@@ -23,8 +23,11 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
    res.json({
       success: true,
-      message: "TeamWeave API Running"
+      message: "PLETTO API Running"
    });
 });
+
+const errorHandler = require("./middleware/errorHandler");
+app.use(errorHandler);
 
 module.exports = app;
