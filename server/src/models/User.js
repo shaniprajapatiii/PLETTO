@@ -4,39 +4,43 @@ const userSchema = new mongoose.Schema(
    {
       name: {
          type: String,
-         required: true
+         required: true,
       },
 
       email: {
          type: String,
          required: true,
-         unique: true
+         unique: true,
       },
 
       password: {
          type: String,
-         required: true
+         required: true,
       },
 
       avatar: {
          type: String,
-         default: ""
+         default: "",
       },
 
       bio: {
          type: String,
-         default: ""
+         default: "",
       },
 
       color: {
          type: String,
-         default: "#3B82F6"
-      }
+         default: "#6366f1",
+      },
+
+      isActive: {
+         type: Boolean,
+         default: true,
+      },
    },
    {
-      timestamps: true
-   }
+      timestamps: true,
+   },
 );
 
-module.exports =
-   mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", userSchema);
