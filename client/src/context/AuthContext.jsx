@@ -6,18 +6,18 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
    const [user, setUser] = useState(null);
-
+   const [workspace, setWorkspace] = useState(null);
    const [loading, setLoading] = useState(true);
 
    useEffect(() => {
       const fetchUser = async () => {
          try {
             const res = await getMe();
-
             setUser(res.data.user);
-         } 
-         catch {
+            setWorkspace(res.data.workspace);
+         } catch {
             setUser(null);
+            setWorkspace(null);
          } finally {
             setLoading(false);
          }
@@ -31,6 +31,8 @@ export const AuthProvider = ({ children }) => {
          value={{
             user,
             setUser,
+            workspace,
+            setWorkspace,
             loading,
          }}
       >

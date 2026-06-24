@@ -1,29 +1,39 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Landing from "../pages/Landing/Landing";
 import Login from "../pages/Login/Login";
-
 import Register from "../pages/Register/Register";
-
 import Dashboard from "../pages/Dashboard/Dashboard";
-
+import Chat from "../pages/Chat/Chat";
+import Docs from "../pages/Docs/Docs";
+import Whiteboard from "../pages/Whiteboard/Whiteboard";
+import Profile from "../pages/Profile/Profile";
+import Settings from "../pages/Settings/Settings";
 import ProtectedRoute from "../components/common/ProtectedRoute";
+import Layout from "../components/common/Layout";
 
 export default function AppRoutes() {
    return (
       <BrowserRouter>
          <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
-
             <Route path="/register" element={<Register />} />
 
             <Route
-               path="/dashboard"
                element={
                   <ProtectedRoute>
-                     <Dashboard />
+                     <Layout />
                   </ProtectedRoute>
                }
-            />
+            >
+               <Route path="/dashboard" element={<Dashboard />} />
+               <Route path="/docs" element={<Docs />} />
+               <Route path="/chat" element={<Chat />} />
+               <Route path="/whiteboard" element={<Whiteboard />} />
+               <Route path="/profile" element={<Profile />} />
+               <Route path="/settings" element={<Settings />} />
+            </Route>
          </Routes>
       </BrowserRouter>
    );
