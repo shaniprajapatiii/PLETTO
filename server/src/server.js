@@ -22,6 +22,8 @@ const io = new Server(server, {
       credentials: true,
    },
 });
+const { setIo } = require("./utils/socket");
+setIo(io);
 
 io.use(async (socket, next) => {
    try {
