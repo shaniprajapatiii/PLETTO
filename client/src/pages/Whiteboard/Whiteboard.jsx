@@ -26,6 +26,7 @@ export default function Whiteboard() {
    const [size, setSize] = useState(4);
    const [zoom, setZoom] = useState(1);
    const [activeStroke, setActiveStroke] = useState(null);
+   const [activeShape, setActiveShape] = useState(null);
    const svgRef = useRef(null);
 
    useEffect(() => {
@@ -104,6 +105,13 @@ export default function Whiteboard() {
          return;
       }
 
+      if (tool === "rectangle") {
+         const shape = { id: `${Date.now()}`, x: point.x, y: point.y, width: 0, height: 0, color };
+         setActiveShape(shape);
+         setBoardData((prev) => ({ ...prev, shapes: [...(prev.shapes || []), shape] }));
+         return;
+      }
+
       const stroke = {
          id: `${Date.now()}`,
          points: [point],
@@ -115,8 +123,24 @@ export default function Whiteboard() {
    };
 
    const handlePointerMove = (event) => {
-      if (!activeStroke || tool === "eraser") return;
+      if (!activeBoard) return;
       const point = getPoint(event);
+
+      if (tool === "rectangle" && activeShape) {
+         const nextShape = {
+            ...activeShape,
+            width: point.x - activeShape.x,
+            height: point.y - activeShape.y,
+         };
+         setActiveShape(nextShape);
+         setBoardData((prev) => ({
+            ...prev,
+            shapes: (prev.shapes || []).map((shape) => (shape.id === activeShape.id ? nextShape : shape)),
+         }));
+         return;
+      }
+
+      if (!activeStroke || tool === "eraser") return;
       const nextStroke = {
          ...activeStroke,
          points: [...activeStroke.points, point],
@@ -130,9 +154,10 @@ export default function Whiteboard() {
 
    const handlePointerUp = () => {
       setActiveStroke(null);
+      setActiveShape(null);
    };
 
-   const strokeSummary = useMemo(() => `${(boardData.strokes || []).length} strokes`, [boardData.strokes]);
+   const strokeSummary = useMemo(() => `${(boardData.strokes || []).length} strokes · ${(boardData.shapes || []).length} shapes`, [boardData.strokes, boardData.shapes]);
 
    return (
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
@@ -188,6 +213,9 @@ export default function Whiteboard() {
                <button onClick={() => setTool("eraser")} className={`rounded-2xl px-3 py-2 text-sm ${tool === "eraser" ? "bg-gold text-[var(--noir-900)]" : "bg-transparent text-muted-foreground"}`}>
                   <span className="flex items-center gap-2"><HiX className="h-4 w-4" /> Eraser</span>
                </button>
+               <button onClick={() => setTool("rectangle")} className={`rounded-2xl px-3 py-2 text-sm ${tool === "rectangle" ? "bg-gold text-[var(--noir-900)]" : "bg-transparent text-muted-foreground"}`}>
+                  <span className="flex items-center gap-2"><HiOutlinePresentationChartBar className="h-4 w-4" /> Box</span>
+               </button>
                <div className="mx-1 h-6 w-px bg-border" />
                <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>Size</span>
@@ -227,6 +255,19 @@ export default function Whiteboard() {
                            strokeWidth={stroke.size}
                            strokeLinecap="round"
                            strokeLinejoin="round"
+                        />
+                     ))}
+                     {(boardData.shapes || []).map((shape) => (
+                        <rect
+                           key={shape.id}
+                           x={Math.min(shape.x, shape.x + shape.width)}
+                           y={Math.min(shape.y, shape.y + shape.height)}
+                           width={Math.abs(shape.width)}
+                           height={Math.abs(shape.height)}
+                           rx="12"
+                           fill="none"
+                           stroke={shape.color}
+                           strokeWidth="2"
                         />
                      ))}
                   </g>

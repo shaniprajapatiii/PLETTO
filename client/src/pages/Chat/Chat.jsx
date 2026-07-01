@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useSearchParams } from "react-router-dom";
-import { HiHashtag, HiPlus, HiSparkles } from "react-icons/hi";
+import { HiHashtag, HiPlus, HiSparkles, HiUsers } from "react-icons/hi";
 import { createChannel, getChannels, getMessages } from "../../services/chatService";
 import { useAuth } from "../../context/AuthContext";
 import { PageShell } from "../../components/common/PageShell";
@@ -16,7 +16,9 @@ export default function Chat() {
    const [error, setError] = useState(null);
    const [socketError, setSocketError] = useState(null);
    const [searchParams, setSearchParams] = useSearchParams();
+   const [isTyping, setIsTyping] = useState(false);
    const socketRef = useRef(null);
+   const typingTimeoutRef = useRef(null);
 
    const socket = useMemo(() => {
       if (!workspace) return null;
@@ -116,6 +118,16 @@ export default function Chat() {
       setSearchParams(nextParams);
    };
 
+   const handleMessageChange = (e) => {
+      const nextValue = e.target.value;
+      setMessage(nextValue);
+      setIsTyping(Boolean(nextValue.trim()));
+      if (typingTimeoutRef.current) {
+         window.clearTimeout(typingTimeoutRef.current);
+      }
+      typingTimeoutRef.current = window.setTimeout(() => setIsTyping(false), 1200);
+   };
+
    const handleSend = (e) => {
       e.preventDefault();
       if (!message.trim() || !activeChannel || !socketRef.current) return;
@@ -167,7 +179,16 @@ export default function Chat() {
          </PageShell>
 
          <PageShell title={activeChannel?.name || "Select a channel"} subtitle="Stay aligned with the team in one shared room." actions={<div className="rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-2 text-sm text-gold"><HiSparkles className="mr-2 inline h-4 w-4" />Realtime chat is running</div>} className="p-5 sm:p-6">
-            <div className="min-h-[420px] rounded-[1.6rem] border border-border bg-[rgba(255,255,255,0.025)] p-5">
+            <div className="flex flex-wrap items-center gap-3 rounded-[1.2rem] border border-border/70 bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm text-muted-foreground">
+               <div className="flex items-center gap-2 text-gold">
+                  <HiUsers className="h-4 w-4" />
+                  Presence aware
+               </div>
+               <div className="rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Live member sync</div>
+               {isTyping ? <div className="text-sm text-white">A teammate is typing…</div> : <div>Messages sync instantly across your workspace.</div>}
+            </div>
+
+            <div className="mt-5 min-h-[420px] rounded-[1.6rem] border border-border bg-[rgba(255,255,255,0.025)] p-5">
                {messages.length > 0 ? (
                   <div className="space-y-4">
                      {messages.map((msg) => (
@@ -192,7 +213,7 @@ export default function Chat() {
                   className="flex-1 rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none focus:border-gold"
                   placeholder="Type your message…"
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={handleMessageChange}
                   disabled={!activeChannel}
                />
                <button
