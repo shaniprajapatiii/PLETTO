@@ -47,17 +47,18 @@ export default function Landing() {
 
          <main>
             <section className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
-               <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+               <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.18),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.1),transparent_26%)]" />
+               <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
                   <div className="space-y-8">
                      <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-2 text-[11px] uppercase tracking-[0.3em] text-gold font-mono">
                         Realtime team collaboration platform
                      </div>
                      <div className="max-w-2xl">
                         <h1 className="font-display text-5xl font-semibold leading-tight text-white sm:text-6xl">
-                           Build the same collaborative workspace, exactly as designed.
+                           Build momentum with one <span className="text-gradient-gold">polished workspace</span>.
                         </h1>
                         <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
-                           PLETTO brings docs, chat, whiteboards, and workspace intelligence together in a single synced experience. No redesign, no compromise — just polished, high-fidelity teamwork.
+                           PLETTO keeps docs, chat, whiteboards, and shared context in one synced experience so focused teams can move without the usual churn.
                         </p>
                      </div>
                      <div className="flex flex-col gap-4 sm:flex-row">
@@ -69,21 +70,23 @@ export default function Landing() {
                         </Link>
                      </div>
 
-                     <div className="grid gap-4 sm:grid-cols-2">
+                     <div className="grid gap-4 sm:grid-cols-3">
                         {[
-                           { label: "Realtime docs", value: "Editable with live presence" },
-                           { label: "Shared whiteboards", value: "Lines, shapes, notes" },
+                           { label: "Realtime docs", value: "Live editing" },
+                           { label: "Shared boards", value: "Fast ideation" },
+                           { label: "Focused chat", value: "Always synced" },
                         ].map((item) => (
-                           <div key={item.label} className="rounded-3xl border border-border bg-card/80 p-5 shadow-soft">
+                           <div key={item.label} className="rounded-[1.3rem] border border-border bg-[rgba(255,255,255,0.05)] p-4 shadow-soft">
                               <div className="text-sm uppercase tracking-[0.18em] text-gold font-semibold font-mono">{item.label}</div>
-                              <p className="mt-2 text-base text-muted-foreground">{item.value}</p>
+                              <p className="mt-2 text-sm text-muted-foreground">{item.value}</p>
                            </div>
                         ))}
                      </div>
                   </div>
 
                   <div className="relative">
-                     <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-gold/20 bg-[rgba(255,255,255,0.04)] p-6 shadow-soft backdrop-blur-xl">
+                     <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle,rgba(248,181,0,0.18),transparent_60%)] blur-3xl" />
+                     <div className="relative rounded-[2rem] border border-gold/20 bg-[rgba(2,6,23,0.78)] p-4 shadow-soft backdrop-blur-xl">
                         <FeatureDiagram />
                      </div>
                   </div>
@@ -132,29 +135,43 @@ function FeatureDiagram() {
    return (
       <div className="relative overflow-hidden rounded-[1.75rem] border border-border bg-[rgba(255,255,255,0.06)] p-6">
          <div className="absolute inset-0 grid-bg opacity-40" />
-         <div className="relative grid gap-6">
-            <div className="flex flex-col gap-3 rounded-3xl border border-border/80 bg-[rgba(255,255,255,0.05)] p-5">
-               <div className="text-[11px] uppercase tracking-[0.3em] text-gold font-mono">Workspace overview</div>
-               <div className="flex items-center gap-3 text-sm font-semibold text-white">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[rgba(248,181,0,0.22)] text-gold">PA</span>
+         <div className="relative grid gap-4">
+            <div className="rounded-[1.4rem] border border-border/80 bg-[rgba(255,255,255,0.05)] p-5">
+               <div className="flex items-center justify-between gap-3">
                   <div>
-                     <div>PLETTO team</div>
-                     <div className="text-xs text-muted-foreground">4 active collaborators · Synced now</div>
+                     <div className="text-[11px] uppercase tracking-[0.3em] text-gold font-mono">Workspace overview</div>
+                     <div className="mt-2 flex items-center gap-3 text-sm font-semibold text-white">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(248,181,0,0.22)] text-gold">PA</span>
+                        <div>
+                           <div>PLETTO team</div>
+                           <div className="text-xs text-muted-foreground">4 active collaborators · Synced now</div>
+                        </div>
+                     </div>
+                  </div>
+                  <div className="rounded-full border border-gold/20 bg-[rgba(248,181,0,0.1)] px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-gold">
+                     Live
                   </div>
                </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-               <div className="rounded-3xl border border-border bg-[rgba(255,255,255,0.04)] p-5">
-                  <div className="text-sm font-semibold text-white">Live activity</div>
+            <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+               <div className="rounded-[1.3rem] border border-border bg-[rgba(255,255,255,0.04)] p-5">
+                  <div className="text-sm font-semibold text-white">Today’s focus</div>
                   <div className="mt-3 space-y-2 text-[13px] text-muted-foreground">
-                     <div>• Ada edited the design doc</div>
-                     <div>• Kenji sent a team update</div>
-                     <div>• New whiteboard nodes synced</div>
+                     <div className="rounded-2xl border border-border/60 bg-[rgba(255,255,255,0.03)] px-3 py-2">• Design review notes are updating in real time</div>
+                     <div className="rounded-2xl border border-border/60 bg-[rgba(255,255,255,0.03)] px-3 py-2">• Shared whiteboard ideas are syncing instantly</div>
+                     <div className="rounded-2xl border border-border/60 bg-[rgba(255,255,255,0.03)] px-3 py-2">• Chat threads stay connected to the workspace context</div>
                   </div>
                </div>
-               <div className="relative rounded-3xl border border-border bg-[rgba(255,255,255,0.03)] p-5">
-                  <div className="text-sm font-semibold text-white">Realtime cursors</div>
-                  <div className="mt-5 h-44 rounded-3xl bg-[rgba(255,255,255,0.02)] p-4 text-[12px] text-muted-foreground">
+               <div className="relative rounded-[1.3rem] border border-border bg-[rgba(255,255,255,0.03)] p-5">
+                  <div className="text-sm font-semibold text-white">Realtime presence</div>
+                  <div className="mt-4 flex items-center gap-3">
+                     {['A', 'K', 'M'].map((letter) => (
+                        <div key={letter} className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/30 bg-[rgba(248,181,0,0.14)] text-sm font-semibold text-gold">
+                           {letter}
+                        </div>
+                     ))}
+                  </div>
+                  <div className="mt-5 h-36 rounded-[1.2rem] bg-[rgba(255,255,255,0.02)] p-4 text-[12px] text-muted-foreground">
                      <LiveCursors />
                   </div>
                </div>

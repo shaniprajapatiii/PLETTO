@@ -1,14 +1,32 @@
-import { useEffect, useState } from "react";
-import { HiOutlinePresentationChartBar } from "react-icons/hi";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+   HiOutlinePresentationChartBar,
+   HiPencil,
+   HiX,
+   HiSave,
+   HiZoomIn,
+   HiZoomOut,
+   HiRefresh,
+   HiPlus,
+} from "react-icons/hi";
 import { createBoard, getBoards, updateBoard } from "../../services/whiteboardService";
+import { PageShell } from "../../components/common/PageShell";
+
+const COLORS = ["#f8b500", "#38bdf8", "#22c55e", "#f43f5e", "#ffffff", "#0f172a"];
 
 export default function Whiteboard() {
    const [boards, setBoards] = useState([]);
    const [activeBoard, setActiveBoard] = useState(null);
    const [name, setName] = useState("");
-   const [boardData, setBoardData] = useState("{}");
+   const [boardData, setBoardData] = useState({ strokes: [] });
    const [error, setError] = useState(null);
    const [message, setMessage] = useState(null);
+   const [tool, setTool] = useState("pen");
+   const [color, setColor] = useState(COLORS[0]);
+   const [size, setSize] = useState(4);
+   const [zoom, setZoom] = useState(1);
+   const [activeStroke, setActiveStroke] = useState(null);
+   const svgRef = useRef(null);
 
    useEffect(() => {
       refreshBoards();
@@ -17,10 +35,10 @@ export default function Whiteboard() {
    const refreshBoards = async () => {
       try {
          const res = await getBoards();
-         const boards = res.data.whiteboards;
-         setBoards(boards);
-         if (!activeBoard && boards.length) {
-            selectBoard(boards[0]);
+         const fetchedBoards = res.data.whiteboards || [];
+         setBoards(fetchedBoards);
+         if (!activeBoard && fetchedBoards.length) {
+            selectBoard(fetchedBoards[0]);
          }
       } catch (err) {
          setError(err.response?.data?.message || "Failed to load boards");
@@ -29,7 +47,8 @@ export default function Whiteboard() {
 
    const selectBoard = (board) => {
       setActiveBoard(board);
-      setBoardData(JSON.stringify(board.data || { nodes: [], notes: [] }, null, 2));
+      setName(board.name || "");
+      setBoardData(board.data || { strokes: [] });
       setMessage(null);
       setError(null);
    };
@@ -39,9 +58,11 @@ export default function Whiteboard() {
       if (!name.trim()) return;
       try {
          const res = await createBoard(name.trim());
+         const board = res.data.board;
          setName("");
-         refreshBoards();
-         selectBoard(res.data.board);
+         setBoards((prev) => [board, ...prev]);
+         selectBoard(board);
+         setMessage("New board created.");
       } catch (err) {
          setError(err.response?.data?.message || "Could not create board");
       }
@@ -52,34 +73,81 @@ export default function Whiteboard() {
       setError(null);
       setMessage(null);
       try {
-         const parsed = JSON.parse(boardData);
-         const res = await updateBoard(activeBoard._id, { data: parsed });
+         const res = await updateBoard(activeBoard._id, { name, data: boardData });
          setActiveBoard(res.data.board);
+         setBoards((prev) => prev.map((board) => (board._id === res.data.board._id ? res.data.board : board)));
          setMessage("Board saved successfully.");
       } catch (err) {
-         setError(err.response?.data?.message || "Unable to save the board. Check your JSON.");
+         setError(err.response?.data?.message || "Unable to save the board right now.");
       }
    };
 
+   const getPoint = (event) => {
+      const rect = svgRef.current.getBoundingClientRect();
+      return {
+         x: ((event.clientX - rect.left) / rect.width) * 1000,
+         y: ((event.clientY - rect.top) / rect.height) * 700,
+      };
+   };
+
+   const handlePointerDown = (event) => {
+      if (!activeBoard) return;
+      const point = getPoint(event);
+
+      if (tool === "eraser") {
+         const index = findNearestStroke(boardData.strokes || [], point);
+         if (index >= 0) {
+            const nextStrokes = [...(boardData.strokes || [])];
+            nextStrokes.splice(index, 1);
+            setBoardData({ ...boardData, strokes: nextStrokes });
+         }
+         return;
+      }
+
+      const stroke = {
+         id: `${Date.now()}`,
+         points: [point],
+         color,
+         size,
+      };
+      setActiveStroke(stroke);
+      setBoardData((prev) => ({ ...prev, strokes: [...(prev.strokes || []), stroke] }));
+   };
+
+   const handlePointerMove = (event) => {
+      if (!activeStroke || tool === "eraser") return;
+      const point = getPoint(event);
+      const nextStroke = {
+         ...activeStroke,
+         points: [...activeStroke.points, point],
+      };
+      setActiveStroke(nextStroke);
+      setBoardData((prev) => ({
+         ...prev,
+         strokes: (prev.strokes || []).map((stroke, index) => (index === (prev.strokes || []).length - 1 ? nextStroke : stroke)),
+      }));
+   };
+
+   const handlePointerUp = () => {
+      setActiveStroke(null);
+   };
+
+   const strokeSummary = useMemo(() => `${(boardData.strokes || []).length} strokes`, [boardData.strokes]);
+
    return (
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-         <section className="rounded-3xl border border-border bg-card/80 p-6 shadow-soft">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-               <div>
-                  <div className="text-xs uppercase tracking-[0.28em] text-gold">Whiteboards</div>
-                  <h2 className="mt-3 text-2xl font-semibold text-white">Canvas sessions</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">Create a board and keep your ideas organized in one space.</p>
-               </div>
-            </div>
-
-            <form onSubmit={handleCreate} className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-               <input
-                  className="min-w-[220px] flex-1 rounded-3xl border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none focus:border-gold"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Board name"
-               />
-               <button className="rounded-3xl bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
+         <PageShell title="Canvas sessions" subtitle="Sketch, iterate, and save your board state with the same flow as the Team Weave experience." compact className="p-5 sm:p-6">
+            <form onSubmit={handleCreate} className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+               <label className="flex flex-1 items-center gap-2 rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-3 py-2.5 text-sm text-muted-foreground">
+                  <HiPlus className="h-4 w-4 text-gold" />
+                  <input
+                     className="w-full bg-transparent text-sm text-white outline-none"
+                     value={name}
+                     onChange={(e) => setName(e.target.value)}
+                     placeholder="Board name"
+                  />
+               </label>
+               <button className="rounded-[1.2rem] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
                   Create
                </button>
             </form>
@@ -91,53 +159,108 @@ export default function Whiteboard() {
                         key={board._id}
                         type="button"
                         onClick={() => selectBoard(board)}
-                        className={`w-full rounded-3xl border px-4 py-4 text-left transition ${activeBoard?._id === board._id ? "border-gold bg-[rgba(248,181,0,0.12)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
+                        className={`w-full rounded-[1.2rem] border px-4 py-4 text-left transition ${activeBoard?._id === board._id ? "border-gold bg-[rgba(248,181,0,0.12)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
                      >
                         <div className="flex items-center gap-3">
-                           <div className="grid h-12 w-12 place-items-center rounded-3xl bg-[rgba(248,181,0,0.14)] text-gold">
+                           <div className="grid h-12 w-12 place-items-center rounded-[1.1rem] bg-[rgba(248,181,0,0.14)] text-gold">
                               <HiOutlinePresentationChartBar className="h-6 w-6" />
                            </div>
                            <div>
                               <div className="font-semibold text-white">{board.name}</div>
-                              <div className="text-xs text-muted-foreground">Created {new Date(board.createdAt).toLocaleDateString()}</div>
+                              <div className="text-xs text-muted-foreground">Updated {new Date(board.updatedAt || board.createdAt).toLocaleDateString()}</div>
                            </div>
                         </div>
                      </button>
                   ))
                ) : (
-                  <div className="rounded-3xl border border-dashed border-border/60 bg-[rgba(255,255,255,0.03)] p-8 text-center text-sm text-muted-foreground">
+                  <div className="rounded-[1.2rem] border border-dashed border-border/60 bg-[rgba(255,255,255,0.03)] p-8 text-center text-sm text-muted-foreground">
                      No whiteboards yet. Create a board to start capturing your team’s ideas.
                   </div>
                )}
             </div>
-         </section>
+         </PageShell>
 
-         <section className="rounded-3xl border border-border bg-card/80 p-6 shadow-soft">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-               <div>
-                  <div className="text-xs uppercase tracking-[0.28em] text-gold">Canvas editor</div>
-                  <h2 className="mt-3 text-2xl font-semibold text-white">{activeBoard?.name || "Select a board"}</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">Edit the board payload to keep the session state in sync.</p>
-               </div>
-               <button
-                  onClick={handleSave}
-                  disabled={!activeBoard}
-                  className="rounded-3xl bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-               >
-                  Save board
+         <PageShell title={activeBoard?.name || "Select a board"} subtitle="Sketch with a pen, erase lines, and save to the workspace instantly." actions={<button onClick={handleSave} disabled={!activeBoard} className="rounded-[1.2rem] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"><span className="flex items-center gap-2"><HiSave className="h-4 w-4" />Save board</span></button>} className="p-5 sm:p-6">
+            <div className="flex flex-wrap items-center gap-3 rounded-[1.5rem] border border-border bg-[rgba(255,255,255,0.04)] p-4">
+               <button onClick={() => setTool("pen")} className={`rounded-2xl px-3 py-2 text-sm ${tool === "pen" ? "bg-gold text-[var(--noir-900)]" : "bg-transparent text-muted-foreground"}`}>
+                  <span className="flex items-center gap-2"><HiPencil className="h-4 w-4" /> Pen</span>
                </button>
+               <button onClick={() => setTool("eraser")} className={`rounded-2xl px-3 py-2 text-sm ${tool === "eraser" ? "bg-gold text-[var(--noir-900)]" : "bg-transparent text-muted-foreground"}`}>
+                  <span className="flex items-center gap-2"><HiX className="h-4 w-4" /> Eraser</span>
+               </button>
+               <div className="mx-1 h-6 w-px bg-border" />
+               <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Size</span>
+                  <input type="range" min="1" max="12" value={size} onChange={(e) => setSize(Number(e.target.value))} className="accent-gold" />
+               </label>
+               <div className="flex items-center gap-2">
+                  {COLORS.map((swatch) => (
+                     <button key={swatch} onClick={() => setColor(swatch)} className={`h-6 w-6 rounded-full border-2 ${color === swatch ? "border-white" : "border-transparent"}`} style={{ backgroundColor: swatch }} />
+                  ))}
+               </div>
+               <div className="ml-auto flex items-center gap-2">
+                  <button onClick={() => setZoom((value) => Math.max(0.7, value - 0.1))} className="rounded-2xl border border-border p-2 text-muted-foreground hover:text-white"><HiZoomOut className="h-4 w-4" /></button>
+                  <span className="min-w-12 text-center text-sm text-muted-foreground">{zoom.toFixed(1)}x</span>
+                  <button onClick={() => setZoom((value) => Math.min(2, value + 0.1))} className="rounded-2xl border border-border p-2 text-muted-foreground hover:text-white"><HiZoomIn className="h-4 w-4" /></button>
+                  <button onClick={() => { setZoom(1); }} className="rounded-2xl border border-border p-2 text-muted-foreground hover:text-white"><HiRefresh className="h-4 w-4" /></button>
+               </div>
             </div>
 
-            <textarea
-               className="mt-6 min-h-[620px] w-full rounded-[2rem] border border-border bg-[rgba(255,255,255,0.05)] p-5 text-sm text-white outline-none focus:border-gold"
-               value={boardData}
-               onChange={(e) => setBoardData(e.target.value)}
-               placeholder="Enter board JSON payload here"
-            />
+            <div className="mt-6 overflow-hidden rounded-[1.7rem] border border-border bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.08),transparent_18%),#020617] p-3">
+               <svg
+                  ref={svgRef}
+                  viewBox="0 0 1000 700"
+                  className="h-[560px] w-full cursor-crosshair rounded-[1.3rem] border border-border/70 bg-[rgba(255,255,255,0.03)]"
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
+               >
+                  <rect x="0" y="0" width="1000" height="700" fill="transparent" />
+                  <g transform={`scale(${zoom})`} transform-origin="0 0">
+                     {(boardData.strokes || []).map((stroke) => (
+                        <path
+                           key={stroke.id}
+                           d={stroke.points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ")}
+                           fill="none"
+                           stroke={stroke.color}
+                           strokeWidth={stroke.size}
+                           strokeLinecap="round"
+                           strokeLinejoin="round"
+                        />
+                     ))}
+                  </g>
+               </svg>
+            </div>
 
-            {message && <div className="mt-4 rounded-3xl border border-green-500/20 bg-green-500/10 p-4 text-sm text-green-100">{message}</div>}
-            {error && <div className="mt-4 rounded-3xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div>}
-         </section>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+               <div>{strokeSummary}</div>
+               <div className="flex items-center gap-2">
+                  <span className="rounded-full border border-border px-3 py-1">{activeBoard ? "Autosync ready" : "Create a board to begin"}</span>
+                  <button onClick={() => setBoardData({ strokes: [] })} className="rounded-full border border-border px-3 py-1 text-white transition hover:border-gold/40">Clear canvas</button>
+               </div>
+            </div>
+
+            {message ? <div className="mt-4 rounded-[1.2rem] border border-green-500/20 bg-green-500/10 p-4 text-sm text-green-100">{message}</div> : null}
+            {error ? <div className="mt-4 rounded-[1.2rem] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
+         </PageShell>
       </div>
    );
+}
+
+function findNearestStroke(strokes, point) {
+   let bestIndex = -1;
+   let bestDistance = Number.POSITIVE_INFINITY;
+
+   strokes.forEach((stroke, index) => {
+      stroke.points.forEach((segment) => {
+         const distance = Math.hypot(segment.x - point.x, segment.y - point.y);
+         if (distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = index;
+         }
+      });
+   });
+
+   return bestDistance < 30 ? bestIndex : -1;
 }

@@ -39,6 +39,8 @@ exports.register = async (req, res) => {
          name,
          email,
          password: hashedPassword,
+         avatar: "",
+         bio: "",
       });
 
       const workspace = await Workspace.create({
@@ -58,7 +60,14 @@ exports.register = async (req, res) => {
       res.status(201).json({
          success: true,
          token,
-         user,
+         user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            bio: user.bio,
+            color: user.color,
+         },
          workspace: {
             id: workspace._id,
             name: workspace.name,
@@ -106,7 +115,14 @@ exports.login = async (req, res) => {
       res.json({
          success: true,
          token,
-         user,
+         user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            bio: user.bio,
+            color: user.color,
+         },
          workspace,
       });
    } catch (error) {
@@ -126,7 +142,14 @@ exports.me = async (req, res) => {
 
       res.json({
          success: true,
-         user,
+         user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            bio: user.bio,
+            color: user.color,
+         },
          workspace,
       });
    } catch (error) {

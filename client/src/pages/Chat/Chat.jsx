@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { HiHashtag } from "react-icons/hi";
+import { useSearchParams } from "react-router-dom";
+import { HiHashtag, HiPlus, HiSparkles } from "react-icons/hi";
 import { createChannel, getChannels, getMessages } from "../../services/chatService";
 import { useAuth } from "../../context/AuthContext";
+import { PageShell } from "../../components/common/PageShell";
 
 export default function Chat() {
    const { workspace } = useAuth();
@@ -13,6 +15,7 @@ export default function Chat() {
    const [message, setMessage] = useState("");
    const [error, setError] = useState(null);
    const [socketError, setSocketError] = useState(null);
+   const [searchParams, setSearchParams] = useSearchParams();
    const socketRef = useRef(null);
 
    const socket = useMemo(() => {
@@ -30,6 +33,16 @@ export default function Chat() {
       };
       initialize();
    }, []);
+
+   useEffect(() => {
+      if (!activeChannel && channels.length) {
+         const channelId = searchParams.get("channel");
+         const fallback = channels.find((channel) => channel._id === channelId) || channels[0];
+         if (fallback) {
+            setActiveChannel(fallback);
+         }
+      }
+   }, [activeChannel, channels, searchParams]);
 
    useEffect(() => {
       if (!socket) return;
@@ -63,9 +76,12 @@ export default function Chat() {
    const refreshChannels = async () => {
       try {
          const res = await getChannels();
-         setChannels(res.data.channels);
-         if (!activeChannel && res.data.channels.length) {
-            setActiveChannel(res.data.channels[0]);
+         const nextChannels = res.data.channels || [];
+         setChannels(nextChannels);
+         if (!activeChannel && nextChannels.length) {
+            const channelId = searchParams.get("channel");
+            const fallback = nextChannels.find((channel) => channel._id === channelId) || nextChannels[0];
+            setActiveChannel(fallback);
          }
       } catch (err) {
          setError(err.response?.data?.message || "Failed to load channels");
@@ -93,6 +109,13 @@ export default function Chat() {
       }
    };
 
+   const selectChannel = (channel) => {
+      setActiveChannel(channel);
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("channel", channel._id);
+      setSearchParams(nextParams);
+   };
+
    const handleSend = (e) => {
       e.preventDefault();
       if (!message.trim() || !activeChannel || !socketRef.current) return;
@@ -105,23 +128,18 @@ export default function Chat() {
 
    return (
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-         <section className="rounded-3xl border border-border bg-card/80 p-6 shadow-soft">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-               <div>
-                  <div className="text-xs uppercase tracking-[0.28em] text-gold">Channels</div>
-                  <h2 className="mt-3 text-2xl font-semibold text-white">Workspace rooms</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">Create rooms for every focus area and drop in instantly.</p>
-               </div>
-            </div>
-
-            <form onSubmit={handleCreate} className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-               <input
-                  className="min-w-[220px] flex-1 rounded-3xl border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none focus:border-gold"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="New channel name"
-               />
-               <button className="rounded-3xl bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
+         <PageShell title="Workspace rooms" subtitle="Create rooms for every focus area and drop in instantly." compact className="p-5 sm:p-6">
+            <form onSubmit={handleCreate} className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+               <label className="flex flex-1 items-center gap-2 rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-3 py-2.5 text-sm text-muted-foreground">
+                  <HiPlus className="h-4 w-4 text-gold" />
+                  <input
+                     className="w-full bg-transparent text-sm text-white outline-none"
+                     value={name}
+                     onChange={(e) => setName(e.target.value)}
+                     placeholder="New channel name"
+                  />
+               </label>
+               <button className="rounded-[1.2rem] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
                   Create
                </button>
             </form>
@@ -131,11 +149,11 @@ export default function Chat() {
                   <button
                      key={channel._id}
                      type="button"
-                     onClick={() => setActiveChannel(channel)}
-                     className={`w-full rounded-3xl border px-4 py-4 text-left transition ${activeChannel?._id === channel._id ? "border-gold bg-[rgba(248,181,0,0.12)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
+                     onClick={() => selectChannel(channel)}
+                     className={`w-full rounded-[1.2rem] border px-4 py-4 text-left transition ${activeChannel?._id === channel._id ? "border-gold bg-[rgba(248,181,0,0.12)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
                   >
                      <div className="flex items-center gap-3">
-                        <div className="grid h-12 w-12 place-items-center rounded-3xl bg-[rgba(248,181,0,0.14)] text-gold">
+                        <div className="grid h-12 w-12 place-items-center rounded-[1.1rem] bg-[rgba(248,181,0,0.14)] text-gold">
                            <HiHashtag className="h-6 w-6" />
                         </div>
                         <div>
@@ -146,22 +164,14 @@ export default function Chat() {
                   </button>
                ))}
             </div>
-         </section>
+         </PageShell>
 
-         <section className="rounded-3xl border border-border bg-card/80 p-6 shadow-soft">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-               <div>
-                  <div className="text-xs uppercase tracking-[0.28em] text-gold">Live chat</div>
-                  <h2 className="mt-3 text-2xl font-semibold text-white">{activeChannel?.name || "Select a channel"}</h2>
-               </div>
-               <div className="text-sm text-muted-foreground">{socketError || (workspace ? "Realtime chat is running" : "Connect to see live chat")}</div>
-            </div>
-
-            <div className="mt-6 min-h-[420px] rounded-[2rem] border border-border bg-[rgba(255,255,255,0.025)] p-5">
+         <PageShell title={activeChannel?.name || "Select a channel"} subtitle="Stay aligned with the team in one shared room." actions={<div className="rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-2 text-sm text-gold"><HiSparkles className="mr-2 inline h-4 w-4" />Realtime chat is running</div>} className="p-5 sm:p-6">
+            <div className="min-h-[420px] rounded-[1.6rem] border border-border bg-[rgba(255,255,255,0.025)] p-5">
                {messages.length > 0 ? (
                   <div className="space-y-4">
                      {messages.map((msg) => (
-                        <div key={msg._id} className="rounded-3xl border border-border/70 bg-[rgba(255,255,255,0.06)] p-4">
+                        <div key={msg._id} className="rounded-[1.25rem] border border-border/70 bg-[rgba(255,255,255,0.06)] p-4">
                            <div className="flex items-center gap-3">
                               <div className="text-sm font-semibold text-white">{msg.user?.name || "Unknown"}</div>
                               <span className="text-xs text-muted-foreground">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
@@ -179,7 +189,7 @@ export default function Chat() {
 
             <form onSubmit={handleSend} className="mt-6 flex flex-col gap-3 sm:flex-row">
                <input
-                  className="flex-1 rounded-3xl border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none focus:border-gold"
+                  className="flex-1 rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none focus:border-gold"
                   placeholder="Type your message…"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -187,14 +197,14 @@ export default function Chat() {
                />
                <button
                   type="submit"
-                  className="rounded-3xl bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-[1.2rem] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={!activeChannel || !message.trim()}
                >
                   Send
                </button>
             </form>
-            {error && <div className="mt-4 rounded-3xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div>}
-         </section>
+            {error ? <div className="mt-4 rounded-[1.2rem] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
+         </PageShell>
       </div>
    );
 }

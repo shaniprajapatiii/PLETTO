@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { HiChatAlt2, HiDocumentText, HiViewBoards } from "react-icons/hi";
+import { useEffect, useMemo, useState } from "react";
+import { HiChatAlt2, HiChevronRight, HiClock, HiDocumentText, HiLightningBolt, HiSparkles, HiViewBoards } from "react-icons/hi";
 import { getChannels } from "../../services/chatService";
 import { getDocs } from "../../services/docsService";
 import { getBoards } from "../../services/whiteboardService";
@@ -26,18 +26,95 @@ export default function Dashboard() {
       load();
    }, []);
 
+   const activity = useMemo(() => {
+      const items = [
+         ...preview.channels.map((item) => ({ title: item.name, subtitle: "New channel", icon: HiChatAlt2 })),
+         ...preview.documents.map((item) => ({ title: item.title, subtitle: "Updated doc", icon: HiDocumentText })),
+         ...preview.boards.map((item) => ({ title: item.name, subtitle: "Live board", icon: HiViewBoards })),
+      ].slice(0, 6);
+      return items;
+   }, [preview]);
+
    return (
       <div className="space-y-6">
+         <div className="rounded-[2rem] border border-border bg-[linear-gradient(135deg,rgba(248,181,0,0.12),rgba(255,255,255,0.03))] p-6 shadow-soft sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+               <div className="max-w-2xl">
+                  <div className="text-[11px] uppercase tracking-[0.33em] text-gold">Workspace overview</div>
+                  <h2 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Everything your team needs to move faster.</h2>
+                  <p className="mt-3 text-sm text-muted-foreground sm:text-base">A quick pulse on your channels, documents, and collaborative boards, all from one place.</p>
+               </div>
+               <div className="rounded-[1.5rem] border border-gold/25 bg-[rgba(2,6,23,0.72)] p-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 text-gold">
+                     <HiSparkles className="h-4 w-4" />
+                     AI copilot ready
+                  </div>
+                  <div className="mt-2 max-w-xs">Summarize project updates, draft action items, and keep momentum going.</div>
+               </div>
+            </div>
+         </div>
+
          <div className="grid gap-6 lg:grid-cols-3">
             <Panel title="Channels" value={stats.channels} description="Active chat channels in your workspace." icon={<HiChatAlt2 className="h-6 w-6" />} />
             <Panel title="Documents" value={stats.documents} description="Docs available for your team." icon={<HiDocumentText className="h-6 w-6" />} />
             <Panel title="Whiteboards" value={stats.boards} description="Live board sessions ready to use." icon={<HiViewBoards className="h-6 w-6" />} />
          </div>
 
-         <div className="grid gap-6 xl:grid-cols-3">
-            <PreviewCard title="Recent channels" items={preview.channels.map((item) => item.name)} empty="Create a channel to see it here." />
-            <PreviewCard title="Recent docs" items={preview.documents.map((item) => item.title)} empty="Create a document to build your knowledge base." />
-            <PreviewCard title="Recent whiteboards" items={preview.boards.map((item) => item.name)} empty="Create a whiteboard to start collaborating." />
+         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+            <div className="rounded-[2rem] border border-border bg-card/70 p-6 shadow-soft">
+               <div className="flex items-center justify-between gap-3">
+                  <div>
+                     <div className="text-[11px] uppercase tracking-[0.28em] text-gold">Live activity</div>
+                     <h3 className="mt-2 text-xl font-semibold text-white">What is happening right now</h3>
+                  </div>
+                  <div className="rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Streaming</div>
+               </div>
+               <div className="mt-5 space-y-3">
+                  {activity.length > 0 ? activity.map((item, index) => {
+                     const Icon = item.icon;
+                     return (
+                        <div key={`${item.title}-${index}`} className="flex items-center gap-3 rounded-[1.2rem] border border-border/70 bg-[rgba(255,255,255,0.04)] px-4 py-3">
+                           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(248,181,0,0.16)] text-gold">
+                              <Icon className="h-4 w-4" />
+                           </div>
+                           <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-medium text-white">{item.title}</div>
+                              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                                 <HiClock className="h-3.5 w-3.5" />
+                                 {item.subtitle}
+                              </div>
+                           </div>
+                           <HiChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                     );
+                  }) : (
+                     <div className="rounded-[1.2rem] border border-dashed border-border/60 bg-[rgba(255,255,255,0.03)] p-5 text-sm text-muted-foreground">Create a channel, document, or board to fill this feed.</div>
+                  )}
+               </div>
+            </div>
+
+            <div className="space-y-6">
+               <div className="rounded-[2rem] border border-border bg-card/70 p-6 shadow-soft">
+                  <div className="flex items-center gap-2 text-gold">
+                     <HiLightningBolt className="h-4 w-4" />
+                     Quick start
+                  </div>
+                  <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                     <div className="rounded-[1.2rem] border border-border/70 bg-[rgba(255,255,255,0.04)] p-4">Open a channel and keep team conversations flowing.</div>
+                     <div className="rounded-[1.2rem] border border-border/70 bg-[rgba(255,255,255,0.04)] p-4">Create a document to capture decisions and notes.</div>
+                     <div className="rounded-[1.2rem] border border-border/70 bg-[rgba(255,255,255,0.04)] p-4">Sketch and share ideas instantly on a whiteboard.</div>
+                  </div>
+               </div>
+
+               <div className="rounded-[2rem] border border-border bg-card/70 p-6 shadow-soft">
+                  <div className="text-[11px] uppercase tracking-[0.28em] text-gold">Snapshots</div>
+                  <div className="mt-4 space-y-3">
+                     <PreviewCard title="Recent channels" items={preview.channels.map((item) => item.name)} empty="Create a channel to see it here." />
+                     <PreviewCard title="Recent docs" items={preview.documents.map((item) => item.title)} empty="Create a document to build your knowledge base." />
+                     <PreviewCard title="Recent whiteboards" items={preview.boards.map((item) => item.name)} empty="Create a whiteboard to start collaborating." />
+                  </div>
+               </div>
+            </div>
          </div>
       </div>
    );
@@ -45,9 +122,9 @@ export default function Dashboard() {
 
 function Panel({ title, value, description, icon }) {
    return (
-      <div className="rounded-3xl border border-border bg-card/80 p-6 shadow-soft">
+      <div className="rounded-[2rem] border border-border bg-card/80 p-6 shadow-soft">
          <div className="flex items-center justify-between gap-3">
-            <div className="rounded-3xl bg-[rgba(248,181,0,0.12)] p-3 text-gold">{icon}</div>
+            <div className="rounded-[1.25rem] bg-[rgba(248,181,0,0.12)] p-3 text-gold">{icon}</div>
             <span className="text-xs uppercase tracking-[0.25em] text-gold">Live</span>
          </div>
          <div className="mt-8">
@@ -61,17 +138,17 @@ function Panel({ title, value, description, icon }) {
 
 function PreviewCard({ title, items, empty }) {
    return (
-      <div className="rounded-3xl border border-border bg-card/70 p-6 shadow-soft">
-         <div className="text-sm uppercase tracking-[0.25em] text-gold">{title}</div>
-         <div className="mt-4 space-y-3">
+      <div className="rounded-[1.2rem] border border-border/70 bg-[rgba(255,255,255,0.04)] p-4">
+         <div className="text-[11px] uppercase tracking-[0.22em] text-gold">{title}</div>
+         <div className="mt-3 space-y-2">
             {items.length > 0 ? (
                items.map((item, index) => (
-                  <div key={`${item}-${index}`} className="rounded-3xl border border-border/70 bg-[rgba(255,255,255,0.04)] p-4 text-white">
+                  <div key={`${item}-${index}`} className="rounded-[1rem] border border-border/70 bg-[rgba(2,6,23,0.6)] px-3 py-2.5 text-sm text-white">
                      {item}
                   </div>
                ))
             ) : (
-               <div className="rounded-3xl border border-dashed border-border/50 bg-[rgba(255,255,255,0.03)] p-5 text-sm text-muted-foreground">{empty}</div>
+               <div className="rounded-[1rem] border border-dashed border-border/50 bg-[rgba(255,255,255,0.03)] p-3 text-sm text-muted-foreground">{empty}</div>
             )}
          </div>
       </div>

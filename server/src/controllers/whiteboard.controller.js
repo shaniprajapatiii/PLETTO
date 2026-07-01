@@ -29,6 +29,7 @@ exports.createBoard = async (req, res) => {
          name: req.body.name || "Untitled board",
          workspace: workspaceId,
          createdBy: req.user.id,
+         data: { strokes: [] },
       });
       res.status(201).json({ success: true, board });
    } catch (error) {

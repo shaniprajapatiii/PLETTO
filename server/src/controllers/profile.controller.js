@@ -6,10 +6,11 @@ exports.updateProfile = async (req, res) => {
       if (!user) {
          return res.status(404).json({ success: false, message: "User not found" });
       }
-      const { name, bio, avatar } = req.body;
+      const { name, bio, avatar, color } = req.body;
       user.name = name ?? user.name;
       user.bio = bio ?? user.bio;
       user.avatar = avatar ?? user.avatar;
+      user.color = color ?? user.color;
       await user.save();
       res.json({ success: true, user });
    } catch (error) {
