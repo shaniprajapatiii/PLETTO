@@ -104,7 +104,7 @@ export default function Layout() {
    }, []);
 
    if (loading) {
-      return <div className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.12),transparent_22%),#020617] text-sm text-muted-foreground">Connecting your workspace…</div>;
+      return <div className="grid min-h-screen place-items-center bg-[#020202] text-sm text-muted-foreground">Connecting your workspace…</div>;
    }
 
    const handleSignOut = () => {
@@ -281,7 +281,7 @@ export default function Layout() {
 
    return (
       <div className="flex min-h-screen bg-[#030303] text-slate-100">
-         <aside className={`hidden flex-col border-r border-white/10 bg-[#050505]/95 md:flex ${sidebarCollapsed ? "w-[74px]" : "w-[256px]"}`}>
+         <aside className={`hidden flex-col border-r border-white/10 bg-[rgba(5,5,5,0.96)] md:flex ${sidebarCollapsed ? "w-[74px]" : "w-[256px]"}`}>
             {sidebarContent}
          </aside>
 
@@ -295,7 +295,7 @@ export default function Layout() {
          ) : null}
 
          <div className="flex min-w-0 flex-1 flex-col">
-            <header className="flex h-16 items-center gap-2 border-b border-white/10 bg-[#060606]/90 px-3 backdrop-blur-xl sm:px-5">
+            <header className="flex h-16 items-center gap-2 border-b border-white/10 bg-[rgba(6,6,6,0.92)] px-3 shadow-[0_12px_42px_rgba(0,0,0,0.2)] backdrop-blur-2xl sm:px-5">
                <button onClick={() => setSidebarCollapsed((value) => !value)} className="hidden rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-gold/30 hover:text-white md:inline-flex">
                   <ChevronLeftIcon className={`h-4 w-4 transition ${sidebarCollapsed ? "rotate-180" : ""}`} />
                </button>
@@ -381,7 +381,7 @@ export default function Layout() {
                </button>
             </header>
 
-            <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-5">
+            <main className="flex-1 overflow-auto bg-[#050505] p-3 sm:p-4 lg:p-5">
                <Outlet />
             </main>
          </div>

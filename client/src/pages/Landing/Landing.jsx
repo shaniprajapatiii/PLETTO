@@ -21,8 +21,8 @@ const sections = [
 
 export default function Landing() {
    return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.08),transparent_20%),#020617] text-slate-100">
-         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#040404]/85 backdrop-blur-2xl">
+      <div className="min-h-screen bg-[#020202] text-slate-100">
+         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#040404]/85 shadow-[0_10px_35px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
                <Link to="/" className="flex items-center gap-3 text-white">
                   <Logo className="h-10" />
@@ -47,10 +47,10 @@ export default function Landing() {
 
          <main>
             <section className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
-               <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.18),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.1),transparent_26%)]" />
+               <div className="absolute inset-0 -z-10 bg-[#060606]" />
                <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                   <div className="space-y-8">
-                     <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-2 text-[11px] uppercase tracking-[0.3em] text-gold font-mono">
+                     <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-2 text-[11px] uppercase tracking-[0.3em] text-gold font-mono shadow-[0_0_0_1px_rgba(245,181,50,0.08)]">
                         Realtime collaboration OS
                      </div>
                      <div className="max-w-2xl">
@@ -76,7 +76,7 @@ export default function Landing() {
                            { label: "Shared boards", value: "Fast ideation" },
                            { label: "Focused chat", value: "Always synced" },
                         ].map((item) => (
-                           <div key={item.label} className="rounded-[1.2rem] border border-white/10 bg-white/[0.035] p-4 shadow-[0_10px_35px_rgba(0,0,0,0.22)]">
+                           <div key={item.label} className="rounded-[1.2rem] border border-white/10 bg-[rgba(255,255,255,0.045)] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.24)] backdrop-blur-xl">
                               <div className="text-sm uppercase tracking-[0.18em] text-gold font-semibold font-mono">{item.label}</div>
                               <p className="mt-2 text-sm text-muted-foreground">{item.value}</p>
                            </div>
@@ -85,8 +85,8 @@ export default function Landing() {
                   </div>
 
                   <div className="relative">
-                     <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle,rgba(248,181,0,0.18),transparent_60%)] blur-3xl" />
-                     <div className="relative rounded-[2rem] border border-white/10 bg-[#050505]/85 p-4 shadow-[0_25px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+                     <div className="absolute inset-0 rounded-[2rem] bg-[#0a0a0a]" />
+                     <div className="relative rounded-[2rem] border border-white/10 bg-[#050505]/85 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur-xl">
                         <FeatureDiagram />
                      </div>
                   </div>
@@ -111,7 +111,7 @@ export default function Landing() {
                         { icon: <Cpu className="h-5 w-5" />, title: "Realtime canvas", desc: "Diagram and sketch content with everyone in view." },
                         { icon: <Lock className="h-5 w-5" />, title: "Secure auth", desc: "Workspace membership and secure token access." },
                      ].map((item) => (
-                        <div key={item.title} className="rounded-3xl border border-border bg-card/70 p-6">
+                        <div key={item.title} className="rounded-3xl border border-white/10 bg-[rgba(255,255,255,0.045)] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(248,181,0,0.14)] text-gold">{item.icon}</div>
                            <h3 className="mt-4 text-lg font-semibold text-white">{item.title}</h3>
                            <p className="mt-2 text-sm text-muted-foreground">{item.desc}</p>
@@ -193,7 +193,7 @@ function SectionHeader({ eyebrow, title, sub }) {
 
 function BentoCard({ icon, title, desc }) {
    return (
-      <div className="group overflow-hidden rounded-3xl border border-border bg-card/70 p-6 transition hover:border-gold/40">
+      <div className="group overflow-hidden rounded-3xl border border-white/10 bg-[rgba(255,255,255,0.045)] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-gold/40">
          <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-[rgba(248,181,0,0.16)] text-gold">{icon}</div>
          <div className="mt-4 text-lg font-semibold text-white">{title}</div>
          <p className="mt-2 text-sm text-muted-foreground">{desc}</p>
@@ -217,7 +217,7 @@ function RealtimeShowcase() {
                      { icon: <Zap className="h-5 w-5" />, title: "Fast operation streams", desc: "Optimistic updates, backend event reconciliation." },
                      { icon: <Activity className="h-5 w-5" />, title: "Self-healing sync", desc: "Conflict-free updates and automatic recovery." },
                   ].map((feature) => (
-                     <div key={feature.title} className="flex gap-4 rounded-3xl border border-border bg-card/70 p-5">
+                     <div key={feature.title} className="flex gap-4 rounded-3xl border border-white/10 bg-[rgba(255,255,255,0.045)] p-5 shadow-[0_16px_48px_rgba(0,0,0,0.2)] backdrop-blur-xl">
                         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(248,181,0,0.16)] text-gold">{feature.icon}</div>
                         <div>
                            <div className="font-semibold text-white">{feature.title}</div>

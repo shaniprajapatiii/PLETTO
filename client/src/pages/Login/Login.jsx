@@ -25,15 +25,15 @@ export default function Login() {
    };
 
    return (
-      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.14),transparent_24%),#030303] px-4 py-10 sm:px-6">
-         <div className="w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#060606]/90 shadow-[0_30px_90px_rgba(0,0,0,0.38)] backdrop-blur-xl lg:grid lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="hidden bg-[linear-gradient(135deg,rgba(245,181,50,0.18),rgba(255,255,255,0.03))] p-8 lg:flex lg:flex-col lg:justify-between">
+      <div className="flex min-h-screen items-center justify-center bg-[#030303] px-4 py-10 sm:px-6">
+         <div className="w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a0a0a] shadow-[0_35px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl lg:grid lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="hidden bg-[#080808] p-8 lg:flex lg:flex-col lg:justify-between">
                <div>
                   <Logo />
                   <h1 className="mt-10 text-3xl font-semibold text-white">Welcome back to a calmer way to work.</h1>
                   <p className="mt-4 max-w-md text-sm leading-7 text-muted-foreground">Keep conversations, docs, and boards in sync with the same premium collaboration flow your team expects.</p>
                </div>
-               <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-4 text-sm text-muted-foreground">
+               <div className="rounded-[1.3rem] border border-white/10 bg-[rgba(255,255,255,0.04)] p-4 text-sm text-muted-foreground shadow-[0_12px_36px_rgba(0,0,0,0.16)]">
                   Secure by design · realtime by default · built for modern teams.
                </div>
             </div>
