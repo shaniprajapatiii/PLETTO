@@ -16,6 +16,7 @@ import {
    HiPlus as PlusIcon,
    HiHashtag as HashIcon,
    HiChevronRight as ChevronRightIcon,
+   HiChevronLeft as ChevronLeftIcon,
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import { createBoard } from "../../services/whiteboardService";
@@ -48,6 +49,7 @@ export default function Layout() {
    const [mobileOpen, setMobileOpen] = useState(false);
    const [notifOpen, setNotifOpen] = useState(false);
    const [createOpen, setCreateOpen] = useState(false);
+   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
    const [channels, setChannels] = useState([]);
    const [notifications, setNotifications] = useState(starterNotifications);
    const createRef = useRef(null);
@@ -176,28 +178,39 @@ export default function Layout() {
 
    const sidebarContent = (
       <>
-         <div className="flex items-center justify-between gap-2 border-b border-border/70 px-4 py-4">
-            <Link to="/" className="flex items-center gap-2">
-               <Logo />
+         <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-3">
+            <Link to="/" className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
+               <Logo withText={!sidebarCollapsed} className="h-10" />
             </Link>
-            <button onClick={() => setMobileOpen(false)} className="rounded-full border border-border p-2 text-muted-foreground transition hover:border-gold/40 hover:text-white md:hidden">
+            <button onClick={() => setSidebarCollapsed((value) => !value)} className="hidden rounded-full border border-white/10 p-2 text-muted-foreground transition hover:border-gold/30 hover:text-white md:inline-flex">
+               <ChevronLeftIcon className={`h-4 w-4 transition ${sidebarCollapsed ? "rotate-180" : ""}`} />
+            </button>
+            <button onClick={() => setMobileOpen(false)} className="rounded-full border border-white/10 p-2 text-muted-foreground transition hover:border-gold/30 hover:text-white md:hidden">
                <CloseIcon className="h-4 w-4" />
             </button>
          </div>
 
-         <div className="p-3">
-            <button
-               onClick={() => setPaletteOpen(true)}
-               className="flex w-full items-center gap-2 rounded-2xl border border-border bg-[rgba(255,255,255,0.04)] px-3 py-2 text-left text-sm text-muted-foreground transition hover:border-gold/40 hover:text-white"
-            >
-               <SearchIcon className="h-4 w-4 text-gold" />
-               Jump to anything
-               <span className="ml-auto rounded-full border border-border px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gold">⌘K</span>
-            </button>
-         </div>
+         {!sidebarCollapsed ? (
+            <div className="p-3">
+               <button
+                  onClick={() => setPaletteOpen(true)}
+                  className="flex w-full items-center gap-2 rounded-[16px] border border-white/10 bg-white/[0.03] px-3 py-2.5 text-left text-sm text-muted-foreground transition hover:border-gold/30 hover:bg-white/[0.05] hover:text-white"
+               >
+                  <SearchIcon className="h-4 w-4 text-gold" />
+                  Jump to anything
+                  <span className="ml-auto rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gold">⌘K</span>
+               </button>
+            </div>
+         ) : (
+            <div className="flex justify-center p-3">
+               <button onClick={() => setPaletteOpen(true)} className="grid h-10 w-10 place-items-center rounded-[14px] border border-white/10 bg-white/[0.03] text-gold transition hover:border-gold/30 hover:bg-white/[0.05]">
+                  <SearchIcon className="h-4 w-4" />
+               </button>
+            </div>
+         )}
 
          <nav className="flex-1 space-y-1 overflow-y-auto px-2 pb-3">
-            <div className="px-2 pb-2 pt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Workspace</div>
+            {!sidebarCollapsed ? <div className="px-2 pb-2 pt-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70">Workspace</div> : null}
             {navItems.map((item) => {
                const Icon = item.icon;
                const active = location.pathname.startsWith(item.to);
@@ -205,81 +218,94 @@ export default function Layout() {
                   <Link
                      key={item.to}
                      to={item.to}
-                     className={`flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-sm transition ${active ? "border-gold/30 bg-[rgba(248,181,0,0.12)] text-white" : "border-transparent text-muted-foreground hover:border-border hover:bg-[rgba(255,255,255,0.04)] hover:text-white"}`}
+                     title={sidebarCollapsed ? item.label : undefined}
+                     className={`flex items-center rounded-[14px] border px-3 py-2.25 text-sm transition ${active ? "border-gold/30 bg-[rgba(245,181,50,0.12)] text-white shadow-[0_0_0_1px_rgba(245,181,50,0.12)]" : "border-transparent text-muted-foreground hover:border-white/10 hover:bg-white/[0.04] hover:text-white"} ${sidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-2.5"}`}
                   >
                      <Icon className="h-4 w-4" />
-                     {item.label}
-                     {active ? <span className="ml-auto h-2 w-2 rounded-full bg-gold" /> : null}
+                     {!sidebarCollapsed ? item.label : null}
+                     {active && !sidebarCollapsed ? <span className="ml-auto h-2 w-2 rounded-full bg-gold" /> : null}
                   </Link>
                );
             })}
 
-            <div className="flex items-center justify-between px-2 pb-2 pt-6">
-               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Channels</div>
-               <button onClick={handleCreateChannel} className="rounded-full border border-border p-1 text-muted-foreground transition hover:border-gold/40 hover:text-gold">
-                  <PlusIcon className="h-3.5 w-3.5" />
-               </button>
-            </div>
+            {!sidebarCollapsed ? (
+               <div className="flex items-center justify-between px-2 pb-2 pt-5">
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70">Channels</div>
+                  <button onClick={handleCreateChannel} className="rounded-full border border-white/10 p-1 text-muted-foreground transition hover:border-gold/30 hover:text-gold">
+                     <PlusIcon className="h-3.5 w-3.5" />
+                  </button>
+               </div>
+            ) : null}
             {channels.length > 0 ? (
                channels.map((channel) => (
                   <button
                      key={channel._id}
                      type="button"
                      onClick={() => navigate(`/chat?channel=${channel._id}`)}
-                     className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-sm text-muted-foreground transition hover:bg-[rgba(255,255,255,0.04)] hover:text-white"
+                     title={sidebarCollapsed ? channel.name : undefined}
+                     className={`flex w-full items-center rounded-[14px] px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/[0.04] hover:text-white ${sidebarCollapsed ? "justify-center px-2" : "gap-2"}`}
                   >
                      <HashIcon className="h-3.5 w-3.5 text-gold/70" />
-                     {channel.name}
+                     {!sidebarCollapsed ? channel.name : null}
                   </button>
                ))
             ) : (
-               <div className="rounded-2xl border border-dashed border-border/70 bg-[rgba(255,255,255,0.03)] px-3 py-4 text-sm text-muted-foreground">
-                  Create your first channel to start collaborating.
-               </div>
+               !sidebarCollapsed ? (
+                  <div className="rounded-[14px] border border-dashed border-white/10 bg-white/[0.03] px-3 py-4 text-sm text-muted-foreground">
+                     Create your first channel to start collaborating.
+                  </div>
+               ) : null
             )}
          </nav>
 
-         <div className="border-t border-border/70 p-3">
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-[rgba(255,255,255,0.04)] p-3">
+         <div className="border-t border-white/10 p-3">
+            <div className={`flex items-center rounded-[16px] border border-white/10 bg-white/[0.035] p-3 ${sidebarCollapsed ? "justify-center" : "gap-3"}`}>
                <Link to="/profile" className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-gold text-[11px] font-semibold text-[var(--noir-900)]">
                   {initials}
                </Link>
-               <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-white">{user?.name || "You"}</div>
-                  <div className="truncate text-xs text-muted-foreground">{user?.email}</div>
-               </div>
-               <button onClick={handleSignOut} className="rounded-full border border-border p-2 text-muted-foreground transition hover:border-gold/40 hover:text-gold">
-                  <LogoutIcon className="h-4 w-4" />
-               </button>
+               {!sidebarCollapsed ? (
+                  <>
+                     <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold text-white">{user?.name || "You"}</div>
+                        <div className="truncate text-xs text-muted-foreground">{user?.email}</div>
+                     </div>
+                     <button onClick={handleSignOut} className="rounded-full border border-white/10 p-2 text-muted-foreground transition hover:border-gold/30 hover:text-gold">
+                        <LogoutIcon className="h-4 w-4" />
+                     </button>
+                  </>
+               ) : null}
             </div>
          </div>
       </>
    );
 
    return (
-      <div className="flex min-h-screen bg-[radial-gradient(circle_at_bottom_right,rgba(248,181,0,0.1),transparent_30%),#020617] text-slate-100">
-         <aside className="hidden w-[250px] flex-col border-r border-border/70 bg-[rgba(2,6,23,0.95)] md:flex">
+      <div className="flex min-h-screen bg-[#030303] text-slate-100">
+         <aside className={`hidden flex-col border-r border-white/10 bg-[#050505]/95 md:flex ${sidebarCollapsed ? "w-[74px]" : "w-[256px]"}`}>
             {sidebarContent}
          </aside>
 
          {mobileOpen ? (
             <div className="fixed inset-0 z-50 flex md:hidden">
-               <div className="absolute inset-0 bg-[rgba(2,6,23,0.7)]" onClick={() => setMobileOpen(false)} />
-               <aside className="relative flex w-[280px] max-w-[85vw] flex-col border-r border-border/70 bg-[rgba(2,6,23,0.98)] animate-[fadeIn_180ms_ease-out]">
+               <div className="absolute inset-0 bg-[rgba(2,2,2,0.72)]" onClick={() => setMobileOpen(false)} />
+               <aside className="relative flex w-[280px] max-w-[85vw] flex-col border-r border-white/10 bg-[#060606] animate-[fadeIn_180ms_ease-out]">
                   {sidebarContent}
                </aside>
             </div>
          ) : null}
 
          <div className="flex min-w-0 flex-1 flex-col">
-            <header className="flex h-16 items-center gap-2 border-b border-border/70 bg-[rgba(2,6,23,0.76)] px-3 backdrop-blur-xl sm:px-5">
-               <button onClick={() => setMobileOpen(true)} className="rounded-full border border-border bg-[rgba(255,255,255,0.04)] p-2 text-muted-foreground transition hover:border-gold/40 hover:text-white md:hidden">
+            <header className="flex h-16 items-center gap-2 border-b border-white/10 bg-[#060606]/90 px-3 backdrop-blur-xl sm:px-5">
+               <button onClick={() => setSidebarCollapsed((value) => !value)} className="hidden rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-gold/30 hover:text-white md:inline-flex">
+                  <ChevronLeftIcon className={`h-4 w-4 transition ${sidebarCollapsed ? "rotate-180" : ""}`} />
+               </button>
+               <button onClick={() => setMobileOpen(true)} className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-gold/30 hover:text-white md:hidden">
                   <MenuIcon className="h-4 w-4" />
                </button>
 
                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-gold">
-                     <span>pletto</span>
+                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-gold">
+                     <span className="font-semibold">PLETTO</span>
                      {breadCrumbs.map((segment, index) => (
                         <span key={segment} className="flex items-center gap-2">
                            <ChevronRightIcon className="h-3 w-3" />
@@ -287,7 +313,7 @@ export default function Layout() {
                         </span>
                      ))}
                   </div>
-                  <h1 className="mt-1 text-lg font-semibold text-white">{title}</h1>
+                  <h1 className="mt-0.5 text-[1rem] font-semibold text-white">{title}</h1>
                </div>
 
                <div className="hidden items-center gap-2 md:flex">
@@ -295,12 +321,12 @@ export default function Layout() {
                </div>
 
                <div ref={notifRef} className="relative">
-                  <button onClick={() => setNotifOpen((value) => !value)} className="relative rounded-full border border-border bg-[rgba(255,255,255,0.04)] p-2 text-muted-foreground transition hover:border-gold/40 hover:text-white">
+                  <button onClick={() => setNotifOpen((value) => !value)} className="relative rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-gold/30 hover:text-white">
                      <BellIcon className="h-4 w-4" />
                      {unreadCount > 0 ? <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-semibold text-[var(--noir-900)]">{unreadCount}</span> : null}
                   </button>
                   {notifOpen ? (
-                     <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border bg-[rgba(2,6,23,0.96)] p-2 shadow-soft">
+                     <div className="absolute right-0 mt-2 w-80 rounded-[18px] border border-white/10 bg-[#070707] p-2 shadow-soft">
                         <div className="flex items-center justify-between px-2 py-2">
                            <div className="text-xs uppercase tracking-[0.2em] text-gold">Notifications</div>
                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -311,14 +337,14 @@ export default function Layout() {
                         {notifications.length > 0 ? (
                            <div className="space-y-2">
                               {notifications.map((notification) => (
-                                 <button key={notification.id} onClick={() => openNotification(notification)} className={`w-full rounded-2xl border px-3 py-3 text-left transition ${notification.read ? "border-border bg-[rgba(255,255,255,0.03)]" : "border-gold/30 bg-[rgba(248,181,0,0.08)]"}`}>
+                                 <button key={notification.id} onClick={() => openNotification(notification)} className={`w-full rounded-[14px] border px-3 py-3 text-left transition ${notification.read ? "border-white/10 bg-white/[0.03]" : "border-gold/30 bg-[rgba(245,181,50,0.08)]"}`}>
                                     <div className="text-sm font-medium text-white">{notification.title}</div>
                                     <div className="mt-1 text-xs text-muted-foreground">{notification.body}</div>
                                  </button>
                               ))}
                            </div>
                         ) : (
-                           <div className="rounded-2xl border border-dashed border-border/70 bg-[rgba(255,255,255,0.03)] px-3 py-5 text-center text-sm text-muted-foreground">
+                           <div className="rounded-[14px] border border-dashed border-white/10 bg-white/[0.03] px-3 py-5 text-center text-sm text-muted-foreground">
                               You are all caught up.
                            </div>
                         )}
@@ -327,17 +353,17 @@ export default function Layout() {
                </div>
 
                <div ref={createRef} className="relative">
-                  <button onClick={() => setCreateOpen((value) => !value)} className="rounded-full border border-border bg-[rgba(255,255,255,0.04)] p-2 text-muted-foreground transition hover:border-gold/40 hover:text-white">
+                  <button onClick={() => setCreateOpen((value) => !value)} className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-gold/30 hover:text-white">
                      <PlusIcon className="h-4 w-4" />
                   </button>
                   {createOpen ? (
-                     <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-[rgba(2,6,23,0.96)] p-2 shadow-soft">
+                     <div className="absolute right-0 mt-2 w-56 rounded-[18px] border border-white/10 bg-[#070707] p-2 shadow-soft">
                         {[
                            { label: "New document", action: handleCreateDoc },
                            { label: "New channel", action: handleCreateChannel },
                            { label: "New whiteboard", action: handleCreateBoard },
                         ].map((item) => (
-                           <button key={item.label} onClick={() => { item.action(); setCreateOpen(false); }} className="flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-sm text-muted-foreground transition hover:bg-[rgba(248,181,0,0.08)] hover:text-white">
+                           <button key={item.label} onClick={() => { item.action(); setCreateOpen(false); }} className="flex w-full items-center justify-between rounded-[14px] px-3 py-2.5 text-left text-sm text-muted-foreground transition hover:bg-[rgba(245,181,50,0.08)] hover:text-white">
                               <span>{item.label}</span>
                               <ChevronRightIcon className="h-4 w-4" />
                            </button>
@@ -355,7 +381,7 @@ export default function Layout() {
                </button>
             </header>
 
-            <main className="flex-1 overflow-auto p-4 sm:p-6">
+            <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-5">
                <Outlet />
             </main>
          </div>

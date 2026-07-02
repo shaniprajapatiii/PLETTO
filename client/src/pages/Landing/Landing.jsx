@@ -22,12 +22,12 @@ const sections = [
 export default function Landing() {
    return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.08),transparent_20%),#020617] text-slate-100">
-         <header className="sticky top-0 z-20 border-b border-border/70 bg-[rgba(2,6,23,0.85)] backdrop-blur-xl">
-            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6">
+         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#040404]/85 backdrop-blur-2xl">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
                <Link to="/" className="flex items-center gap-3 text-white">
                   <Logo className="h-10" />
                </Link>
-               <nav className="hidden items-center gap-8 lg:flex">
+               <nav className="hidden items-center gap-6 lg:flex">
                   {sections.map((section) => (
                      <a key={section.href} href={section.href} className="text-sm text-muted-foreground transition hover:text-white">
                         {section.label}
@@ -35,10 +35,10 @@ export default function Landing() {
                   ))}
                </nav>
                <div className="flex items-center gap-3">
-                  <Link to="/login" className="rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition hover:border-gold hover:text-white">
+                  <Link to="/login" className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-muted-foreground transition hover:border-gold/40 hover:text-white">
                      Login
                   </Link>
-                  <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-5 py-2 text-sm font-semibold text-[var(--noir-900)] shadow-gold transition hover:-translate-y-0.5">
+                  <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-5 py-2 text-sm font-semibold text-[var(--noir-900)] shadow-[0_12px_30px_rgba(245,181,50,0.18)] transition hover:-translate-y-0.5">
                      Get started <ArrowRight className="h-4 w-4" />
                   </Link>
                </div>
@@ -48,24 +48,24 @@ export default function Landing() {
          <main>
             <section className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
                <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.18),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.1),transparent_26%)]" />
-               <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
+               <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                   <div className="space-y-8">
                      <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-2 text-[11px] uppercase tracking-[0.3em] text-gold font-mono">
-                        Realtime team collaboration platform
+                        Realtime collaboration OS
                      </div>
                      <div className="max-w-2xl">
                         <h1 className="font-display text-5xl font-semibold leading-tight text-white sm:text-6xl">
-                           Build momentum with one <span className="text-gradient-gold">polished workspace</span>.
+                           The future of work, <span className="text-gradient-gold">designed to feel effortless</span>.
                         </h1>
                         <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
-                           PLETTO keeps docs, chat, whiteboards, and shared context in one synced experience so focused teams can move without the usual churn.
+                           PLETTO unifies docs, chat, boards, and live context into a calm, high-signal workspace built for fast-moving teams.
                         </p>
                      </div>
                      <div className="flex flex-col gap-4 sm:flex-row">
-                        <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-gold px-6 py-3 text-sm font-semibold text-[var(--noir-900)] shadow-gold transition hover:-translate-y-0.5">
+                        <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-gold px-6 py-3 text-sm font-semibold text-[var(--noir-900)] shadow-[0_16px_40px_rgba(245,181,50,0.2)] transition hover:-translate-y-0.5">
                            Start your workspace <ArrowRight className="h-4 w-4" />
                         </Link>
-                        <Link to="/login" className="inline-flex items-center justify-center rounded-2xl border border-border bg-[rgba(255,255,255,0.06)] px-6 py-3 text-sm text-white transition hover:border-gold">
+                        <Link to="/login" className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-3 text-sm text-white transition hover:border-gold/40">
                            Sign in
                         </Link>
                      </div>
@@ -76,7 +76,7 @@ export default function Landing() {
                            { label: "Shared boards", value: "Fast ideation" },
                            { label: "Focused chat", value: "Always synced" },
                         ].map((item) => (
-                           <div key={item.label} className="rounded-[1.3rem] border border-border bg-[rgba(255,255,255,0.05)] p-4 shadow-soft">
+                           <div key={item.label} className="rounded-[1.2rem] border border-white/10 bg-white/[0.035] p-4 shadow-[0_10px_35px_rgba(0,0,0,0.22)]">
                               <div className="text-sm uppercase tracking-[0.18em] text-gold font-semibold font-mono">{item.label}</div>
                               <p className="mt-2 text-sm text-muted-foreground">{item.value}</p>
                            </div>
@@ -86,7 +86,7 @@ export default function Landing() {
 
                   <div className="relative">
                      <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle,rgba(248,181,0,0.18),transparent_60%)] blur-3xl" />
-                     <div className="relative rounded-[2rem] border border-gold/20 bg-[rgba(2,6,23,0.78)] p-4 shadow-soft backdrop-blur-xl">
+                     <div className="relative rounded-[2rem] border border-white/10 bg-[#050505]/85 p-4 shadow-[0_25px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
                         <FeatureDiagram />
                      </div>
                   </div>
@@ -377,7 +377,7 @@ function CTA() {
 
 function Footer() {
    return (
-      <footer className="border-t border-border/70 py-10">
+      <footer className="border-t border-white/10 py-10">
          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 sm:px-6 md:flex-row md:items-center md:justify-between">
             <Logo />
             <div className="text-sm text-muted-foreground">© {new Date().getFullYear()} PLETTO Systems · Built for connected teams.</div>

@@ -5,14 +5,15 @@
 :root {
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #e2e8f0;
-  background-color: #020617;
-  --noir-900: #0f172a;
-  --noir-800: #141b2d;
-  --gold: #f8b500;
-  --gold-50: #fff7d6;
-  --border: rgba(255, 255, 255, 0.08);
-  --card: rgba(15, 23, 42, 0.75);
+  color: #f8fafc;
+  background-color: #030303;
+  --noir-900: #050505;
+  --noir-800: #0d0d0d;
+  --gold: #f5b532;
+  --gold-50: #fff1c2;
+  --border: rgba(255, 255, 255, 0.1);
+  --card: rgba(255, 255, 255, 0.035);
+  --panel: rgba(255, 255, 255, 0.05);
   --muted: rgba(226, 232, 240, 0.72);
 }
 
@@ -27,8 +28,14 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top left, rgba(248, 181, 0, 0.1), transparent 25%), radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.08), transparent 18%), #020617;
-  color: #e2e8f0;
+  background-color: #030303;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at top left, rgba(245, 181, 50, 0.14), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 20%);
+  background-size: 64px 64px, 64px 64px, auto, auto;
+  color: #f8fafc;
 }
 
 body, input, button, textarea, select {
@@ -67,7 +74,7 @@ button {
 }
 
 .shadow-soft {
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3);
 }
 
 .border-border {

@@ -4,7 +4,6 @@ import { useSearchParams } from "react-router-dom";
 import { HiHashtag, HiPlus, HiSparkles, HiUsers } from "react-icons/hi";
 import { createChannel, getChannels, getMessages } from "../../services/chatService";
 import { useAuth } from "../../context/AuthContext";
-import { PageShell } from "../../components/common/PageShell";
 
 export default function Chat() {
    const { workspace } = useAuth();
@@ -139,78 +138,95 @@ export default function Chat() {
    };
 
    return (
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-         <PageShell title="Workspace rooms" subtitle="Create rooms for every focus area and drop in instantly." compact className="p-5 sm:p-6">
-            <form onSubmit={handleCreate} className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
-               <label className="flex flex-1 items-center gap-2 rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-3 py-2.5 text-sm text-muted-foreground">
-                  <HiPlus className="h-4 w-4 text-gold" />
-                  <input
-                     className="w-full bg-transparent text-sm text-white outline-none"
-                     value={name}
-                     onChange={(e) => setName(e.target.value)}
-                     placeholder="New channel name"
-                  />
-               </label>
-               <button className="rounded-[1.2rem] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
-                  Create
+      <div className="grid gap-5 2xl:grid-cols-[300px_minmax(0,1fr)]">
+         <div className="rounded-[24px] border border-white/10 bg-[#060606]/85 p-4 shadow-[0_16px_50px_rgba(0,0,0,0.24)]">
+            <div className="flex items-center justify-between gap-3">
+               <div>
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Rooms</div>
+                  <div className="mt-1 text-lg font-semibold text-white">Channels</div>
+               </div>
+               <button className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm font-medium text-gold">
+                  <HiPlus className="h-4 w-4" />
+                  New
+               </button>
+            </div>
+
+            <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-2 rounded-[18px] border border-white/10 bg-white/[0.03] p-3">
+               <input
+                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-muted-foreground"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Create a room"
+               />
+               <button className="rounded-[14px] bg-gradient-gold px-4 py-2 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
+                  Create room
                </button>
             </form>
 
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2">
                {channels.map((channel) => (
                   <button
                      key={channel._id}
                      type="button"
                      onClick={() => selectChannel(channel)}
-                     className={`w-full rounded-[1.2rem] border px-4 py-4 text-left transition ${activeChannel?._id === channel._id ? "border-gold bg-[rgba(248,181,0,0.12)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
+                     className={`flex w-full items-center gap-3 rounded-[16px] border px-3 py-3 text-left transition ${activeChannel?._id === channel._id ? "border-gold/30 bg-[rgba(245,181,50,0.12)]" : "border-white/10 bg-white/[0.025] hover:border-gold/20 hover:bg-white/[0.04]"}`}
                   >
-                     <div className="flex items-center gap-3">
-                        <div className="grid h-12 w-12 place-items-center rounded-[1.1rem] bg-[rgba(248,181,0,0.14)] text-gold">
-                           <HiHashtag className="h-6 w-6" />
-                        </div>
-                        <div>
-                           <div className="font-semibold text-white">{channel.name}</div>
-                           <div className="text-xs text-muted-foreground">Created {new Date(channel.createdAt).toLocaleDateString()}</div>
-                        </div>
+                     <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[rgba(245,181,50,0.14)] text-gold">
+                        <HiHashtag className="h-5 w-5" />
+                     </div>
+                     <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium text-white">{channel.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">{new Date(channel.createdAt).toLocaleDateString()}</div>
                      </div>
                   </button>
                ))}
             </div>
-         </PageShell>
+         </div>
 
-         <PageShell title={activeChannel?.name || "Select a channel"} subtitle="Stay aligned with the team in one shared room." actions={<div className="rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-2 text-sm text-gold"><HiSparkles className="mr-2 inline h-4 w-4" />Realtime chat is running</div>} className="p-5 sm:p-6">
-            <div className="flex flex-wrap items-center gap-3 rounded-[1.2rem] border border-border/70 bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm text-muted-foreground">
+         <div className="flex min-h-[680px] flex-col rounded-[24px] border border-white/10 bg-[#060606]/85 p-4 shadow-[0_16px_50px_rgba(0,0,0,0.24)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+               <div>
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Active room</div>
+                  <div className="mt-1 text-xl font-semibold text-white">{activeChannel?.name || "Choose a room"}</div>
+               </div>
+               <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-gold">
+                  <HiSparkles className="h-4 w-4" />
+                  Realtime ready
+               </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-muted-foreground">
                <div className="flex items-center gap-2 text-gold">
                   <HiUsers className="h-4 w-4" />
                   Presence aware
                </div>
-               <div className="rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Live member sync</div>
+               <div className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Live sync</div>
                {isTyping ? <div className="text-sm text-white">A teammate is typing…</div> : <div>Messages sync instantly across your workspace.</div>}
             </div>
 
-            <div className="mt-5 min-h-[420px] rounded-[1.6rem] border border-border bg-[rgba(255,255,255,0.025)] p-5">
+            <div className="mt-4 flex-1 overflow-auto rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.025)] p-4">
                {messages.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                      {messages.map((msg) => (
-                        <div key={msg._id} className="rounded-[1.25rem] border border-border/70 bg-[rgba(255,255,255,0.06)] p-4">
+                        <div key={msg._id} className="rounded-[16px] border border-white/10 bg-[rgba(255,255,255,0.05)] p-4">
                            <div className="flex items-center gap-3">
                               <div className="text-sm font-semibold text-white">{msg.user?.name || "Unknown"}</div>
                               <span className="text-xs text-muted-foreground">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                            </div>
-                           <p className="mt-2 text-sm text-white">{msg.text}</p>
+                           <p className="mt-2 text-sm leading-6 text-white">{msg.text}</p>
                         </div>
                      ))}
                   </div>
                ) : (
-                  <div className="grid h-[330px] place-items-center text-center text-sm text-muted-foreground">
-                     {activeChannel ? "No messages yet. Start the discussion." : "Pick a channel or create a new room to begin."}
+                  <div className="grid h-full place-items-center text-center text-sm text-muted-foreground">
+                     {activeChannel ? "No messages yet. Start the conversation." : "Pick a room or create a new one to begin."}
                   </div>
                )}
             </div>
 
-            <form onSubmit={handleSend} className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <form onSubmit={handleSend} className="mt-4 flex flex-col gap-3 sm:flex-row">
                <input
-                  className="flex-1 rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none focus:border-gold"
+                  className="flex-1 rounded-[16px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none focus:border-gold/40"
                   placeholder="Type your message…"
                   value={message}
                   onChange={handleMessageChange}
@@ -218,14 +234,14 @@ export default function Chat() {
                />
                <button
                   type="submit"
-                  className="rounded-[1.2rem] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-[16px] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={!activeChannel || !message.trim()}
                >
                   Send
                </button>
             </form>
-            {error ? <div className="mt-4 rounded-[1.2rem] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
-         </PageShell>
+            {error ? <div className="mt-4 rounded-[16px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
+         </div>
       </div>
    );
 }

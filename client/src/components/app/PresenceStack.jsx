@@ -1,21 +1,36 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-
-const PRESENCE = [
-   { id: 1, name: "Mira", color: "#f8b500" },
-   { id: 2, name: "Kenji", color: "#22c55e" },
-   { id: 3, name: "Ada", color: "#38bdf8" },
-];
+import { getWorkspaceMembers } from "../../services/workspaceService";
 
 export function PresenceStack() {
    const { user } = useAuth();
+   const [members, setMembers] = useState([]);
+
+   useEffect(() => {
+      const loadMembers = async () => {
+         try {
+            const response = await getWorkspaceMembers();
+            setMembers(response.data.members || []);
+         } catch {
+            setMembers([]);
+         }
+      };
+
+      loadMembers();
+   }, []);
+
    const visible = useMemo(() => {
       const currentUser = user ? [{ id: user._id || "me", name: user.name || "You", color: "#ffffff" }] : [];
-      return [...currentUser, ...PRESENCE].slice(0, 4);
-   }, [user]);
+      const workspaceMembers = members.map((member) => ({
+         id: member._id || member.email || member.name,
+         name: member.name || member.email || "Member",
+         color: ["#f8b500", "#38bdf8", "#22c55e", "#f472b6"][Math.abs((member._id || member.email || "").length) % 4],
+      }));
+      return [...currentUser, ...workspaceMembers].slice(0, 4);
+   }, [members, user]);
 
    return (
-      <div className="flex items-center gap-2 rounded-full border border-border bg-[rgba(255,255,255,0.04)] px-3 py-2">
+      <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2">
          <div className="flex -space-x-2">
             {visible.map((person) => (
                <div
@@ -28,7 +43,7 @@ export function PresenceStack() {
                </div>
             ))}
          </div>
-         <div className="text-xs text-muted-foreground">{visible.length} online</div>
+         <div className="text-xs text-muted-foreground">{visible.length} active</div>
       </div>
    );
 }
