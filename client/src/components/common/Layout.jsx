@@ -20,7 +20,7 @@ import {
    HiStar as StarIcon,
    HiClock as ClockIcon,
    HiChevronDown as ChevronDownIcon,
-   HiEllipsisVertical as EllipsisIcon,
+   HiDotsVertical as EllipsisIcon,
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import { createBoard } from "../../services/whiteboardService";

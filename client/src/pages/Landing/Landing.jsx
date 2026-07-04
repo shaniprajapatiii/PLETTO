@@ -2,44 +2,45 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
    HiArrowRight as ArrowRight,
-   HiChip as Cpu,
-   HiGlobe as Globe,
-   HiLockClosed as Lock,
-   HiSparkles as Activity,
+   HiDocumentText,
+   HiChatAlt2,
+   HiViewBoards,
    HiWifi as Wifi,
-   HiLightningBolt as Zap,
+   HiShieldCheck,
+   HiCollection,
+   HiTrendingUp,
 } from "react-icons/hi";
 import { Logo } from "../../components/brand/Logo";
-import { LiveCursors } from "../../components/realtime/LiveCursors";
 
 const sections = [
    { label: "Product", href: "#product" },
-   { label: "Realtime", href: "#realtime" },
-   { label: "AI", href: "#ai" },
-   { label: "Infra", href: "#infra" },
+   { label: "Platform", href: "#platform" },
+   { label: "Workflow", href: "#workflow" },
+   { label: "Launch", href: "#launch" },
 ];
 
 export default function Landing() {
    return (
-      <div className="min-h-screen bg-[#020202] text-slate-100">
-         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#040404]/85 shadow-[0_10px_35px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+      <div className="relative min-h-screen overflow-x-hidden bg-[#080808] text-slate-100">
+         <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(245,184,74,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(245,184,74,0.06)_1px,transparent_1px)] bg-[size:44px_44px]" />
+         <header className="sticky top-0 z-20 border-b border-[#f5b84a]/15 bg-[#080808]/85 backdrop-blur-2xl">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
                <Link to="/" className="flex items-center gap-3 text-white">
                   <Logo className="h-10" />
                </Link>
                <nav className="hidden items-center gap-6 lg:flex">
                   {sections.map((section) => (
-                     <a key={section.href} href={section.href} className="text-sm text-muted-foreground transition hover:text-white">
+                     <a key={section.href} href={section.href} className="text-sm text-slate-400 transition hover:text-[#f5b84a]">
                         {section.label}
                      </a>
                   ))}
                </nav>
                <div className="flex items-center gap-3">
-                  <Link to="/login" className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-muted-foreground transition hover:border-gold/40 hover:text-white">
+                  <Link to="/login" className="rounded-full border border-[#f5b84a]/20 bg-[#121212]/80 px-4 py-2 text-sm text-slate-300 transition hover:border-[#f5b84a]/45 hover:text-white">
                      Login
                   </Link>
-                  <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-5 py-2 text-sm font-semibold text-[var(--noir-900)] shadow-[0_12px_30px_rgba(245,181,50,0.18)] transition hover:-translate-y-0.5">
-                     Get started <ArrowRight className="h-4 w-4" />
+                  <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f5b84a] via-[#eeb84f] to-[#c9870e] px-5 py-2 text-sm font-semibold text-[#140d03] shadow-[0_16px_40px_rgba(245,184,74,0.18)] transition hover:-translate-y-0.5">
+                     Start free <ArrowRight className="h-4 w-4" />
                   </Link>
                </div>
             </div>
@@ -47,221 +48,274 @@ export default function Landing() {
 
          <main>
             <section className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
-               <div className="absolute inset-0 -z-10 bg-[#060606]" />
+               <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(245,184,74,0.16),transparent_40%),linear-gradient(135deg,#080808,#0f0f0f)]" />
                <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                   <div className="space-y-8">
-                     <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-2 text-[11px] uppercase tracking-[0.3em] text-gold font-mono shadow-[0_0_0_1px_rgba(245,181,50,0.08)]">
-                        Realtime collaboration OS
-                     </div>
                      <div className="max-w-2xl">
-                        <h1 className="font-display text-5xl font-semibold leading-tight text-white sm:text-6xl">
-                           The future of work, <span className="text-gradient-gold">designed to feel effortless</span>.
+                        <h1 className="font-display text-5xl font-semibold leading-tight text-white sm:text-6xl lg:text-7xl">
+                           Create a workspace that feels <span className="text-[#f5b84a]">alive</span>.
                         </h1>
-                        <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
-                           PLETTO unifies docs, chat, boards, and live context into a calm, high-signal workspace built for fast-moving teams.
+                        <p className="mt-6 max-w-xl text-lg leading-8 text-slate-400">
+                           PLETTO brings docs, chat, boards, and live context together into one premium operating system for modern teams that ship with clarity.
                         </p>
                      </div>
                      <div className="flex flex-col gap-4 sm:flex-row">
-                        <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-gold px-6 py-3 text-sm font-semibold text-[var(--noir-900)] shadow-[0_16px_40px_rgba(245,181,50,0.2)] transition hover:-translate-y-0.5">
-                           Start your workspace <ArrowRight className="h-4 w-4" />
+                        <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f5b84a] via-[#eeb84f] to-[#c9870e] px-6 py-3 text-sm font-semibold text-[#140d03] shadow-[0_20px_50px_rgba(245,184,74,0.2)] transition hover:-translate-y-0.5">
+                           Create workspace <ArrowRight className="h-4 w-4" />
                         </Link>
-                        <Link to="/login" className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-3 text-sm text-white transition hover:border-gold/40">
+                        <Link to="/login" className="inline-flex items-center justify-center rounded-2xl border border-[#f5b84a]/20 bg-[#121212]/80 px-6 py-3 text-sm text-white transition hover:border-[#f5b84a]/45">
                            Sign in
                         </Link>
                      </div>
-
                      <div className="grid gap-4 sm:grid-cols-3">
                         {[
-                           { label: "Realtime docs", value: "Live editing" },
-                           { label: "Shared boards", value: "Fast ideation" },
-                           { label: "Focused chat", value: "Always synced" },
+                           { label: "Live sync", value: "Sub-40ms" },
+                           { label: "Team scale", value: "Unlimited" },
+                           { label: "Security", value: "Enterprise" },
                         ].map((item) => (
-                           <div key={item.label} className="rounded-[1.2rem] border border-white/10 bg-[rgba(255,255,255,0.045)] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.24)] backdrop-blur-xl">
-                              <div className="text-sm uppercase tracking-[0.18em] text-gold font-semibold font-mono">{item.label}</div>
-                              <p className="mt-2 text-sm text-muted-foreground">{item.value}</p>
+                           <div key={item.label} className="rounded-2xl border border-[#f5b84a]/15 bg-[#121212]/90 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
+                              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{item.label}</div>
+                              <div className="mt-1 text-lg font-semibold text-white">{item.value}</div>
                            </div>
                         ))}
                      </div>
                   </div>
-
                   <div className="relative">
-                     <div className="absolute inset-0 rounded-[2rem] bg-[#0a0a0a]" />
-                     <div className="relative rounded-[2rem] border border-white/10 bg-[#050505]/85 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-                        <FeatureDiagram />
+                     <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle,rgba(245,184,74,0.16),transparent_60%)] blur-3xl" />
+                     <div className="relative rounded-[2rem] border border-[#f5b84a]/15 bg-[#0f0f0f]/90 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                        <AnimatedWorkspaceDiagram />
                      </div>
                   </div>
                </div>
             </section>
 
             <section id="product" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-               <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
-                  <div>
-                     <div className="text-[11px] uppercase tracking-[0.25em] text-gold font-mono">Unified workspace</div>
-                     <h2 className="mt-4 font-display text-4xl font-semibold leading-tight text-white sm:text-5xl">
-                        The same logic, look, and flow — now in your own MERN deployment.
+               <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+                  <div className="rounded-[2rem] border border-[#f5b84a]/15 bg-[#111111]/90 p-8 shadow-[0_24px_80px_rgba(0,0,0,0.3)]">
+                     <div className="text-[11px] uppercase tracking-[0.24em] text-[#f5b84a]">Unified workspace</div>
+                     <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">
+                        Replace fragmented tools with one calm, intelligent environment for every team decision.
                      </h2>
-                     <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-                        We rebuilt the exact `team-weave` landing experience in the client app while preserving your application flow and adding MongoDB, Express, and JWT-backed auth.
+                     <p className="mt-5 text-base leading-8 text-slate-400">
+                        Share knowledge, align on execution, and move from conception to delivery without leaving the flow of work.
                      </p>
+                     <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                        {[
+                           { title: "Real-time documents", body: "Edit with presence-aware context and automatic save." },
+                           { title: "Collaborative boards", body: "Turn ideas into structured direction without friction." },
+                           { title: "Native chat", body: "Keep decisions, ownership, and async context in one place." },
+                           { title: "Secure by design", body: "Role-based access, audit trails, and resilient infrastructure." },
+                        ].map((item) => (
+                           <div key={item.title} className="rounded-2xl border border-[#f5b84a]/15 bg-[#121212]/80 p-4">
+                              <div className="text-sm font-semibold text-white">{item.title}</div>
+                              <p className="mt-2 text-sm leading-6 text-slate-400">{item.body}</p>
+                           </div>
+                        ))}
+                     </div>
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4">
                      {[
-                        { icon: <Activity className="h-5 w-5" />, title: "Live collaboration", desc: "Shared presence, messages, and updates across every workspace." },
-                        { icon: <Zap className="h-5 w-5" />, title: "Fast sync", desc: "Optimized API and socket flows for team updates." },
-                        { icon: <Cpu className="h-5 w-5" />, title: "Realtime canvas", desc: "Diagram and sketch content with everyone in view." },
-                        { icon: <Lock className="h-5 w-5" />, title: "Secure auth", desc: "Workspace membership and secure token access." },
+                        { icon: <HiCollection className="h-5 w-5" />, title: "Flexible architecture", body: "Scale from small teams to global orgs without reworking your flow." },
+                        { icon: <HiTrendingUp className="h-5 w-5" />, title: "Fewer context switches", body: "Keep product plans, design notes, and conversations connected." },
+                        { icon: <HiShieldCheck className="h-5 w-5" />, title: "Reliability built in", body: "Fast recovery, observability, and audit-ready operations." },
                      ].map((item) => (
-                        <div key={item.title} className="rounded-3xl border border-white/10 bg-[rgba(255,255,255,0.045)] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-                           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(248,181,0,0.14)] text-gold">{item.icon}</div>
-                           <h3 className="mt-4 text-lg font-semibold text-white">{item.title}</h3>
-                           <p className="mt-2 text-sm text-muted-foreground">{item.desc}</p>
+                        <div key={item.title} className="rounded-[1.6rem] border border-[#f5b84a]/15 bg-gradient-to-br from-[#161616] to-[#101010] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+                           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f5b84a]/10 text-[#f7c96d]">{item.icon}</div>
+                           <div className="mt-4 text-lg font-semibold text-white">{item.title}</div>
+                           <p className="mt-2 text-sm leading-6 text-slate-400">{item.body}</p>
                         </div>
                      ))}
                   </div>
                </div>
             </section>
 
-            <RealtimeShowcase />
-            <AIShowcase />
-            <InfraSection />
-            <CTA />
+            <section id="platform" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+               <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+                  <div>
+                     <div className="text-[11px] uppercase tracking-[0.24em] text-[#f5b84a]">Realtime platform</div>
+                     <h2 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">
+                        A system designed for momentum.
+                     </h2>
+                     <p className="mt-5 max-w-xl text-base leading-8 text-slate-400">
+                        Every interaction moves through a fast, resilient layer of presence, sync, and event processing so your team can stay focused on the work instead of the tooling.
+                     </p>
+                     <div className="mt-8 space-y-4">
+                        {[
+                           { title: "Presence-aware collaboration", body: "See who is thinking, editing, and responding in real time." },
+                           { title: "Conflict-free updates", body: "Rapid, reliable changes without the usual coordination overhead." },
+                           { title: "Live context everywhere", body: "Messages, docs, and boards stay linked to the same source of truth." },
+                        ].map((item) => (
+                           <div key={item.title} className="flex gap-4 rounded-2xl border border-[#f5b84a]/15 bg-[#121212]/80 p-4">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f5b84a]/10 text-[#f7c96d]">
+                                 <Wifi className="h-5 w-5" />
+                              </div>
+                              <div>
+                                 <div className="font-semibold text-white">{item.title}</div>
+                                 <p className="mt-1 text-sm leading-6 text-slate-400">{item.body}</p>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+                  <div className="rounded-[2rem] border border-[#f5b84a]/15 bg-gradient-to-br from-[#151515] to-[#101010] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+                     <SyncDiagram />
+                  </div>
+               </div>
+            </section>
+
+            <section id="workflow" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+               <div className="rounded-[2rem] border border-[#f5b84a]/15 bg-[radial-gradient(circle_at_top,rgba(245,184,74,0.12),transparent_60%)] p-8 sm:p-10">
+                  <div className="max-w-3xl">
+                     <div className="text-[11px] uppercase tracking-[0.24em] text-[#f5b84a]">Workflow</div>
+                     <h2 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">
+                        Move from concept to launch without losing momentum.
+                     </h2>
+                     <p className="mt-5 text-base leading-8 text-slate-400">
+                        Capture ideas, assign ownership, and turn them into execution plans in one place.
+                     </p>
+                  </div>
+                  <div className="mt-10 grid gap-4 lg:grid-cols-3">
+                     {[
+                        { title: "Plan", body: "Draft specs, collect context, and align teams quickly." },
+                        { title: "Build", body: "Bring product and engineering into the same live workspace." },
+                        { title: "Launch", body: "Share progress, respond fast, and keep momentum visible." },
+                     ].map((step, index) => (
+                        <div key={step.title} className="rounded-[1.6rem] border border-[#f5b84a]/15 bg-[#121212]/90 p-6 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
+                           <div className="text-sm font-semibold text-[#f7c96d]">0{index + 1}</div>
+                           <div className="mt-3 text-lg font-semibold text-white">{step.title}</div>
+                           <p className="mt-2 text-sm leading-6 text-slate-400">{step.body}</p>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+            </section>
+
+            <section id="launch" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+               <div className="rounded-[2rem] border border-[#f5b84a]/20 bg-gradient-to-br from-[#f5b84a]/10 to-[#0f0f0f] p-8 sm:p-10 text-center">
+                  <div className="text-[11px] uppercase tracking-[0.24em] text-[#f5b84a]">Ready when you are</div>
+                  <h2 className="mt-3 text-3xl font-semibold text-white sm:text-5xl">
+                     Create the operating system your team has been waiting for.
+                  </h2>
+                  <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-400">
+                     Start with a polished workspace that feels as strong as your product vision.
+                  </p>
+                  <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                     <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f5b84a] via-[#eeb84f] to-[#c9870e] px-7 py-3 text-sm font-semibold text-[#140d03] shadow-[0_20px_50px_rgba(245,184,74,0.2)] transition hover:-translate-y-0.5">
+                        Start free <ArrowRight className="h-4 w-4" />
+                     </Link>
+                     <Link to="/login" className="inline-flex items-center justify-center rounded-full border border-[#f5b84a]/20 bg-[#121212]/80 px-7 py-3 text-sm font-semibold text-white transition hover:border-[#f5b84a]/45">
+                        Sign in
+                     </Link>
+                  </div>
+               </div>
+            </section>
+
             <Footer />
          </main>
       </div>
    );
 }
 
-function FeatureDiagram() {
+function AnimatedWorkspaceDiagram() {
    return (
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-border bg-[rgba(255,255,255,0.06)] p-6">
-         <div className="absolute inset-0 grid-bg opacity-40" />
+      <div className="relative overflow-hidden rounded-[1.6rem] border border-[#f5b84a]/15 bg-[#121212]/95 p-6">
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,184,74,0.12),transparent_55%)]" />
          <div className="relative grid gap-4">
-            <div className="rounded-[1.4rem] border border-border/80 bg-[rgba(255,255,255,0.05)] p-5">
-               <div className="flex items-center justify-between gap-3">
-                  <div>
-                     <div className="text-[11px] uppercase tracking-[0.3em] text-gold font-mono">Workspace overview</div>
-                     <div className="mt-2 flex items-center gap-3 text-sm font-semibold text-white">
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(248,181,0,0.22)] text-gold">PA</span>
-                        <div>
-                           <div>PLETTO team</div>
-                           <div className="text-xs text-muted-foreground">4 active collaborators · Synced now</div>
-                        </div>
-                     </div>
-                  </div>
-                  <div className="rounded-full border border-gold/20 bg-[rgba(248,181,0,0.1)] px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-gold">
-                     Live
-                  </div>
+            <div className="flex items-center justify-between rounded-2xl border border-[#f5b84a]/20 bg-[#f5b84a]/10 px-4 py-3">
+               <div>
+                  <div className="text-[11px] uppercase tracking-[0.25em] text-[#f7c96d]">Live workspace</div>
+                  <div className="mt-1 text-sm font-semibold text-white">Context, collaboration, delivery</div>
+               </div>
+               <div className="rounded-full border border-[#f5b84a]/20 bg-[#0f0f0f]/90 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[#f7c96d]">
+                  Syncing
                </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-               <div className="rounded-[1.3rem] border border-border bg-[rgba(255,255,255,0.04)] p-5">
-                  <div className="text-sm font-semibold text-white">Today’s focus</div>
-                  <div className="mt-3 space-y-2 text-[13px] text-muted-foreground">
-                     <div className="rounded-2xl border border-border/60 bg-[rgba(255,255,255,0.03)] px-3 py-2">• Design review notes are updating in real time</div>
-                     <div className="rounded-2xl border border-border/60 bg-[rgba(255,255,255,0.03)] px-3 py-2">• Shared whiteboard ideas are syncing instantly</div>
-                     <div className="rounded-2xl border border-border/60 bg-[rgba(255,255,255,0.03)] px-3 py-2">• Chat threads stay connected to the workspace context</div>
+            <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
+               <div className="rounded-[1.4rem] border border-[#f5b84a]/15 bg-[#0f0f0f]/90 p-5">
+                  <div className="flex items-center gap-3">
+                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5b84a]/10 text-[#f7c96d]">
+                        <HiDocumentText className="h-5 w-5" />
+                     </div>
+                     <div>
+                        <div className="text-sm font-semibold text-white">Launch brief</div>
+                        <div className="text-xs text-slate-400">Updated by 4 collaborators</div>
+                     </div>
                   </div>
-               </div>
-               <div className="relative rounded-[1.3rem] border border-border bg-[rgba(255,255,255,0.03)] p-5">
-                  <div className="text-sm font-semibold text-white">Realtime presence</div>
-                  <div className="mt-4 flex items-center gap-3">
-                     {['A', 'K', 'M'].map((letter) => (
-                        <div key={letter} className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/30 bg-[rgba(248,181,0,0.14)] text-sm font-semibold text-gold">
-                           {letter}
+                  <div className="mt-4 space-y-2">
+                     {["A new onboarding flow", "Shared research notes", "AI-ready summaries"].map((item) => (
+                        <div key={item} className="rounded-2xl border border-[#f5b84a]/10 bg-[#161616]/80 px-3 py-2 text-sm text-slate-400">
+                           {item}
                         </div>
                      ))}
                   </div>
-                  <div className="mt-5 h-36 rounded-[1.2rem] bg-[rgba(255,255,255,0.02)] p-4 text-[12px] text-muted-foreground">
-                     <LiveCursors />
+               </div>
+               <div className="space-y-3">
+                  <div className="rounded-[1.4rem] border border-[#f5b84a]/15 bg-[#0f0f0f]/90 p-4">
+                     <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                        <HiChatAlt2 className="h-4 w-4 text-[#f7c96d]" />
+                        Team channels
+                     </div>
+                     <div className="mt-3 space-y-2">
+                        {['Design', 'Engineering', 'Launch'].map((channel) => (
+                           <div key={channel} className="rounded-2xl border border-[#f5b84a]/10 bg-[#161616]/80 px-3 py-2 text-sm text-slate-400">
+                              {channel}
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+                  <div className="rounded-[1.4rem] border border-[#f5b84a]/15 bg-[#0f0f0f]/90 p-4">
+                     <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                        <HiViewBoards className="h-4 w-4 text-[#f7c96d]" />
+                        Whiteboard
+                     </div>
+                     <div className="relative mt-4 h-24 rounded-[1.2rem] border border-[#f5b84a]/20 bg-[radial-gradient(circle_at_center,rgba(245,184,74,0.16),transparent_70%)]">
+                        <div className="absolute left-4 top-4 h-8 w-8 rounded-full border border-[#f5b84a]/30 bg-[#f5b84a]/10" />
+                        <div className="absolute right-6 top-8 h-12 w-12 rounded-2xl border border-[#f5b84a]/20 bg-[#f5b84a]/10" />
+                        <div className="absolute bottom-4 left-12 h-10 w-20 rounded-full border border-[#f5b84a]/20 bg-[#f5b84a]/10" />
+                     </div>
                   </div>
                </div>
             </div>
          </div>
       </div>
-   );
-}
-
-function SectionHeader({ eyebrow, title, sub }) {
-   return (
-      <div className="max-w-3xl">
-         <div className="text-[11px] uppercase tracking-[0.25em] text-gold font-mono">{eyebrow}</div>
-         <h2 className="mt-3 font-display text-3xl font-semibold leading-[1.05] text-white sm:text-5xl">{title}</h2>
-         <p className="mt-4 text-muted-foreground">{sub}</p>
-      </div>
-   );
-}
-
-function BentoCard({ icon, title, desc }) {
-   return (
-      <div className="group overflow-hidden rounded-3xl border border-white/10 bg-[rgba(255,255,255,0.045)] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-gold/40">
-         <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-[rgba(248,181,0,0.16)] text-gold">{icon}</div>
-         <div className="mt-4 text-lg font-semibold text-white">{title}</div>
-         <p className="mt-2 text-sm text-muted-foreground">{desc}</p>
-      </div>
-   );
-}
-
-function RealtimeShowcase() {
-   return (
-      <section id="realtime" className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24">
-         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <div>
-               <SectionHeader
-                  eyebrow="Realtime infrastructure"
-                  title={<>Sub-frame sync across <span className="text-gradient-gold">every region</span>.</>}
-                  sub="A global mesh of websocket gateways pushes operations through an in-app sync layer, so your presence and board state always stay aligned."
-               />
-               <div className="mt-8 space-y-4">
-                  {[
-                     { icon: <Wifi className="h-5 w-5" />, title: "Distributed presence", desc: "Heartbeats under 40ms and shared cursor state." },
-                     { icon: <Zap className="h-5 w-5" />, title: "Fast operation streams", desc: "Optimistic updates, backend event reconciliation." },
-                     { icon: <Activity className="h-5 w-5" />, title: "Self-healing sync", desc: "Conflict-free updates and automatic recovery." },
-                  ].map((feature) => (
-                     <div key={feature.title} className="flex gap-4 rounded-3xl border border-white/10 bg-[rgba(255,255,255,0.045)] p-5 shadow-[0_16px_48px_rgba(0,0,0,0.2)] backdrop-blur-xl">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(248,181,0,0.16)] text-gold">{feature.icon}</div>
-                        <div>
-                           <div className="font-semibold text-white">{feature.title}</div>
-                           <p className="text-sm text-muted-foreground">{feature.desc}</p>
-                        </div>
-                     </div>
-                  ))}
-               </div>
-            </div>
-            <div className="relative rounded-[2rem] border border-border bg-card/60 p-6 shadow-soft">
-               <div className="absolute inset-0 grid-bg opacity-40" />
-               <SyncDiagram />
-            </div>
-         </div>
-      </section>
    );
 }
 
 function SyncDiagram() {
-   const [radius, setRadius] = useState(95);
+   const [radius, setRadius] = useState(108);
 
    return (
-      <div className="relative aspect-square max-w-md mx-auto w-full overflow-hidden rounded-3xl border border-border bg-[rgba(255,255,255,0.04)]">
-         <div className="absolute inset-0 grid-bg opacity-50" />
-         <div className="absolute inset-0 grid place-items-center">
-            <div className="relative h-36 w-36 rounded-full border border-gold/30 bg-[rgba(248,181,0,0.12)]">
+      <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-[1.8rem] border border-[#f5b84a]/15 bg-[#121212]/95 p-5">
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,184,74,0.16),transparent_55%)]" />
+         <div className="absolute inset-0">
+            <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f5b84a]/20" />
+            <div className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f5b84a]/10" />
+            <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[#f5b84a]/30 to-[#c9870e]/30 blur-3xl" />
+         </div>
+         <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative h-24 w-24 rounded-full border border-[#f5b84a]/30 bg-[#f5b84a]/10 shadow-[0_0_40px_rgba(245,184,74,0.16)]">
                <div className="absolute inset-0 rounded-full animate-pulse-ring" />
-               <div className="absolute inset-6 rounded-full bg-gradient-gold shadow-gold" />
+               <div className="absolute inset-5 rounded-full bg-gradient-to-r from-[#f5b84a] to-[#c9870e]" />
             </div>
-            {['NYC', 'SFO', 'FRA', 'SYD', 'TYO', 'SAO'].map((label, index) => {
-               const angle = (index / 6) * Math.PI * 2;
-               const x = Math.cos(angle) * radius;
-               const y = Math.sin(angle) * radius;
-               return (
-                  <div
-                     key={label}
-                     className="absolute flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-2 text-[11px] text-muted-foreground"
-                     style={{ transform: `translate(${x}px, ${y}px)`, left: '50%', top: '50%' }}
-                  >
-                     <span className="h-2 w-2 rounded-full bg-gold" />
-                     {label}
-                  </div>
-               );
-            })}
+         </div>
+         {['Docs', 'Chat', 'Boards', 'AI', 'Apps', 'Teams'].map((label, index) => {
+            const angle = (index / 6) * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            return (
+               <div
+                  key={label}
+                  className="absolute flex items-center gap-2 rounded-full border border-[#f5b84a]/15 bg-[#0f0f0f]/90 px-3 py-2 text-[11px] font-medium text-slate-300"
+                  style={{ transform: `translate(${x}px, ${y}px)`, left: '50%', top: '50%' }}
+               >
+                  <span className="h-2 w-2 rounded-full bg-[#f7c96d]" />
+                  {label}
+               </div>
+            );
+         })}
+         <div className="absolute inset-0">
+            <div className="absolute left-1/2 top-1/2 h-[2px] w-full -translate-y-1/2 bg-gradient-to-r from-transparent via-[#f5b84a]/20 to-transparent" />
+            <div className="absolute left-1/2 top-1/2 h-full w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-[#f5b84a]/20 to-transparent" />
          </div>
          <ResizeWatcher onChange={setRadius} />
       </div>
@@ -270,7 +324,7 @@ function SyncDiagram() {
 
 function ResizeWatcher({ onChange }) {
    useEffect(() => {
-      const update = () => onChange(window.innerWidth >= 640 ? 125 : 90);
+      const update = () => onChange(window.innerWidth >= 640 ? 124 : 92);
       update();
       window.addEventListener("resize", update);
       return () => window.removeEventListener("resize", update);
@@ -278,109 +332,42 @@ function ResizeWatcher({ onChange }) {
    return null;
 }
 
-function AIShowcase() {
-   return (
-      <section id="ai" className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24">
-         <SectionHeader
-            eyebrow="AI collaboration"
-            title={<>An assistant that lives <span className="text-gradient-gold">inside your workspace</span>.</>}
-            sub="PLETTO surfaces relevant docs, chat history, and board context with an AI companion that understands your team flow."
-         />
-         <div className="mt-10 rounded-[2rem] border border-border bg-card/70 p-6 shadow-soft">
-            <div className="grid gap-6 lg:grid-cols-2">
-               <div className="space-y-3 rounded-3xl border border-border bg-[rgba(255,255,255,0.04)] p-6">
-                  {[
-                     { from: "you", text: "Summarize what was decided about the rollout." },
-                     { from: "ai", text: "Progressive rollout starts at 5% EU-West, owner Mira, full ramp by Nov 12." },
-                     { from: "you", text: "Draft a Slack update for #launch." },
-                     { from: "ai", text: "✨ Launch update — starting Wed 5% EU-West, owner @mira, full ramp by 11/12." },
-                  ].map((message, index) => (
-                     <div
-                        key={index}
-                        className={`rounded-3xl px-4 py-3 text-sm ${message.from === 'ai' ? 'bg-gradient-gold/15 text-white ml-auto' : 'bg-[rgba(255,255,255,0.05)] text-muted-foreground'}`}
-                     >
-                        {message.text}
-                     </div>
-                  ))}
-               </div>
-               <div className="space-y-4">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-gold font-mono">Retrieved context</div>
-                  {[
-                     { title: "q4-launch.md", line: "Decision: progressive rollout, EU-West first." },
-                     { title: "#launch · Mira", line: "I own the flag setup and metrics dash." },
-                     { title: "Meeting · Nov 4", line: "Target full ramp by Nov 12." },
-                     { title: "infra/flags.ts", line: "export const ROLLOUT_PCT = 0.05;" },
-                  ].map((item) => (
-                     <div key={item.title} className="rounded-3xl border border-border bg-[rgba(255,255,255,0.04)] p-4">
-                        <div className="flex items-center gap-2 text-xs text-white">
-                           <Activity className="h-3 w-3 text-gold" />
-                           <span className="font-mono">{item.title}</span>
-                        </div>
-                        <p className="mt-2 text-sm text-muted-foreground">{item.line}</p>
-                     </div>
-                  ))}
-               </div>
-            </div>
-         </div>
-      </section>
-   );
-}
-
-function InfraSection() {
-   return (
-      <section id="infra" className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24">
-         <SectionHeader
-            eyebrow="Built for scale"
-            title={<>Engineered like <span className="text-gradient-gold">infrastructure</span>, not a webapp.</>}
-            sub="Secure auth, auditing, storage, and global sync patterns make PLETTO ready for teams that need reliability by default."
-         />
-         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-               { icon: <Globe className="h-5 w-5" />, title: "Multi-region", desc: "Edge-ready architecture and failover." },
-               { icon: <Lock className="h-5 w-5" />, title: "E2E encryption", desc: "Protection for tokens, files, and events." },
-               { icon: <Activity className="h-5 w-5" />, title: "Observability", desc: "Logs, metrics, and health insights." },
-               { icon: <Cpu className="h-5 w-5" />, title: "Scale", desc: "Rooms, docs, and boards grow with your team." },
-            ].map((card) => (
-               <div key={card.title} className="rounded-3xl border border-border bg-card/70 p-6 transition hover:border-gold/40">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-[rgba(248,181,0,0.14)] text-gold">{card.icon}</div>
-                  <h3 className="mt-4 text-lg font-semibold text-white">{card.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{card.desc}</p>
-               </div>
-            ))}
-         </div>
-      </section>
-   );
-}
-
-function CTA() {
-   return (
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24">
-         <div className="relative overflow-hidden rounded-[2rem] border border-gold/30 bg-[rgba(255,255,255,0.04)] p-10 text-center">
-            <div className="absolute inset-0 grid-bg opacity-40" />
-            <div className="relative">
-               <h2 className="font-display text-4xl font-semibold text-white sm:text-5xl">
-                  Step into the <span className="text-gradient-gold">living workspace</span>.
-               </h2>
-               <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-                  Spin up your team's PLETTO in seconds. Bring your docs, channels, whiteboards and workspace memory into one polished experience.
-               </p>
-               <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                  <Link to="/register" className="inline-flex items-center gap-2 rounded-2xl bg-gradient-gold px-6 py-3 text-sm font-semibold text-[var(--noir-900)] shadow-gold transition hover:-translate-y-0.5">
-                     Launch workspace <ArrowRight className="h-4 w-4" />
-                  </Link>
-               </div>
-            </div>
-         </div>
-      </section>
-   );
-}
-
 function Footer() {
    return (
-      <footer className="border-t border-white/10 py-10">
-         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 sm:px-6 md:flex-row md:items-center md:justify-between">
-            <Logo />
-            <div className="text-sm text-muted-foreground">© {new Date().getFullYear()} PLETTO Systems · Built for connected teams.</div>
+      <footer className="border-t border-[#f5b84a]/15 bg-gradient-to-b from-[#121212]/80 to-transparent py-12 sm:py-16">
+         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-8 md:grid-cols-4 md:gap-10">
+               <div className="md:col-span-2">
+                  <Logo className="mb-4 h-8" />
+                  <p className="max-w-sm text-sm leading-7 text-slate-400">
+                     A modern workspace for teams that value clarity, speed, and thoughtful execution.
+                  </p>
+               </div>
+               <div>
+                  <div className="mb-4 text-[11px] uppercase tracking-[0.24em] text-[#f5b84a]">Product</div>
+                  <div className="space-y-3 text-sm text-slate-400">
+                     <div><a href="#product" className="transition hover:text-white">Overview</a></div>
+                     <div><a href="#platform" className="transition hover:text-white">Platform</a></div>
+                     <div><a href="#workflow" className="transition hover:text-white">Workflow</a></div>
+                  </div>
+               </div>
+               <div>
+                  <div className="mb-4 text-[11px] uppercase tracking-[0.24em] text-[#f5b84a]">Company</div>
+                  <div className="space-y-3 text-sm text-slate-400">
+                     <div><a href="#launch" className="transition hover:text-white">Launch</a></div>
+                     <div><a href="#" className="transition hover:text-white">Privacy</a></div>
+                     <div><a href="#" className="transition hover:text-white">Terms</a></div>
+                  </div>
+               </div>
+            </div>
+            <div className="mt-10 flex flex-col gap-3 border-t border-[#f5b84a]/15 pt-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+               <div>© {new Date().getFullYear()} PLETTO. Built for connected teams.</div>
+               <div className="flex gap-5">
+                  <a href="#" className="transition hover:text-white">Status</a>
+                  <a href="#" className="transition hover:text-white">Contact</a>
+                  <a href="#" className="transition hover:text-white">Security</a>
+               </div>
+            </div>
          </div>
       </footer>
    );
