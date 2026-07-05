@@ -21,6 +21,8 @@ export default function Chat() {
    const [isTyping, setIsTyping] = useState(false);
    const [typingUsers, setTypingUsers] = useState([]);
    const socketRef = useRef(null);
+   const activeChannelRef = useRef(null);
+   const userRef = useRef(user);
    const typingTimeoutRef = useRef(null);
 
    const socket = useMemo(() => {
@@ -59,6 +61,14 @@ export default function Chat() {
    }, [activeChannel, channels, searchParams]);
 
    useEffect(() => {
+      activeChannelRef.current = activeChannel;
+   }, [activeChannel]);
+
+   useEffect(() => {
+      userRef.current = user;
+   }, [user]);
+
+   useEffect(() => {
       if (!socket) return;
       socketRef.current = socket;
 
@@ -67,7 +77,8 @@ export default function Chat() {
       });
 
       socket.on("newMessage", (newMessage) => {
-         if (!activeChannel || newMessage.channel !== activeChannel._id) return;
+         const currentChannel = activeChannelRef.current;
+         if (!currentChannel || newMessage.channel !== currentChannel._id) return;
          setMessages((current) => {
             if (current.some((item) => item._id === newMessage._id)) {
                return current;
@@ -77,8 +88,10 @@ export default function Chat() {
       });
 
       socket.on("typing", ({ channelId, isTyping, user: typingUser }) => {
-         if (!activeChannel || channelId !== activeChannel._id) return;
-         if (!typingUser || typingUser.id === user?._id) return;
+         const currentChannel = activeChannelRef.current;
+         const currentUser = userRef.current;
+         if (!currentChannel || channelId !== currentChannel._id) return;
+         if (!typingUser || typingUser.id === currentUser?._id) return;
 
          setTypingUsers((current) => {
             if (!isTyping) {
@@ -92,9 +105,12 @@ export default function Chat() {
       });
 
       return () => {
+         socket.off("connect_error");
+         socket.off("newMessage");
+         socket.off("typing");
          socket.disconnect();
       };
-   }, [socket, activeChannel, user]);
+   }, [socket]);
 
    useEffect(() => {
       if (!activeChannel || !socketRef.current) return;

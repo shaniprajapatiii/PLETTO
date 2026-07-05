@@ -17,10 +17,20 @@ export default function Docs() {
    const [remoteCursor, setRemoteCursor] = useState(null);
    const [collabMessage, setCollabMessage] = useState(null);
    const socketRef = useRef(null);
+   const activeDocRef = useRef(null);
+   const userRef = useRef(user);
 
    useEffect(() => {
       refreshDocs();
    }, []);
+
+   useEffect(() => {
+      activeDocRef.current = active;
+   }, [active]);
+
+   useEffect(() => {
+      userRef.current = user;
+   }, [user]);
 
    const socket = useMemo(() => {
       if (!workspace) return null;
@@ -37,7 +47,8 @@ export default function Docs() {
       socket.on("connect_error", (err) => setError(err.message || "Socket connection failed"));
 
       socket.on("docUpdate", ({ document, user: sender }) => {
-         if (!active || document._id !== active._id) return;
+         const currentDoc = activeDocRef.current;
+         if (!currentDoc || document._id !== currentDoc._id) return;
          setActive(document);
          setTitle(document.title);
          setContent(document.content);
@@ -46,14 +57,19 @@ export default function Docs() {
       });
 
       socket.on("docCursor", ({ docId, cursor, user: sender }) => {
-         if (!active || docId !== active._id || sender.id === user?._id) return;
+         const currentDoc = activeDocRef.current;
+         const currentUser = userRef.current;
+         if (!currentDoc || docId !== currentDoc._id || sender.id === currentUser?._id) return;
          setRemoteCursor({ name: sender.name, position: cursor });
       });
 
       return () => {
+         socket.off("connect_error");
+         socket.off("docUpdate");
+         socket.off("docCursor");
          socket.disconnect();
       };
-   }, [socket, active, user]);
+   }, [socket]);
 
    useEffect(() => {
       if (!socketRef.current || !active) return;

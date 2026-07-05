@@ -34,10 +34,20 @@ export default function Whiteboard() {
    const [activeShape, setActiveShape] = useState(null);
    const svgRef = useRef(null);
    const socketRef = useRef(null);
+   const activeBoardRef = useRef(null);
+   const userRef = useRef(user);
 
    useEffect(() => {
       refreshBoards();
    }, []);
+
+   useEffect(() => {
+      activeBoardRef.current = activeBoard;
+   }, [activeBoard]);
+
+   useEffect(() => {
+      userRef.current = user;
+   }, [user]);
 
    const socket = useMemo(() => {
       if (!workspace) return null;
@@ -54,14 +64,17 @@ export default function Whiteboard() {
       socket.on("connect_error", (err) => setError(err.message || "Socket connection failed"));
 
       socket.on("boardUpdate", ({ board, user: sender }) => {
-         if (!activeBoard || board._id !== activeBoard._id) return;
+         const currentBoard = activeBoardRef.current;
+         if (!currentBoard || board._id !== currentBoard._id) return;
          setActiveBoard(board);
          setBoardData(board.data || { strokes: [] });
          setRemoteMessage(`${sender.name || "A teammate"} updated the board`);
       });
 
       socket.on("boardCursor", ({ boardId, cursor, user: sender }) => {
-         if (!activeBoard || boardId !== activeBoard._id || sender.id === user?._id) return;
+         const currentBoard = activeBoardRef.current;
+         const currentUser = userRef.current;
+         if (!currentBoard || boardId !== currentBoard._id || sender.id === currentUser?._id) return;
          setRemoteCursors((current) => {
             const next = current.filter((cursorItem) => cursorItem.user.id !== sender.id);
             next.push({ user: sender, cursor });
@@ -70,9 +83,12 @@ export default function Whiteboard() {
       });
 
       return () => {
+         socket.off("connect_error");
+         socket.off("boardUpdate");
+         socket.off("boardCursor");
          socket.disconnect();
       };
-   }, [socket, activeBoard, user]);
+   }, [socket]);
 
    const refreshBoards = async () => {
       try {
