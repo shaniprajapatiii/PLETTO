@@ -10,6 +10,11 @@ const documentSchema = new mongoose.Schema(
          type: String,
          default: "",
       },
+      type: {
+         type: String,
+         enum: ["text", "markdown"],
+         default: "text",
+      },
       workspace: {
          type: mongoose.Schema.Types.ObjectId,
          ref: "Workspace",

@@ -9,6 +9,9 @@ const connectDB = require("./config/db");
 const WorkspaceMember = require("./models/WorkspaceMember");
 const Channel = require("./models/Channel");
 const Message = require("./models/Message");
+const Document = require("./models/Document");
+const Whiteboard = require("./models/Whiteboard");
+const User = require("./models/User");
 
 const PORT = Number(process.env.PORT) || 5000;
 
@@ -38,9 +41,13 @@ io.use(async (socket, next) => {
          return next(new Error("Workspace membership required"));
       }
 
+      const user = await User.findById(decoded.id).select("name avatar");
+
       socket.user = {
          id: decoded.id,
          workspaceId: membership.workspace?._id,
+         name: user?.name || "Unknown",
+         avatar: user?.avatar || "",
       };
       next();
    } catch (error) {
@@ -62,6 +69,19 @@ io.on("connection", (socket) => {
       }
    });
 
+   socket.on("typing", ({ channelId, isTyping }) => {
+      if (!channelId) return;
+      io.to(channelId).emit("typing", {
+         channelId,
+         isTyping: Boolean(isTyping),
+         user: {
+            id: socket.user.id,
+            name: socket.user.name,
+            avatar: socket.user.avatar,
+         },
+      });
+   });
+
    socket.on("sendMessage", async ({ channelId, text }) => {
       try {
          if (!text || !text.trim()) return;
@@ -81,6 +101,114 @@ io.on("connection", (socket) => {
       } catch (error) {
          console.error("Socket sendMessage error:", error.message);
       }
+   });
+
+   socket.on("joinDoc", async (docId) => {
+      try {
+         const document = await Document.findOne({ _id: docId, workspace: socket.user.workspaceId });
+         if (!document) {
+            return;
+         }
+         socket.join(`doc:${docId}`);
+         socket.emit("joinedDoc", docId);
+      } catch (error) {
+         console.error("Socket joinDoc error:", error.message);
+      }
+   });
+
+   socket.on("docUpdate", async ({ docId, title, content, type }) => {
+      try {
+         if (!docId) return;
+         const update = {};
+         if (title !== undefined) update.title = title;
+         if (content !== undefined) update.content = content;
+         if (type !== undefined) update.type = type;
+
+         const document = await Document.findOneAndUpdate(
+            { _id: docId, workspace: socket.user.workspaceId },
+            update,
+            { new: true },
+         );
+         if (!document) {
+            return;
+         }
+
+         io.to(`doc:${docId}`).emit("docUpdate", {
+            document,
+            user: {
+               id: socket.user.id,
+               name: socket.user.name,
+               avatar: socket.user.avatar,
+            },
+         });
+      } catch (error) {
+         console.error("Socket docUpdate error:", error.message);
+      }
+   });
+
+   socket.on("docCursor", ({ docId, cursor }) => {
+      if (!docId || !cursor) return;
+      socket.to(`doc:${docId}`).emit("docCursor", {
+         docId,
+         cursor,
+         user: {
+            id: socket.user.id,
+            name: socket.user.name,
+            avatar: socket.user.avatar,
+         },
+      });
+   });
+
+   socket.on("joinBoard", async (boardId) => {
+      try {
+         const board = await Whiteboard.findOne({ _id: boardId, workspace: socket.user.workspaceId });
+         if (!board) {
+            return;
+         }
+         socket.join(`board:${boardId}`);
+         socket.emit("joinedBoard", boardId);
+      } catch (error) {
+         console.error("Socket joinBoard error:", error.message);
+      }
+   });
+
+   socket.on("boardUpdate", async ({ boardId, data }) => {
+      try {
+         if (!boardId || data === undefined) return;
+
+         const board = await Whiteboard.findOneAndUpdate(
+            { _id: boardId, workspace: socket.user.workspaceId },
+            { data },
+            { new: true },
+         );
+         if (!board) {
+            return;
+         }
+
+         io.to(`board:${boardId}`).emit("boardUpdate", {
+            board,
+            user: {
+               id: socket.user.id,
+               name: socket.user.name,
+               avatar: socket.user.avatar,
+            },
+         });
+      } catch (error) {
+         console.error("Socket boardUpdate error:", error.message);
+      }
+   });
+
+   socket.on("boardCursor", ({ boardId, cursor }) => {
+      if (!boardId || !cursor) return;
+      socket.to(`board:${boardId}`).emit("boardCursor", {
+         boardId,
+         cursor,
+         user: {
+            id: socket.user.id,
+            name: socket.user.name,
+            avatar: socket.user.avatar,
+         },
+      });
    });
 
    socket.on("disconnect", () => {

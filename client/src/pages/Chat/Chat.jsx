@@ -3,19 +3,23 @@ import { io } from "socket.io-client";
 import { useSearchParams } from "react-router-dom";
 import { HiHashtag, HiPlus, HiSparkles, HiUsers } from "react-icons/hi";
 import { createChannel, getChannels, getMessages } from "../../services/chatService";
+import { getWorkspaceMembers } from "../../services/workspaceService";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Chat() {
-   const { workspace } = useAuth();
+   const { workspace, user } = useAuth();
    const [channels, setChannels] = useState([]);
    const [activeChannel, setActiveChannel] = useState(null);
    const [messages, setMessages] = useState([]);
    const [name, setName] = useState("");
    const [message, setMessage] = useState("");
+   const [members, setMembers] = useState([]);
+   const [selectedMemberId, setSelectedMemberId] = useState("");
    const [error, setError] = useState(null);
    const [socketError, setSocketError] = useState(null);
    const [searchParams, setSearchParams] = useSearchParams();
    const [isTyping, setIsTyping] = useState(false);
+   const [typingUsers, setTypingUsers] = useState([]);
    const socketRef = useRef(null);
    const typingTimeoutRef = useRef(null);
 
@@ -31,9 +35,18 @@ export default function Chat() {
    useEffect(() => {
       const initialize = async () => {
          await refreshChannels();
+         if (user) {
+            try {
+               const response = await getWorkspaceMembers();
+               const memberList = response.data.members || [];
+               setMembers(memberList.filter((member) => member.userId !== user._id));
+            } catch {
+               // ignore member loading failures for now
+            }
+         }
       };
       initialize();
-   }, []);
+   }, [user]);
 
    useEffect(() => {
       if (!activeChannel && channels.length) {
@@ -63,10 +76,25 @@ export default function Chat() {
          });
       });
 
+      socket.on("typing", ({ channelId, isTyping, user: typingUser }) => {
+         if (!activeChannel || channelId !== activeChannel._id) return;
+         if (!typingUser || typingUser.id === user?._id) return;
+
+         setTypingUsers((current) => {
+            if (!isTyping) {
+               return current.filter((item) => item.id !== typingUser.id);
+            }
+            if (current.some((item) => item.id === typingUser.id)) {
+               return current;
+            }
+            return [...current, typingUser].slice(-3);
+         });
+      });
+
       return () => {
          socket.disconnect();
       };
-   }, [socket, activeChannel]);
+   }, [socket, activeChannel, user]);
 
    useEffect(() => {
       if (!activeChannel || !socketRef.current) return;
@@ -102,11 +130,30 @@ export default function Chat() {
       e.preventDefault();
       if (!name.trim()) return;
       try {
-         await createChannel(name.trim());
+         await createChannel({ name: name.trim(), type: "public" });
          setName("");
          await refreshChannels();
       } catch (err) {
          setError(err.response?.data?.message || "Could not create channel");
+      }
+   };
+
+   const handleCreateDirect = async (e) => {
+      e.preventDefault();
+      if (!selectedMemberId || !user?._id) return;
+      try {
+         const res = await createChannel({
+            type: "dm",
+            members: [selectedMemberId, user._id],
+         });
+         const channel = res.data.channel;
+         setSelectedMemberId("");
+         await refreshChannels();
+         if (channel) {
+            setActiveChannel(channel);
+         }
+      } catch (err) {
+         setError(err.response?.data?.message || "Could not create direct chat");
       }
    };
 
@@ -120,11 +167,26 @@ export default function Chat() {
    const handleMessageChange = (e) => {
       const nextValue = e.target.value;
       setMessage(nextValue);
-      setIsTyping(Boolean(nextValue.trim()));
+      const typing = Boolean(nextValue.trim());
+      setIsTyping(typing);
+      if (socketRef.current && activeChannel) {
+         socketRef.current.emit("typing", {
+            channelId: activeChannel._id,
+            isTyping: typing,
+         });
+      }
       if (typingTimeoutRef.current) {
          window.clearTimeout(typingTimeoutRef.current);
       }
-      typingTimeoutRef.current = window.setTimeout(() => setIsTyping(false), 1200);
+      typingTimeoutRef.current = window.setTimeout(() => {
+         setIsTyping(false);
+         if (socketRef.current && activeChannel) {
+            socketRef.current.emit("typing", {
+               channelId: activeChannel._id,
+               isTyping: false,
+            });
+         }
+      }, 1200);
    };
 
    const handleSend = (e) => {
@@ -162,6 +224,26 @@ export default function Chat() {
                   Create room
                </button>
             </form>
+            {members.length > 0 && (
+               <form onSubmit={handleCreateDirect} className="mt-4 rounded-[18px] border border-white/10 bg-white/[0.03] p-3">
+                  <label className="mb-2 block text-sm font-medium text-white">Start a direct message</label>
+                  <select
+                     className="w-full rounded-[14px] border border-white/10 bg-transparent px-3 py-2 text-sm text-white outline-none"
+                     value={selectedMemberId}
+                     onChange={(e) => setSelectedMemberId(e.target.value)}
+                  >
+                     <option value="">Pick a teammate</option>
+                     {members.map((member) => (
+                        <option key={member.userId} value={member.userId}>
+                           {member.name || member.email}
+                        </option>
+                     ))}
+                  </select>
+                  <button type="submit" className="mt-3 w-full rounded-[14px] bg-gold px-4 py-2 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
+                     Start direct chat
+                  </button>
+               </form>
+            )}
 
             <div className="mt-4 space-y-2">
                {channels.map((channel) => (
@@ -201,7 +283,11 @@ export default function Chat() {
                   Presence aware
                </div>
                <div className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Live sync</div>
-               {isTyping ? <div className="text-sm text-white">A teammate is typing…</div> : <div>Messages sync instantly across your workspace.</div>}
+               {typingUsers.length > 0 ? (
+                  <div className="text-sm text-white">{typingUsers.map((user) => user.name).join(", ")} is typing…</div>
+               ) : (
+                  <div>Messages sync instantly across your workspace.</div>
+               )}
             </div>
 
             <div className="mt-4 flex-1 overflow-auto rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.025)] p-4">

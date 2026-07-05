@@ -28,6 +28,7 @@ exports.createDoc = async (req, res) => {
       const document = await Document.create({
          title: req.body.title || "Untitled document",
          content: req.body.content || "",
+         type: req.body.type === "markdown" ? "markdown" : "text",
          workspace: workspaceId,
          createdBy: req.user.id,
       });
@@ -44,9 +45,14 @@ exports.updateDoc = async (req, res) => {
       if (!workspaceId) {
          return res.status(403).json({ success: false, message: "Workspace access required" });
       }
+      const update = {};
+      if (req.body.title !== undefined) update.title = req.body.title;
+      if (req.body.content !== undefined) update.content = req.body.content;
+      if (req.body.type !== undefined) update.type = req.body.type === "markdown" ? "markdown" : "text";
+
       const document = await Document.findOneAndUpdate(
          { _id: id, workspace: workspaceId },
-         { ...req.body },
+         update,
          { new: true },
       );
       if (!document) {

@@ -6,6 +6,7 @@ exports.getMembers = async (req, res) => {
       const memberships = await WorkspaceMember.find({ workspace: req.user.workspaceId }).populate("user", "name email");
       const members = memberships.map((membership) => ({
          _id: membership._id,
+         userId: membership.user?._id,
          role: membership.role,
          name: membership.user?.name,
          email: membership.user?.email,

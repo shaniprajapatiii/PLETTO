@@ -1,19 +1,64 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { io } from "socket.io-client";
 import { HiCheck, HiDocumentText, HiLightningBolt, HiPlus, HiSparkles, HiUsers } from "react-icons/hi";
 import { createDoc, getDocs, updateDoc } from "../../services/docsService";
+import { useAuth } from "../../context/AuthContext";
 import { PageShell } from "../../components/common/PageShell";
 
 export default function Docs() {
+   const { workspace, user } = useAuth();
    const [docs, setDocs] = useState([]);
    const [active, setActive] = useState(null);
    const [content, setContent] = useState("");
    const [title, setTitle] = useState("");
+   const [docType, setDocType] = useState("text");
    const [error, setError] = useState(null);
    const [saving, setSaving] = useState(false);
+   const [remoteCursor, setRemoteCursor] = useState(null);
+   const [collabMessage, setCollabMessage] = useState(null);
+   const socketRef = useRef(null);
 
    useEffect(() => {
       refreshDocs();
    }, []);
+
+   const socket = useMemo(() => {
+      if (!workspace) return null;
+      return io("http://localhost:5000", {
+         auth: {
+            token: localStorage.getItem("token"),
+         },
+      });
+   }, [workspace]);
+
+   useEffect(() => {
+      if (!socket) return;
+      socketRef.current = socket;
+      socket.on("connect_error", (err) => setError(err.message || "Socket connection failed"));
+
+      socket.on("docUpdate", ({ document, user: sender }) => {
+         if (!active || document._id !== active._id) return;
+         setActive(document);
+         setTitle(document.title);
+         setContent(document.content);
+         setDocType(document.type || "text");
+         setCollabMessage(`${sender.name || "A teammate"} updated this document`);
+      });
+
+      socket.on("docCursor", ({ docId, cursor, user: sender }) => {
+         if (!active || docId !== active._id || sender.id === user?._id) return;
+         setRemoteCursor({ name: sender.name, position: cursor });
+      });
+
+      return () => {
+         socket.disconnect();
+      };
+   }, [socket, active, user]);
+
+   useEffect(() => {
+      if (!socketRef.current || !active) return;
+      socketRef.current.emit("joinDoc", active._id);
+   }, [active]);
 
    const refreshDocs = async () => {
       try {
@@ -24,20 +69,22 @@ export default function Docs() {
             setActive(fetchedDocs[0]);
             setTitle(fetchedDocs[0].title);
             setContent(fetchedDocs[0].content);
+            setDocType(fetchedDocs[0].type || "text");
          }
       } catch (err) {
          setError(err.response?.data?.message || "Failed to load documents");
       }
    };
 
-   const handleCreate = async () => {
+   const handleCreate = async (type = "text") => {
       try {
-         const res = await createDoc();
+         const res = await createDoc({ title: "Untitled document", content: "", type });
          const document = res.data.document;
          setDocs((prev) => [document, ...prev]);
          setActive(document);
          setTitle(document.title);
          setContent(document.content);
+         setDocType(document.type || "text");
       } catch (err) {
          setError(err.response?.data?.message || "Could not create document");
       }
@@ -47,8 +94,16 @@ export default function Docs() {
       if (!active) return;
       setSaving(true);
       try {
-         const res = await updateDoc(active._id, { title, content });
+         const res = await updateDoc(active._id, { title, content, type: docType });
          setActive(res.data.document);
+         if (socketRef.current) {
+            socketRef.current.emit("docUpdate", {
+               docId: active._id,
+               title,
+               content,
+               type: docType,
+            });
+         }
       } catch (err) {
          setError(err.response?.data?.message || "Could not save document");
       } finally {
@@ -60,7 +115,17 @@ export default function Docs() {
       setActive(doc);
       setTitle(doc.title);
       setContent(doc.content);
+      setDocType(doc.type || "text");
+      setRemoteCursor(null);
+      setCollabMessage(null);
+      if (socketRef.current) {
+         socketRef.current.emit("joinDoc", doc._id);
+      }
    };
+
+   useEffect(() => {
+      setRemoteCursor(null);
+   }, [active?._id]);
 
    const wordCount = useMemo(() => content.trim().split(/\s+/).filter(Boolean).length, [content]);
    const lastUpdated = active?.updatedAt ? new Date(active.updatedAt).toLocaleDateString() : "Not yet saved";
@@ -75,9 +140,14 @@ export default function Docs() {
                      Live collaboration ready
                   </div>
                </div>
-               <button onClick={handleCreate} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-gold text-[var(--noir-900)]">
-                  <HiPlus className="h-4 w-4" />
-               </button>
+               <div className="flex gap-2">
+                  <button onClick={() => handleCreate("text")} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-gold text-[var(--noir-900)]">
+                     <HiPlus className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => handleCreate("markdown")} className="rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-2 text-sm font-semibold text-gold">
+                     New markdown
+                  </button>
+               </div>
             </div>
             <div className="mt-6 space-y-3">
                {docs.length > 0 ? (
@@ -125,12 +195,46 @@ export default function Docs() {
                      onChange={(e) => setTitle(e.target.value)}
                      placeholder="Document title"
                   />
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                     <button
+                        type="button"
+                        onClick={() => setDocType("text")}
+                        className={`rounded-full px-4 py-2 ${docType === "text" ? "bg-gold text-[var(--noir-900)]" : "bg-white/[0.04] text-white"}`}
+                     >
+                        Text
+                     </button>
+                     <button
+                        type="button"
+                        onClick={() => setDocType("markdown")}
+                        className={`rounded-full px-4 py-2 ${docType === "markdown" ? "bg-gold text-[var(--noir-900)]" : "bg-white/[0.04] text-white"}`}
+                     >
+                        Markdown
+                     </button>
+                     <span className="text-xs text-muted-foreground">Current document: {docType === "markdown" ? "Markdown" : "Plain text"}</span>
+                  </div>
                   <textarea
                      className="min-h-[520px] w-full rounded-[1.6rem] border border-border bg-[rgba(255,255,255,0.05)] p-5 text-sm text-white outline-none focus:border-gold"
                      value={content}
                      onChange={(e) => setContent(e.target.value)}
-                     placeholder="Start writing your document..."
+                     placeholder={docType === "markdown" ? "Write markdown here..." : "Start writing your document..."}
+                     onSelect={(e) => {
+                        const textarea = e.target;
+                        if (socketRef.current && active) {
+                           socketRef.current.emit("docCursor", {
+                              docId: active._id,
+                              cursor: {
+                                 selectionStart: textarea.selectionStart,
+                                 selectionEnd: textarea.selectionEnd,
+                              },
+                           });
+                        }
+                     }}
                   />
+                  {remoteCursor ? (
+                     <div className="mt-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-3 text-sm text-gold">
+                        {remoteCursor.name} is editing around position {remoteCursor.position?.selectionStart || 0}.
+                     </div>
+                  ) : null}
                </div>
 
                <div className="space-y-4">
@@ -140,9 +244,9 @@ export default function Docs() {
                         Collaboration context
                      </div>
                      <div className="mt-4 space-y-3 text-sm text-muted-foreground">
-                        <div className="rounded-[1.1rem] border border-border/70 bg-[rgba(2,6,23,0.65)] px-3 py-2">Mina is reviewing the launch timeline.</div>
-                        <div className="rounded-[1.1rem] border border-border/70 bg-[rgba(2,6,23,0.65)] px-3 py-2">The latest notes are already synced to the workspace.</div>
-                        <div className="rounded-[1.1rem] border border-border/70 bg-[rgba(2,6,23,0.65)] px-3 py-2">AI can surface next actions from this draft.</div>
+                        <div className="rounded-[1.1rem] border border-border/70 bg-[rgba(2,6,23,0.65)] px-3 py-2">{collabMessage || "Your team can edit this document together in real time."}</div>
+                        <div className="rounded-[1.1rem] border border-border/70 bg-[rgba(2,6,23,0.65)] px-3 py-2">Document type: {docType === "markdown" ? "Markdown" : "Plain text"}</div>
+                        <div className="rounded-[1.1rem] border border-border/70 bg-[rgba(2,6,23,0.65)] px-3 py-2">Changes are shared to the workspace when you save.</div>
                      </div>
                   </div>
                   <div className="rounded-[1.5rem] border border-border bg-[rgba(255,255,255,0.04)] p-5">

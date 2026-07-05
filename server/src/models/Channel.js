@@ -6,6 +6,17 @@ const channelSchema = new mongoose.Schema(
          type: String,
          required: true,
       },
+      type: {
+         type: String,
+         enum: ["public", "dm"],
+         default: "public",
+      },
+      members: [
+         {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+         },
+      ],
       workspace: {
          type: mongoose.Schema.Types.ObjectId,
          ref: "Workspace",

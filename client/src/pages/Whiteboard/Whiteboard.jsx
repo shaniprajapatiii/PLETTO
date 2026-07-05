@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { io } from "socket.io-client";
 import {
    HiOutlinePresentationChartBar,
    HiPencil,
@@ -10,17 +11,21 @@ import {
    HiPlus,
 } from "react-icons/hi";
 import { createBoard, getBoards, updateBoard } from "../../services/whiteboardService";
+import { useAuth } from "../../context/AuthContext";
 import { PageShell } from "../../components/common/PageShell";
 
 const COLORS = ["#f8b500", "#38bdf8", "#22c55e", "#f43f5e", "#ffffff", "#0f172a"];
 
 export default function Whiteboard() {
+   const { workspace, user } = useAuth();
    const [boards, setBoards] = useState([]);
    const [activeBoard, setActiveBoard] = useState(null);
    const [name, setName] = useState("");
    const [boardData, setBoardData] = useState({ strokes: [] });
    const [error, setError] = useState(null);
    const [message, setMessage] = useState(null);
+   const [remoteMessage, setRemoteMessage] = useState(null);
+   const [remoteCursors, setRemoteCursors] = useState([]);
    const [tool, setTool] = useState("pen");
    const [color, setColor] = useState(COLORS[0]);
    const [size, setSize] = useState(4);
@@ -28,10 +33,46 @@ export default function Whiteboard() {
    const [activeStroke, setActiveStroke] = useState(null);
    const [activeShape, setActiveShape] = useState(null);
    const svgRef = useRef(null);
+   const socketRef = useRef(null);
 
    useEffect(() => {
       refreshBoards();
    }, []);
+
+   const socket = useMemo(() => {
+      if (!workspace) return null;
+      return io("http://localhost:5000", {
+         auth: {
+            token: localStorage.getItem("token"),
+         },
+      });
+   }, [workspace]);
+
+   useEffect(() => {
+      if (!socket) return;
+      socketRef.current = socket;
+      socket.on("connect_error", (err) => setError(err.message || "Socket connection failed"));
+
+      socket.on("boardUpdate", ({ board, user: sender }) => {
+         if (!activeBoard || board._id !== activeBoard._id) return;
+         setActiveBoard(board);
+         setBoardData(board.data || { strokes: [] });
+         setRemoteMessage(`${sender.name || "A teammate"} updated the board`);
+      });
+
+      socket.on("boardCursor", ({ boardId, cursor, user: sender }) => {
+         if (!activeBoard || boardId !== activeBoard._id || sender.id === user?._id) return;
+         setRemoteCursors((current) => {
+            const next = current.filter((cursorItem) => cursorItem.user.id !== sender.id);
+            next.push({ user: sender, cursor });
+            return next.slice(-4);
+         });
+      });
+
+      return () => {
+         socket.disconnect();
+      };
+   }, [socket, activeBoard, user]);
 
    const refreshBoards = async () => {
       try {
@@ -52,6 +93,11 @@ export default function Whiteboard() {
       setBoardData(board.data || { strokes: [] });
       setMessage(null);
       setError(null);
+      setRemoteMessage(null);
+      setRemoteCursors([]);
+      if (socketRef.current) {
+         socketRef.current.emit("joinBoard", board._id);
+      }
    };
 
    const handleCreate = async (e) => {
@@ -78,6 +124,12 @@ export default function Whiteboard() {
          setActiveBoard(res.data.board);
          setBoards((prev) => prev.map((board) => (board._id === res.data.board._id ? res.data.board : board)));
          setMessage("Board saved successfully.");
+         if (socketRef.current) {
+            socketRef.current.emit("boardUpdate", {
+               boardId: activeBoard._id,
+               data: res.data.board.data,
+            });
+         }
       } catch (err) {
          setError(err.response?.data?.message || "Unable to save the board right now.");
       }
@@ -234,13 +286,31 @@ export default function Whiteboard() {
                </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-[1.7rem] border border-border bg-[radial-gradient(circle_at_top_left,rgba(248,181,0,0.08),transparent_18%),#020617] p-3">
+            <div className="mt-6 overflow-hidden rounded-[1.7rem] border border-border bg-[radial-gradient(circle_at_top_left,rgba(248,181,0.08),transparent_18%),#020617] p-3">
+               {remoteMessage ? (
+                  <div className="mb-3 rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0.08)] p-3 text-sm text-gold">
+                     {remoteMessage}
+                  </div>
+               ) : null}
                <svg
                   ref={svgRef}
                   viewBox="0 0 1000 700"
                   className="h-[560px] w-full cursor-crosshair rounded-[1.3rem] border border-border/70 bg-[rgba(255,255,255,0.03)]"
                   onPointerDown={handlePointerDown}
-                  onPointerMove={handlePointerMove}
+                  onPointerMove={(event) => {
+                     handlePointerMove(event);
+                     if (socketRef.current && activeBoard) {
+                        const rect = svgRef.current.getBoundingClientRect();
+                        const point = {
+                           x: ((event.clientX - rect.left) / rect.width) * 1000,
+                           y: ((event.clientY - rect.top) / rect.height) * 700,
+                        };
+                        socketRef.current.emit("boardCursor", {
+                           boardId: activeBoard._id,
+                           cursor: point,
+                        });
+                     }
+                  }}
                   onPointerUp={handlePointerUp}
                   onPointerLeave={handlePointerUp}
                >
@@ -269,6 +339,14 @@ export default function Whiteboard() {
                            stroke={shape.color}
                            strokeWidth="2"
                         />
+                     ))}
+                     {remoteCursors.map((cursorItem) => (
+                        <g key={cursorItem.user.id}>
+                           <circle cx={cursorItem.cursor.x} cy={cursorItem.cursor.y} r="12" fill="rgba(248,181,0,0.7)" />
+                           <text x={cursorItem.cursor.x + 16} y={cursorItem.cursor.y + 4} fill="#ffffff" fontSize="18" fontWeight="600">
+                              {cursorItem.user.name?.split(" ")[0] || "Teammate"}
+                           </text>
+                        </g>
                      ))}
                   </g>
                </svg>
