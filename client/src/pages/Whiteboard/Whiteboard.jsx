@@ -51,7 +51,9 @@ export default function Whiteboard() {
 
    const socket = useMemo(() => {
       if (!workspace) return null;
-      return io("http://localhost:5000", {
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const socketBase = apiBase.replace(/\/api\/?$/, "");
+      return io(socketBase, {
          auth: {
             token: localStorage.getItem("token"),
          },

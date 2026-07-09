@@ -20,7 +20,30 @@ connectDB();
 const server = http.createServer(app);
 const io = new Server(server, {
    cors: {
-      origin: process.env.CLIENT_URL,
+      origin: (origin, callback) => {
+         if (!origin) {
+            callback(null, true);
+            return;
+         }
+
+         const allowedOrigins = [process.env.CLIENT_URL];
+         try {
+            const url = new URL(origin);
+            if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+               callback(null, true);
+               return;
+            }
+         } catch (error) {
+            // invalid origin format, fall back to explicit list
+         }
+
+         if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+         }
+
+         callback(new Error("Not allowed by CORS"));
+      },
       methods: ["GET", "POST"],
       credentials: true,
    },
