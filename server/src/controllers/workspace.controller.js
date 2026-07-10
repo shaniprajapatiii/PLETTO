@@ -3,13 +3,17 @@ const User = require("../models/User");
 
 exports.getMembers = async (req, res) => {
    try {
-      const memberships = await WorkspaceMember.find({ workspace: req.user.workspaceId }).populate("user", "name email");
+      const memberships = await WorkspaceMember.find({ workspace: req.user.workspaceId }).populate("user", "name email avatar bio color isActive");
       const members = memberships.map((membership) => ({
          _id: membership._id,
          userId: membership.user?._id,
          role: membership.role,
          name: membership.user?.name,
          email: membership.user?.email,
+         avatar: membership.user?.avatar,
+         bio: membership.user?.bio,
+         color: membership.user?.color,
+         isActive: membership.user?.isActive,
       }));
       res.json({ success: true, members });
    } catch (error) {

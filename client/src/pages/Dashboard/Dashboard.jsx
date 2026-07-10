@@ -118,6 +118,7 @@ export default function Dashboard() {
                      </div>
                      <div className="mt-4 grid gap-3">
                         <QuickLink to="/chat" title="Open chat" description="Jump into the active room and continue the conversation." />
+                        <QuickLink to="/people" title="Browse people" description="Open profiles and start a private message." />
                         <QuickLink to="/docs" title="Open docs" description="Review shared notes and the latest updates." />
                         <QuickLink to="/whiteboard" title="Open whiteboard" description="Move from discussion to visual planning." />
                      </div>

@@ -5,6 +5,7 @@ import {
    HiDocumentText as DocsIcon,
    HiChatAlt2 as ChatIcon,
    HiViewBoards as WhiteboardIcon,
+   HiUsers as PeopleIcon,
    HiUserCircle as ProfileIcon,
    HiCog as SettingsIcon,
    HiLogout as LogoutIcon,
@@ -28,11 +29,13 @@ import { createChannel, getChannels } from "../../services/chatService";
 import { Logo } from "../brand/Logo";
 import { CommandPalette } from "./CommandPalette";
 import { PresenceStack } from "../../components/app/PresenceStack";
+import { getAvatarSrc } from "../../utils/avatar";
 
 const navItems = [
    { label: "Dashboard", to: "/dashboard", icon: DashboardIcon },
    { label: "Documents", to: "/docs", icon: DocsIcon },
    { label: "Chat", to: "/chat", icon: ChatIcon },
+   { label: "People", to: "/people", icon: PeopleIcon },
    { label: "Whiteboard", to: "/whiteboard", icon: WhiteboardIcon },
    { label: "Profile", to: "/profile", icon: ProfileIcon },
    { label: "Settings", to: "/settings", icon: SettingsIcon },
@@ -81,7 +84,6 @@ export default function Layout() {
    const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications]);
    const title = navItems.find((item) => location.pathname.startsWith(item.to))?.label ?? "Workspace";
    const breadCrumbs = location.pathname.split("/").filter(Boolean);
-   const initials = (user?.name || user?.email || "?").slice(0, 2).toUpperCase();
 
    // Toggle favorite
    const toggleFavorite = (itemId) => {
@@ -146,7 +148,7 @@ export default function Layout() {
       const name = window.prompt("Channel name");
       if (!name?.trim()) return;
       try {
-         const response = await createChannel(name.trim());
+         const response = await createChannel({ name: name.trim(), type: "public" });
          const channel = response.data.channel || response.data.data;
          if (channel) {
             setChannels((current) => [channel, ...current]);
@@ -396,7 +398,7 @@ export default function Layout() {
                   to="/profile"
                   className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[10px] bg-gradient-gold text-sm font-bold text-[var(--noir-900)]"
                >
-                  {initials}
+                  <img src={getAvatarSrc({ avatar: user?.avatar, name: user?.name, email: user?.email })} alt={user?.name || "You"} className="h-full w-full rounded-[10px] object-cover" />
                </Link>
                {!sidebarCollapsed ? (
                   <>

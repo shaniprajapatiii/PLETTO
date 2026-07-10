@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getWorkspaceMembers } from "../../services/workspaceService";
+import { getAvatarSrc } from "../../utils/avatar";
 
 export function PresenceStack() {
    const { user } = useAuth();
@@ -36,10 +37,9 @@ export function PresenceStack() {
                <div
                   key={person.id}
                   title={person.name}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(2,6,23,0.85)] text-[10px] font-semibold text-[var(--noir-900)]"
-                  style={{ backgroundColor: person.color }}
+                  className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-[rgba(2,6,23,0.85)] bg-[rgba(245,181,50,0.1)] text-[10px] font-semibold text-[var(--noir-900)]"
                >
-                  {person.name.slice(0, 1)}
+                  <img src={getAvatarSrc(person)} alt={person.name} className="h-full w-full object-cover" />
                </div>
             ))}
          </div>
