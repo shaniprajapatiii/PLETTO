@@ -20,8 +20,11 @@ export function CommandPalette({ open, onOpenChange }) {
 
    useEffect(() => {
       if (!open) return;
-      setQuery("");
-      setSelectedIndex(0);
+      const resetState = () => {
+         setQuery("");
+         setSelectedIndex(0);
+      };
+      resetState();
    }, [open]);
 
    const filteredActions = useMemo(() => {

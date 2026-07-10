@@ -1,66 +1,116 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { io } from "socket.io-client";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { HiHashtag, HiPlus, HiSparkles, HiUsers } from "react-icons/hi";
-import { createChannel, getChannels, getMessages } from "../../services/chatService";
+import { HiHashtag, HiPlus, HiSparkles, HiUsers, HiTrash, HiPencil, HiEmojiHappy, HiXCircle, HiReply } from "react-icons/hi";
+import {
+   createChannel,
+   getChannels,
+   getMessages,
+   editMessage,
+   deleteMessage,
+   pinMessage,
+   unpinMessage,
+   getPinnedMessages,
+   addReaction,
+   removeReaction,
+} from "../../services/chatService";
 import { getWorkspaceMembers } from "../../services/workspaceService";
 import { useAuth } from "../../context/AuthContext";
+import { useSocket } from "../../context/SocketContext";
+
+const EMOJI_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "🎉", "✨"];
 
 export default function Chat() {
-   const { workspace, user } = useAuth();
+   const { user } = useAuth();
+   const socket = useSocket();
    const [channels, setChannels] = useState([]);
    const [activeChannel, setActiveChannel] = useState(null);
    const [messages, setMessages] = useState([]);
+   const [pinnedMessages, setPinnedMessages] = useState([]);
    const [name, setName] = useState("");
-   const [message, setMessage] = useState("");
+   const [messageText, setMessageText] = useState("");
    const [members, setMembers] = useState([]);
    const [selectedMemberId, setSelectedMemberId] = useState("");
    const [error, setError] = useState(null);
-   const [socketError, setSocketError] = useState(null);
+   const [, setSocketError] = useState(null);
    const [searchParams, setSearchParams] = useSearchParams();
-   const [isTyping, setIsTyping] = useState(false);
    const [typingUsers, setTypingUsers] = useState([]);
-   const socketRef = useRef(null);
+   const [onlineUsers, setOnlineUsers] = useState([]);
+   const [editingMessageId, setEditingMessageId] = useState(null);
+   const [editingText, setEditingText] = useState("");
+   const [showPinned, setShowPinned] = useState(false);
+   const [replyingTo, setReplyingTo] = useState(null);
+   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
+
+   const socketRef = useRef(socket);
    const activeChannelRef = useRef(null);
    const userRef = useRef(user);
    const typingTimeoutRef = useRef(null);
+   const messagesEndRef = useRef(null);
 
-   const socket = useMemo(() => {
-      if (!workspace) return null;
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-      const socketBase = apiBase.replace(/\/api\/?$/, "");
-      return io(socketBase, {
-         auth: {
-            token: localStorage.getItem("token"),
-         },
-      });
-   }, [workspace]);
+   const refreshChannels = async () => {
+      try {
+         const res = await getChannels();
+         const nextChannels = res.data.channels || [];
+         setChannels(nextChannels);
+         return nextChannels;
+      } catch (error) {
+         setError(error.response?.data?.message || "Failed to load channels");
+         return [];
+      }
+   };
+
+   const refreshMessages = async (channelId) => {
+      try {
+         const res = await getMessages(channelId);
+         setMessages(res.data.messages);
+      } catch {
+         setError("Failed to load messages");
+      }
+   };
+
+   const loadPinnedMessages = async (channelId) => {
+      try {
+         const res = await getPinnedMessages(channelId);
+         setPinnedMessages(res.data.pinnedMessages);
+      } catch {
+         // ignore
+      }
+   };
+
+   // Auto-scroll to latest message
+   const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+   };
+
+   useEffect(() => {
+      scrollToBottom();
+   }, [messages]);
 
    useEffect(() => {
       const initialize = async () => {
-         await refreshChannels();
+         const nextChannels = await refreshChannels();
+         if (!activeChannel && nextChannels.length) {
+            const channelId = searchParams.get("channel");
+            const fallback = nextChannels.find((channel) => channel._id === channelId) || nextChannels[0];
+            if (fallback) {
+               const nextParams = new URLSearchParams(searchParams);
+               nextParams.set("channel", fallback._id);
+               setSearchParams(nextParams);
+               setActiveChannel(fallback);
+            }
+         }
          if (user) {
             try {
                const response = await getWorkspaceMembers();
                const memberList = response.data.members || [];
                setMembers(memberList.filter((member) => member.userId !== user._id));
             } catch {
-               // ignore member loading failures for now
+               // ignore
             }
          }
       };
       initialize();
-   }, [user]);
-
-   useEffect(() => {
-      if (!activeChannel && channels.length) {
-         const channelId = searchParams.get("channel");
-         const fallback = channels.find((channel) => channel._id === channelId) || channels[0];
-         if (fallback) {
-            setActiveChannel(fallback);
-         }
-      }
-   }, [activeChannel, channels, searchParams]);
+   }, [activeChannel, searchParams, setSearchParams, user]);
 
    useEffect(() => {
       activeChannelRef.current = activeChannel;
@@ -74,10 +124,16 @@ export default function Chat() {
       if (!socket) return;
       socketRef.current = socket;
 
+      socket.on("connect", () => {
+         console.log("Socket connected");
+         socket.emit("userOnline");
+      });
+
       socket.on("connect_error", (err) => {
          setSocketError(err.message || "Socket connection failed");
       });
 
+      // Message events
       socket.on("newMessage", (newMessage) => {
          const currentChannel = activeChannelRef.current;
          if (!currentChannel || newMessage.channel !== currentChannel._id) return;
@@ -89,6 +145,47 @@ export default function Chat() {
          });
       });
 
+      socket.on("messageEdited", (editedMessage) => {
+         const currentChannel = activeChannelRef.current;
+         if (!currentChannel || editedMessage.channel !== currentChannel._id) return;
+         setMessages((current) =>
+            current.map((msg) => (msg._id === editedMessage._id ? editedMessage : msg))
+         );
+      });
+
+      socket.on("messageDeleted", ({ messageId }) => {
+         setMessages((current) => current.filter((msg) => msg._id !== messageId));
+      });
+
+      // Reaction events
+      socket.on("reactionAdded", (message) => {
+         setMessages((current) =>
+            current.map((msg) => (msg._id === message._id ? message : msg))
+         );
+      });
+
+      socket.on("reactionRemoved", (message) => {
+         setMessages((current) =>
+            current.map((msg) => (msg._id === message._id ? message : msg))
+         );
+      });
+
+      // Pin events
+      socket.on("messagePinned", (message) => {
+         setPinnedMessages((current) => [...current, message]);
+         setMessages((current) =>
+            current.map((msg) => (msg._id === message._id ? message : msg))
+         );
+      });
+
+      socket.on("messageUnpinned", ({ messageId }) => {
+         setPinnedMessages((current) => current.filter((msg) => msg._id !== messageId));
+         setMessages((current) =>
+            current.map((msg) => (msg._id === messageId ? { ...msg, isPinned: false } : msg))
+         );
+      });
+
+      // Typing events
       socket.on("typing", ({ channelId, isTyping, user: typingUser }) => {
          const currentChannel = activeChannelRef.current;
          const currentUser = userRef.current;
@@ -106,11 +203,40 @@ export default function Chat() {
          });
       });
 
+      // Presence events
+      socket.on("presenceUpdate", ({ userId, status, name, avatar, color }) => {
+         setOnlineUsers((current) => {
+            const filtered = current.filter((u) => u.id !== userId);
+            if (status === "online") {
+               return [...filtered, { id: userId, name, avatar, color, status }];
+            }
+            return filtered;
+         });
+      });
+
+      // User join/leave channel
+      socket.on("userJoinedChannel", ({ name }) => {
+         console.log(`${name} joined`);
+      });
+
+      socket.on("userLeftChannel", ({ name }) => {
+         console.log(`${name} left`);
+      });
+
       return () => {
+         socket.off("connect");
          socket.off("connect_error");
          socket.off("newMessage");
+         socket.off("messageEdited");
+         socket.off("messageDeleted");
+         socket.off("reactionAdded");
+         socket.off("reactionRemoved");
+         socket.off("messagePinned");
+         socket.off("messageUnpinned");
          socket.off("typing");
-         socket.disconnect();
+         socket.off("presenceUpdate");
+         socket.off("userJoinedChannel");
+         socket.off("userLeftChannel");
       };
    }, [socket]);
 
@@ -118,47 +244,39 @@ export default function Chat() {
       if (!activeChannel || !socketRef.current) return;
       socketRef.current.emit("joinChannel", activeChannel._id);
       refreshMessages(activeChannel._id);
+      loadPinnedMessages(activeChannel._id);
    }, [activeChannel]);
-
-   const refreshChannels = async () => {
-      try {
-         const res = await getChannels();
-         const nextChannels = res.data.channels || [];
-         setChannels(nextChannels);
-         if (!activeChannel && nextChannels.length) {
-            const channelId = searchParams.get("channel");
-            const fallback = nextChannels.find((channel) => channel._id === channelId) || nextChannels[0];
-            setActiveChannel(fallback);
-         }
-      } catch (err) {
-         setError(err.response?.data?.message || "Failed to load channels");
-      }
-   };
-
-   const refreshMessages = async (channelId) => {
-      try {
-         const res = await getMessages(channelId);
-         setMessages(res.data.messages);
-      } catch (err) {
-         setError(err.response?.data?.message || "Failed to load chat history");
-      }
-   };
 
    const handleCreate = async (e) => {
       e.preventDefault();
-      if (!name.trim()) return;
+      const trimmedName = name.trim();
+      if (!trimmedName) return;
+
+      setError(null);
       try {
-         await createChannel({ name: name.trim(), type: "public" });
+         const res = await createChannel({ name: trimmedName, type: "public" });
+         const createdChannel = res.data.channel;
          setName("");
-         await refreshChannels();
-      } catch (err) {
-         setError(err.response?.data?.message || "Could not create channel");
+
+         if (createdChannel) {
+            setChannels((current) => [createdChannel, ...current]);
+            setActiveChannel(createdChannel);
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set("channel", createdChannel._id);
+            setSearchParams(nextParams);
+         } else {
+            await refreshChannels();
+         }
+      } catch (error) {
+         setError(error.response?.data?.message || "Could not create channel");
       }
    };
 
    const handleCreateDirect = async (e) => {
       e.preventDefault();
       if (!selectedMemberId || !user?._id) return;
+
+      setError(null);
       try {
          const res = await createChannel({
             type: "dm",
@@ -166,17 +284,26 @@ export default function Chat() {
          });
          const channel = res.data.channel;
          setSelectedMemberId("");
-         await refreshChannels();
+
          if (channel) {
+            setChannels((current) => [channel, ...current]);
             setActiveChannel(channel);
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set("channel", channel._id);
+            setSearchParams(nextParams);
+         } else {
+            await refreshChannels();
          }
-      } catch (err) {
-         setError(err.response?.data?.message || "Could not create direct chat");
+      } catch (error) {
+         setError(error.response?.data?.message || "Could not create direct chat");
       }
    };
 
    const selectChannel = (channel) => {
       setActiveChannel(channel);
+      setShowPinned(false);
+      setEditingMessageId(null);
+      setReplyingTo(null);
       const nextParams = new URLSearchParams(searchParams);
       nextParams.set("channel", channel._id);
       setSearchParams(nextParams);
@@ -184,20 +311,20 @@ export default function Chat() {
 
    const handleMessageChange = (e) => {
       const nextValue = e.target.value;
-      setMessage(nextValue);
-      const typing = Boolean(nextValue.trim());
-      setIsTyping(typing);
+      setMessageText(nextValue);
+
       if (socketRef.current && activeChannel) {
+         const typing = Boolean(nextValue.trim());
          socketRef.current.emit("typing", {
             channelId: activeChannel._id,
             isTyping: typing,
          });
       }
+
       if (typingTimeoutRef.current) {
          window.clearTimeout(typingTimeoutRef.current);
       }
       typingTimeoutRef.current = window.setTimeout(() => {
-         setIsTyping(false);
          if (socketRef.current && activeChannel) {
             socketRef.current.emit("typing", {
                channelId: activeChannel._id,
@@ -207,23 +334,77 @@ export default function Chat() {
       }, 1200);
    };
 
-   const handleSend = (e) => {
+   const handleSendMessage = (e) => {
       e.preventDefault();
-      if (!message.trim() || !activeChannel || !socketRef.current) return;
+      if (!messageText.trim() || !activeChannel || !socketRef.current) return;
+
       socketRef.current.emit("sendMessage", {
          channelId: activeChannel._id,
-         text: message.trim(),
+         text: messageText.trim(),
       });
-      setMessage("");
+      setMessageText("");
+      setReplyingTo(null);
+   };
+
+   const handleEditMessage = async (messageId, newText) => {
+      try {
+         await editMessage(messageId, newText);
+         setEditingMessageId(null);
+         setEditingText("");
+      } catch {
+         setError("Failed to edit message");
+      }
+   };
+
+   const handleDeleteMessage = async (messageId) => {
+      try {
+         await deleteMessage(messageId);
+      } catch {
+         setError("Failed to delete message");
+      }
+   };
+
+   const handlePinMessage = async (messageId) => {
+      try {
+         await pinMessage(messageId);
+      } catch {
+         setError("Failed to pin message");
+      }
+   };
+
+   const handleUnpinMessage = async (messageId) => {
+      try {
+         await unpinMessage(messageId);
+      } catch {
+         setError("Failed to unpin message");
+      }
+   };
+
+   const handleAddReaction = async (messageId, emoji) => {
+      try {
+         await addReaction(messageId, emoji);
+         setShowEmojiPicker(null);
+      } catch {
+         console.error("Failed to add reaction");
+      }
+   };
+
+   const handleRemoveReaction = async (messageId, emoji) => {
+      try {
+         await removeReaction(messageId, emoji);
+      } catch {
+         console.error("Failed to remove reaction");
+      }
    };
 
    return (
       <div className="grid gap-5 2xl:grid-cols-[300px_minmax(0,1fr)]">
+         {/* Sidebar */}
          <div className="rounded-[24px] border border-white/10 bg-[#060606]/85 p-4 shadow-[0_16px_50px_rgba(0,0,0,0.24)]">
             <div className="flex items-center justify-between gap-3">
                <div>
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Rooms</div>
-                  <div className="mt-1 text-lg font-semibold text-white">Channels</div>
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Channels</div>
+                  <div className="mt-1 text-lg font-semibold text-white">Rooms</div>
                </div>
                <button className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm font-medium text-gold">
                   <HiPlus className="h-4 w-4" />
@@ -242,9 +423,10 @@ export default function Chat() {
                   Create room
                </button>
             </form>
+
             {members.length > 0 && (
                <form onSubmit={handleCreateDirect} className="mt-4 rounded-[18px] border border-white/10 bg-white/[0.03] p-3">
-                  <label className="mb-2 block text-sm font-medium text-white">Start a direct message</label>
+                  <label className="mb-2 block text-sm font-medium text-white">Direct message</label>
                   <select
                      className="w-full rounded-[14px] border border-white/10 bg-transparent px-3 py-2 text-sm text-white outline-none"
                      value={selectedMemberId}
@@ -258,7 +440,7 @@ export default function Chat() {
                      ))}
                   </select>
                   <button type="submit" className="mt-3 w-full rounded-[14px] bg-gold px-4 py-2 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
-                     Start direct chat
+                     Start chat
                   </button>
                </form>
             )}
@@ -269,7 +451,7 @@ export default function Chat() {
                      key={channel._id}
                      type="button"
                      onClick={() => selectChannel(channel)}
-                     className={`flex w-full items-center gap-3 rounded-[16px] border px-3 py-3 text-left transition ${activeChannel?._id === channel._id ? "border-gold/30 bg-[rgba(245,181,50,0.12)]" : "border-white/10 bg-white/[0.025] hover:border-gold/20 hover:bg-white/[0.04]"}`}
+                     className={`flex w-full items-center gap-3 rounded-[16px] border px-3 py-3 text-left transition ${activeChannel?._id === channel._id ? "border-gold/30 bg-[rgba(245,181,50,0.12)]" : "border-white/10 bg-white/[0.025] hover:border-gold/20"}`}
                   >
                      <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[rgba(245,181,50,0.14)] text-gold">
                         <HiHashtag className="h-5 w-5" />
@@ -283,68 +465,264 @@ export default function Chat() {
             </div>
          </div>
 
+         {/* Main Chat */}
          <div className="flex min-h-[680px] flex-col rounded-[24px] border border-white/10 bg-[#060606]/85 p-4 shadow-[0_16px_50px_rgba(0,0,0,0.24)]">
+            {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
                <div>
                   <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Active room</div>
                   <div className="mt-1 text-xl font-semibold text-white">{activeChannel?.name || "Choose a room"}</div>
                </div>
-               <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-gold">
-                  <HiSparkles className="h-4 w-4" />
-                  Realtime ready
+               <div className="flex gap-2">
+                  {pinnedMessages.length > 0 && (
+                     <button
+                        onClick={() => setShowPinned(!showPinned)}
+                        className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-gold hover:bg-[rgba(245,181,50,0.12)]"
+                     >
+                        📌 {pinnedMessages.length}
+                     </button>
+                  )}
+                  <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-gold">
+                     <HiSparkles className="h-4 w-4" />
+                     Realtime
+                  </div>
                </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-muted-foreground">
+            {/* Status */}
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm">
                <div className="flex items-center gap-2 text-gold">
                   <HiUsers className="h-4 w-4" />
-                  Presence aware
+                  {onlineUsers.length} online
                </div>
-               <div className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Live sync</div>
-               {typingUsers.length > 0 ? (
-                  <div className="text-sm text-white">{typingUsers.map((user) => user.name).join(", ")} is typing…</div>
-               ) : (
-                  <div>Messages sync instantly across your workspace.</div>
+               <div className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">
+                  Live sync
+               </div>
+               {typingUsers.length > 0 && (
+                  <div className="text-sm text-white">
+                     {typingUsers.map((u) => u.name).join(", ")} is typing…
+                  </div>
                )}
             </div>
 
-            <div className="mt-4 flex-1 overflow-auto rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.025)] p-4">
-               {messages.length > 0 ? (
-                  <div className="space-y-3">
-                     {messages.map((msg) => (
-                        <div key={msg._id} className="rounded-[16px] border border-white/10 bg-[rgba(255,255,255,0.05)] p-4">
-                           <div className="flex items-center gap-3">
-                              <div className="text-sm font-semibold text-white">{msg.user?.name || "Unknown"}</div>
-                              <span className="text-xs text-muted-foreground">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            {/* Pinned Messages Panel */}
+            {showPinned && pinnedMessages.length > 0 && (
+               <div className="mt-4 rounded-[16px] border border-gold/20 bg-[rgba(245,181,50,0.08)] p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                     <span className="font-semibold text-white">Pinned Messages</span>
+                     <button onClick={() => setShowPinned(false)} className="text-muted-foreground hover:text-white">
+                        <HiXCircle className="h-5 w-5" />
+                     </button>
+                  </div>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                     {pinnedMessages.map((msg) => (
+                        <div key={msg._id} className="rounded-[12px] border border-white/10 bg-white/[0.05] p-3">
+                           <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-medium text-gold">{msg.user?.name}</span>
+                              <button
+                                 onClick={() => handleUnpinMessage(msg._id)}
+                                 className="text-xs text-muted-foreground hover:text-white"
+                              >
+                                 Unpin
+                              </button>
                            </div>
-                           <p className="mt-2 text-sm leading-6 text-white">{msg.text}</p>
+                           <p className="mt-1 text-sm text-white">{msg.text}</p>
                         </div>
                      ))}
                   </div>
+               </div>
+            )}
+
+            {/* Messages */}
+            <div className="mt-4 flex-1 overflow-auto rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.025)] p-4">
+               {messages.length > 0 ? (
+                  <div className="space-y-3">
+                     {messages
+                        .filter((msg) => !msg.isDeleted)
+                        .map((msg) => (
+                           <div
+                              key={msg._id}
+                              className="group rounded-[16px] border border-white/10 bg-[rgba(255,255,255,0.05)] p-4 transition hover:border-gold/20 hover:bg-[rgba(255,255,255,0.08)]"
+                           >
+                              <div className="flex items-center justify-between gap-3">
+                                 <div className="flex items-center gap-3 flex-1">
+                                    <div className="text-sm font-semibold text-white">{msg.user?.name || "Unknown"}</div>
+                                    <span className="text-xs text-muted-foreground">
+                                       {new Date(msg.createdAt).toLocaleTimeString([], {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                       })}
+                                    </span>
+                                    {msg.isEdited && <span className="text-xs text-muted-foreground">(edited)</span>}
+                                    {msg.isPinned && <span className="text-xs text-gold">📌</span>}
+                                 </div>
+                                 <div className="hidden gap-2 group-hover:flex">
+                                    <button
+                                       onClick={() => handlePinMessage(msg._id)}
+                                       className="p-1 text-muted-foreground hover:text-gold"
+                                       title="Pin message"
+                                    >
+                                       📌
+                                    </button>
+                                    <button
+                                       onClick={() => setShowEmojiPicker(msg._id)}
+                                       className="p-1 text-muted-foreground hover:text-gold"
+                                       title="Add reaction"
+                                    >
+                                       <HiEmojiHappy className="h-4 w-4" />
+                                    </button>
+                                    {msg.user?._id === user?._id && (
+                                       <>
+                                          <button
+                                             onClick={() => {
+                                                setEditingMessageId(msg._id);
+                                                setEditingText(msg.text);
+                                             }}
+                                             className="p-1 text-muted-foreground hover:text-gold"
+                                             title="Edit"
+                                          >
+                                             <HiPencil className="h-4 w-4" />
+                                          </button>
+                                          <button
+                                             onClick={() => handleDeleteMessage(msg._id)}
+                                             className="p-1 text-muted-foreground hover:text-red-400"
+                                             title="Delete"
+                                          >
+                                             <HiTrash className="h-4 w-4" />
+                                          </button>
+                                       </>
+                                    )}
+                                 </div>
+                              </div>
+
+                              {/* Emoji picker */}
+                              {showEmojiPicker === msg._id && (
+                                 <div className="mt-2 flex gap-1 rounded-[12px] border border-white/10 bg-white/[0.05] p-2">
+                                    {EMOJI_REACTIONS.map((emoji) => (
+                                       <button
+                                          key={emoji}
+                                          onClick={() => handleAddReaction(msg._id, emoji)}
+                                          className="p-1 hover:bg-white/[0.1] rounded transition"
+                                       >
+                                          {emoji}
+                                       </button>
+                                    ))}
+                                    <button
+                                       onClick={() => setShowEmojiPicker(null)}
+                                       className="p-1 text-muted-foreground hover:text-white"
+                                    >
+                                       <HiXCircle className="h-4 w-4" />
+                                    </button>
+                                 </div>
+                              )}
+
+                              {/* Edit mode */}
+                              {editingMessageId === msg._id ? (
+                                 <form
+                                    onSubmit={(e) => {
+                                       e.preventDefault();
+                                       handleEditMessage(msg._id, editingText);
+                                    }}
+                                    className="mt-2 flex gap-2"
+                                 >
+                                    <input
+                                       type="text"
+                                       value={editingText}
+                                       onChange={(e) => setEditingText(e.target.value)}
+                                       className="flex-1 rounded-[12px] border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none"
+                                    />
+                                    <button
+                                       type="submit"
+                                       className="rounded-[12px] bg-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
+                                    >
+                                       Save
+                                    </button>
+                                    <button
+                                       type="button"
+                                       onClick={() => setEditingMessageId(null)}
+                                       className="rounded-[12px] border border-white/10 px-3 py-2 text-sm text-white"
+                                    >
+                                       Cancel
+                                    </button>
+                                 </form>
+                              ) : (
+                                 <>
+                                    <p className="mt-2 text-sm leading-6 text-white">{msg.text}</p>
+
+                                    {/* Reactions display */}
+                                    {msg.reactions && msg.reactions.length > 0 && (
+                                       <div className="mt-2 flex flex-wrap gap-1">
+                                          {msg.reactions.map((reaction) => (
+                                             <button
+                                                key={reaction.emoji}
+                                                onClick={() => {
+                                                   if (reaction.users?.some((u) => u._id === user?._id)) {
+                                                      handleRemoveReaction(msg._id, reaction.emoji);
+                                                   } else {
+                                                      handleAddReaction(msg._id, reaction.emoji);
+                                                   }
+                                                }}
+                                                className={`rounded-full px-2 py-1 text-xs flex items-center gap-1 transition ${
+                                                   reaction.users?.some((u) => u._id === user?._id)
+                                                      ? "border-gold/50 bg-[rgba(245,181,50,0.12)]"
+                                                      : "border border-white/10 bg-white/[0.05] hover:bg-white/[0.1]"
+                                                }`}
+                                                title={reaction.users?.map((u) => u.name).join(", ")}
+                                             >
+                                                {reaction.emoji} {reaction.users?.length || 0}
+                                             </button>
+                                          ))}
+                                       </div>
+                                    )}
+                                 </>
+                              )}
+                           </div>
+                        ))}
+                     <div ref={messagesEndRef} />
+                  </div>
                ) : (
                   <div className="grid h-full place-items-center text-center text-sm text-muted-foreground">
-                     {activeChannel ? "No messages yet. Start the conversation." : "Pick a room or create a new one to begin."}
+                     {activeChannel ? "No messages yet. Start the conversation." : "Pick a room to begin."}
                   </div>
                )}
             </div>
 
-            <form onSubmit={handleSend} className="mt-4 flex flex-col gap-3 sm:flex-row">
+            {/* Reply indicator */}
+            {replyingTo && (
+               <div className="mt-2 flex items-center justify-between rounded-[12px] border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2">
+                  <div className="flex items-center gap-2">
+                     <HiReply className="h-4 w-4 text-gold" />
+                     <span className="text-sm text-white">Replying to {replyingTo.user?.name}</span>
+                  </div>
+                  <button onClick={() => setReplyingTo(null)} className="text-muted-foreground hover:text-white">
+                     <HiXCircle className="h-4 w-4" />
+                  </button>
+               </div>
+            )}
+
+            {/* Message input */}
+            <form onSubmit={handleSendMessage} className="mt-4 flex flex-col gap-3 sm:flex-row">
                <input
                   className="flex-1 rounded-[16px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none focus:border-gold/40"
                   placeholder="Type your message…"
-                  value={message}
+                  value={messageText}
                   onChange={handleMessageChange}
                   disabled={!activeChannel}
                />
                <button
                   type="submit"
                   className="rounded-[16px] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={!activeChannel || !message.trim()}
+                  disabled={!activeChannel || !messageText.trim()}
                >
                   Send
                </button>
             </form>
-            {error ? <div className="mt-4 rounded-[16px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
+
+            {error && (
+               <div className="mt-4 rounded-[16px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+                  {error}
+               </div>
+            )}
          </div>
       </div>
    );

@@ -7,15 +7,8 @@ const app = express();
 // Middleware
 app.use(
    cors({
-      origin: (origin, callback) => {
-         const allowedOrigins = [process.env.CLIENT_URL, "http://127.0.0.1:5173"];
-         if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-         } else {
-            callback(new Error("Not allowed by CORS"));
-         }
-      },
-      credentials: true,
+      origin: "*",
+      credentials: false,
    }),
 );
 
@@ -35,6 +28,14 @@ app.get("/", (req, res) => {
    });
 });
 
+app.get("/health", (req, res) => {
+   res.json({
+      success: true,
+      message: "PLETTO API healthy",
+      timestamp: new Date().toISOString(),
+   });
+});
+
 // Auth routes
 const authRoutes = require("./routes/auth.routes");
 app.use("/api/auth", authRoutes);
@@ -46,6 +47,7 @@ const whiteboardRoutes = require("./routes/whiteboard.routes");
 const profileRoutes = require("./routes/profile.routes");
 const workspaceRoutes = require("./routes/workspace.routes");
 const uploadRoutes = require("./routes/upload.routes");
+const presenceRoutes = require("./routes/presence.routes");
 
 app.use("/api/chat", chatRoutes);
 app.use("/api/docs", docsRoutes);
@@ -53,6 +55,7 @@ app.use("/api/whiteboards", whiteboardRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/workspace", workspaceRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/presence", presenceRoutes);
 
 const errorHandler = require("./middleware/errorHandler");
 app.use(errorHandler);

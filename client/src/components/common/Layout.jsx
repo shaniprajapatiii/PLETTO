@@ -20,7 +20,6 @@ import {
    HiStar as StarIcon,
    HiClock as ClockIcon,
    HiChevronDown as ChevronDownIcon,
-   HiDotsVertical as EllipsisIcon,
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import { createBoard } from "../../services/whiteboardService";
@@ -79,13 +78,10 @@ export default function Layout() {
       return () => window.removeEventListener("keydown", onKeyDown);
    }, []);
 
-   // Load favorites and recent items from localStorage
-   useEffect(() => {
-      const savedFavorites = JSON.parse(localStorage.getItem("sidebarFavorites") || "[]");
-      const savedRecent = JSON.parse(localStorage.getItem("sidebarRecent") || "[]");
-      setFavorites(savedFavorites);
-      setRecentItems(savedRecent.slice(0, 5)); // Keep only last 5
-   }, []);
+   const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications]);
+   const title = navItems.find((item) => location.pathname.startsWith(item.to))?.label ?? "Workspace";
+   const breadCrumbs = location.pathname.split("/").filter(Boolean);
+   const initials = (user?.name || user?.email || "?").slice(0, 2).toUpperCase();
 
    // Toggle favorite
    const toggleFavorite = (itemId) => {
@@ -109,23 +105,18 @@ export default function Layout() {
    );
 
    useEffect(() => {
-      if (loading || !workspace) return;
-      const loadChannels = async () => {
-         try {
-            const response = await getChannels();
-            setChannels(response.data.channels || []);
-         } catch {
-            setChannels([]);
-         }
-      };
-      loadChannels();
+      if (!loading && workspace) {
+         const loadChannels = async () => {
+            try {
+               const response = await getChannels();
+               setChannels(response.data.channels || []);
+            } catch {
+               setChannels([]);
+            }
+         };
+         loadChannels();
+      }
    }, [loading, workspace]);
-
-   useEffect(() => {
-      setMobileOpen(false);
-      setNotifOpen(false);
-      setCreateOpen(false);
-   }, [location.pathname]);
 
    useEffect(() => {
       const onClick = (event) => {
@@ -207,11 +198,6 @@ export default function Layout() {
          navigate(notification.link);
       }
    };
-
-   const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications]);
-   const title = navItems.find((item) => location.pathname.startsWith(item.to))?.label ?? "Workspace";
-   const breadCrumbs = location.pathname.split("/").filter(Boolean);
-   const initials = (user?.name || user?.email || "?").slice(0, 2).toUpperCase();
 
    const sidebarContent = (
       <>

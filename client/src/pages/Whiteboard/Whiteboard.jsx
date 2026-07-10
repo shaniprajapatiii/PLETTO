@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import {
    HiOutlinePresentationChartBar,
@@ -37,9 +38,35 @@ export default function Whiteboard() {
    const activeBoardRef = useRef(null);
    const userRef = useRef(user);
 
-   useEffect(() => {
-      refreshBoards();
+   const selectBoard = useCallback((board) => {
+      setActiveBoard(board);
+      setName(board.name || "");
+      setBoardData(board.data || { strokes: [] });
+      setMessage(null);
+      setError(null);
+      setRemoteMessage(null);
+      setRemoteCursors([]);
+      if (socketRef.current) {
+         socketRef.current.emit("joinBoard", board._id);
+      }
    }, []);
+
+   const refreshBoards = useCallback(async () => {
+      try {
+         const res = await getBoards();
+         const fetchedBoards = res.data.whiteboards || [];
+         setBoards(fetchedBoards);
+         if (!activeBoard && fetchedBoards.length) {
+            selectBoard(fetchedBoards[0]);
+         }
+      } catch (err) {
+         setError(err.response?.data?.message || "Failed to load boards");
+      }
+   }, [activeBoard, selectBoard]);
+
+   useEffect(() => {
+      void refreshBoards();
+   }, [refreshBoards]);
 
    useEffect(() => {
       activeBoardRef.current = activeBoard;
@@ -91,32 +118,6 @@ export default function Whiteboard() {
          socket.disconnect();
       };
    }, [socket]);
-
-   const refreshBoards = async () => {
-      try {
-         const res = await getBoards();
-         const fetchedBoards = res.data.whiteboards || [];
-         setBoards(fetchedBoards);
-         if (!activeBoard && fetchedBoards.length) {
-            selectBoard(fetchedBoards[0]);
-         }
-      } catch (err) {
-         setError(err.response?.data?.message || "Failed to load boards");
-      }
-   };
-
-   const selectBoard = (board) => {
-      setActiveBoard(board);
-      setName(board.name || "");
-      setBoardData(board.data || { strokes: [] });
-      setMessage(null);
-      setError(null);
-      setRemoteMessage(null);
-      setRemoteCursors([]);
-      if (socketRef.current) {
-         socketRef.current.emit("joinBoard", board._id);
-      }
-   };
 
    const handleCreate = async (e) => {
       e.preventDefault();
@@ -333,7 +334,7 @@ export default function Whiteboard() {
                   onPointerLeave={handlePointerUp}
                >
                   <rect x="0" y="0" width="1000" height="700" fill="transparent" />
-                  <g transform={`scale(${zoom})`} transform-origin="0 0">
+                  <g transform={`scale(${zoom})`}>
                      {(boardData.strokes || []).map((stroke) => (
                         <path
                            key={stroke.id}

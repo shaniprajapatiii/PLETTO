@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { HiCheck, HiDocumentText, HiLightningBolt, HiPlus, HiSparkles, HiUsers } from "react-icons/hi";
 import { createDoc, getDocs, updateDoc } from "../../services/docsService";
@@ -20,9 +21,25 @@ export default function Docs() {
    const activeDocRef = useRef(null);
    const userRef = useRef(user);
 
+   const refreshDocs = useCallback(async () => {
+      try {
+         const res = await getDocs();
+         const fetchedDocs = res.data.documents || [];
+         setDocs(fetchedDocs);
+         if (!active && fetchedDocs.length) {
+            setActive(fetchedDocs[0]);
+            setTitle(fetchedDocs[0].title);
+            setContent(fetchedDocs[0].content);
+            setDocType(fetchedDocs[0].type || "text");
+         }
+      } catch (err) {
+         setError(err.response?.data?.message || "Failed to load documents");
+      }
+   }, [active]);
+
    useEffect(() => {
-      refreshDocs();
-   }, []);
+      void refreshDocs();
+   }, [refreshDocs]);
 
    useEffect(() => {
       activeDocRef.current = active;
@@ -78,22 +95,6 @@ export default function Docs() {
       socketRef.current.emit("joinDoc", active._id);
    }, [active]);
 
-   const refreshDocs = async () => {
-      try {
-         const res = await getDocs();
-         const fetchedDocs = res.data.documents || [];
-         setDocs(fetchedDocs);
-         if (!active && fetchedDocs.length) {
-            setActive(fetchedDocs[0]);
-            setTitle(fetchedDocs[0].title);
-            setContent(fetchedDocs[0].content);
-            setDocType(fetchedDocs[0].type || "text");
-         }
-      } catch (err) {
-         setError(err.response?.data?.message || "Failed to load documents");
-      }
-   };
-
    const handleCreate = async (type = "text") => {
       try {
          const res = await createDoc({ title: "Untitled document", content: "", type });
@@ -140,10 +141,6 @@ export default function Docs() {
          socketRef.current.emit("joinDoc", doc._id);
       }
    };
-
-   useEffect(() => {
-      setRemoteCursor(null);
-   }, [active?._id]);
 
    const wordCount = useMemo(() => content.trim().split(/\s+/).filter(Boolean).length, [content]);
    const lastUpdated = active?.updatedAt ? new Date(active.updatedAt).toLocaleDateString() : "Not yet saved";
