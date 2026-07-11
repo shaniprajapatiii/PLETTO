@@ -3,17 +3,19 @@ const User = require("../models/User");
 
 exports.getMembers = async (req, res) => {
    try {
-      const memberships = await WorkspaceMember.find({ workspace: req.user.workspaceId }).populate("user", "name email avatar bio color isActive");
-      const members = memberships.map((membership) => ({
-         _id: membership._id,
-         userId: membership.user?._id,
-         role: membership.role,
-         name: membership.user?.name,
-         email: membership.user?.email,
-         avatar: membership.user?.avatar,
-         bio: membership.user?.bio,
-         color: membership.user?.color,
-         isActive: membership.user?.isActive,
+      // Fetch all registered users in the website (not just workspace members)
+      const users = await User.find({}, "name email avatar bio color isActive _id").sort({ createdAt: -1 });
+      const currentUserId = req.user?._id?.toString() || "";
+      const members = users.map((user) => ({
+         _id: user._id,
+         userId: user._id,
+         role: user._id.toString() === currentUserId ? "owner" : "member",
+         name: user.name,
+         email: user.email,
+         avatar: user.avatar,
+         bio: user.bio,
+         color: user.color,
+         isActive: user.isActive,
       }));
       res.json({ success: true, members });
    } catch (error) {

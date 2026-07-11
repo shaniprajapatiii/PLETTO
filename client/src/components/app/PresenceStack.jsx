@@ -22,7 +22,17 @@ export function PresenceStack() {
 
    const visible = useMemo(() => {
       const currentUser = user ? [{ id: user._id || "me", name: user.name || "You", color: "#ffffff" }] : [];
-      const workspaceMembers = members.map((member) => ({
+      
+      // Deduplicate members by ID and email
+      const seen = new Set();
+      const uniqueMembers = members.filter((member) => {
+         const key = member._id || member.email || member.name;
+         if (seen.has(key)) return false;
+         seen.add(key);
+         return true;
+      });
+      
+      const workspaceMembers = uniqueMembers.map((member) => ({
          id: member._id || member.email || member.name,
          name: member.name || member.email || "Member",
          color: ["#f8b500", "#38bdf8", "#22c55e", "#f472b6"][Math.abs((member._id || member.email || "").length) % 4],

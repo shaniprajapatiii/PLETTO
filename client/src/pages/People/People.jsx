@@ -29,9 +29,17 @@ export default function People() {
    }, []);
 
    const filteredMembers = useMemo(() => {
+      // Deduplicate by email first
+      const seen = new Set();
+      const uniqueMembers = members.filter((member) => {
+         if (seen.has(member.email)) return false;
+         seen.add(member.email);
+         return true;
+      });
+
       const query = search.trim().toLowerCase();
-      if (!query) return members;
-      return members.filter((member) => {
+      if (!query) return uniqueMembers;
+      return uniqueMembers.filter((member) => {
          return [member.name, member.email, member.role, member.bio]
             .filter(Boolean)
             .some((value) => value.toLowerCase().includes(query));
@@ -85,48 +93,42 @@ export default function People() {
 
             {error ? <div className="rounded-[1.2rem] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="space-y-3">
                {filteredMembers.length > 0 ? (
                   filteredMembers.map((member) => {
                      const avatarSrc = getAvatarSrc(member);
                      const initials = getInitials(member.name, member.email);
                      return (
-                        <article key={member._id || member.userId || member.email} className="rounded-[26px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-5 shadow-[0_16px_50px_rgba(0,0,0,0.2)]">
-                           <div className="flex items-start gap-4">
-                              <img src={avatarSrc} alt={member.name || member.email || "Member"} className="h-16 w-16 rounded-[1.1rem] border border-white/10 object-cover" />
+                        <article key={member.email || member.userId || member._id} className="flex items-center justify-between gap-4 rounded-[26px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-5 shadow-[0_16px_50px_rgba(0,0,0,0.2)] transition hover:border-white/20 hover:bg-[rgba(255,255,255,0.06)]">
+                           <div className="flex min-w-0 flex-1 items-center gap-4">
+                              <img src={avatarSrc} alt={member.name || member.email || "Member"} className="h-20 w-20 flex-shrink-0 rounded-[1.1rem] border border-white/10 object-cover" />
                               <div className="min-w-0 flex-1">
-                                 <div className="flex items-center gap-2">
+                                 <div className="flex flex-wrap items-center gap-2">
                                     <h3 className="truncate text-lg font-semibold text-white">{member.name || member.email || "Member"}</h3>
                                     <span className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${member.role === "owner" ? "bg-gold/15 text-gold" : "bg-white/5 text-muted-foreground"}`}>
                                        {member.role || "member"}
                                     </span>
                                  </div>
                                  <p className="mt-1 truncate text-sm text-muted-foreground">{member.email || "No email available"}</p>
-                                 {member.bio ? <p className="mt-3 line-clamp-3 text-sm text-slate-300">{member.bio}</p> : <p className="mt-3 text-sm text-muted-foreground">No bio shared yet.</p>}
+                                 {member.bio ? <p className="mt-2 line-clamp-1 text-sm text-slate-300">{member.bio}</p> : <p className="mt-2 text-sm text-muted-foreground">No bio shared yet.</p>}
                               </div>
                            </div>
 
-                           <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/10 pt-4">
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(245,181,50,0.1)] text-gold">{initials}</span>
-                                 <span>Private message ready</span>
-                              </div>
-                              <button
-                                 type="button"
-                                 onClick={() => handleMessage(member)}
-                                 disabled={busyId === member.userId}
-                                 className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-4 py-2 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
-                              >
-                                 <HiChatAlt2 className="h-4 w-4" />
-                                 {busyId === member.userId ? "Opening..." : "Message"}
-                                 <HiArrowRight className="h-4 w-4" />
-                              </button>
-                           </div>
+                           <button
+                              type="button"
+                              onClick={() => handleMessage(member)}
+                              disabled={busyId === member.userId}
+                              className="flex-shrink-0 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-4 py-2 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+                           >
+                              <HiChatAlt2 className="h-4 w-4" />
+                              {busyId === member.userId ? "Opening..." : "Message"}
+                              <HiArrowRight className="h-4 w-4" />
+                           </button>
                         </article>
                      );
                   })
                ) : (
-                  <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-muted-foreground md:col-span-2 xl:col-span-3">
+                  <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-muted-foreground">
                      No workspace members match your search.
                   </div>
                )}
