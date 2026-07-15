@@ -209,6 +209,29 @@ export default function Chat() {
          console.log(`${name} left`);
       });
 
+      // Channel real-time events
+      socket.on("channelCreated", (newChannel) => {
+         setChannels((current) => {
+            if (current.some((ch) => ch._id === newChannel._id)) {
+               return current;
+            }
+            return [newChannel, ...current];
+         });
+      });
+
+      socket.on("channelUpdated", (updatedChannel) => {
+         setChannels((current) =>
+            current.map((ch) => (ch._id === updatedChannel._id ? updatedChannel : ch))
+         );
+      });
+
+      socket.on("channelDeleted", ({ channelId }) => {
+         setChannels((current) => current.filter((ch) => ch._id !== channelId));
+         if (activeChannelRef.current?._id === channelId) {
+            setActiveChannel(null);
+         }
+      });
+
       return () => {
          socket.off("connect");
          socket.off("connect_error");
@@ -223,6 +246,9 @@ export default function Chat() {
          socket.off("presenceUpdate");
          socket.off("userJoinedChannel");
          socket.off("userLeftChannel");
+         socket.off("channelCreated");
+         socket.off("channelUpdated");
+         socket.off("channelDeleted");
       };
    }, [socket]);
 
@@ -247,6 +273,25 @@ export default function Chat() {
    const handleMessageChange = (e) => {
       const nextValue = e.target.value;
       setMessageText(nextValue);
+
+      // Emit typing indicator
+      if (socketRef.current && activeChannelRef.current) {
+         clearTimeout(typingTimeoutRef.current);
+         socketRef.current.emit("typing", {
+            channelId: activeChannelRef.current._id,
+            isTyping: true,
+         });
+
+         // Stop typing after 3 seconds of inactivity
+         typingTimeoutRef.current = setTimeout(() => {
+            if (socketRef.current && activeChannelRef.current) {
+               socketRef.current.emit("typing", {
+                  channelId: activeChannelRef.current._id,
+                  isTyping: false,
+               });
+            }
+         }, 3000);
+      }
 
       if (socketRef.current && activeChannel) {
          const typing = Boolean(nextValue.trim());
@@ -284,6 +329,13 @@ export default function Chat() {
    const handleEditMessage = async (messageId, newText) => {
       try {
          await editMessage(messageId, newText);
+         if (socketRef.current && activeChannelRef.current) {
+            socketRef.current.emit("editMessage", {
+               messageId,
+               channelId: activeChannelRef.current._id,
+               text: newText,
+            });
+         }
          setEditingMessageId(null);
          setEditingText("");
       } catch {
@@ -294,6 +346,12 @@ export default function Chat() {
    const handleDeleteMessage = async (messageId) => {
       try {
          await deleteMessage(messageId);
+         if (socketRef.current && activeChannelRef.current) {
+            socketRef.current.emit("deleteMessage", {
+               messageId,
+               channelId: activeChannelRef.current._id,
+            });
+         }
       } catch {
          setError("Failed to delete message");
       }

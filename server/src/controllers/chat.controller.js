@@ -1,6 +1,7 @@
 const Channel = require("../models/Channel");
 const User = require("../models/User");
 const WorkspaceMember = require("../models/WorkspaceMember");
+const { getIo } = require("../utils/socket");
 
 async function getWorkspaceId(userId) {
    const membership = await WorkspaceMember.findOne({ user: userId }).populate("workspace");
@@ -83,6 +84,16 @@ exports.createChannel = async (req, res) => {
       });
 
       await channel.populate("members", "name email avatar");
+      
+      // Broadcast channel creation to all workspace members
+      const io = getIo();
+      if (io) {
+         io.to(workspaceId.toString()).emit("channelCreated", {
+            ...channel.toObject(),
+            createdBy: { name: req.user.name },
+         });
+      }
+      
       res.status(201).json({ success: true, channel });
    } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -113,6 +124,12 @@ exports.updateChannel = async (req, res) => {
       await channel.populate("members", "name avatar");
       await channel.populate("createdBy", "name");
 
+      // Broadcast channel update
+      const io = getIo();
+      if (io) {
+         io.to(workspaceId.toString()).emit("channelUpdated", channel);
+      }
+
       res.json({ success: true, channel });
    } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -135,6 +152,13 @@ exports.deleteChannel = async (req, res) => {
       }
 
       await Channel.deleteOne({ _id: channelId });
+      
+      // Broadcast channel deletion
+      const io = getIo();
+      if (io) {
+         io.to(workspaceId.toString()).emit("channelDeleted", { channelId });
+      }
+      
       res.json({ success: true, message: "Channel deleted" });
    } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -230,6 +254,35 @@ exports.unmuteChannel = async (req, res) => {
       await channel.save();
 
       res.json({ success: true, channel });
+   } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+   }
+};
+
+exports.getCreatedChannels = async (req, res) => {
+   try {
+      const workspaceId = await getWorkspaceId(req.user.id);
+      const channels = await Channel.find({
+         workspace: workspaceId,
+         createdBy: req.user.id,
+         type: "public",
+      })
+         .sort({ createdAt: -1 })
+         .populate("members", "name email avatar")
+         .populate("createdBy", "name");
+
+      // Get message count for each channel
+      const channelsWithStats = await Promise.all(
+         channels.map(async (channel) => {
+            const messageCount = await require("../models/Message").countDocuments({ channel: channel._id });
+            return {
+               ...channel.toObject(),
+               messageCount,
+            };
+         })
+      );
+
+      res.json({ success: true, channels: channelsWithStats });
    } catch (error) {
       res.status(500).json({ success: false, message: error.message });
    }

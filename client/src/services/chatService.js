@@ -2,6 +2,7 @@ import api from "./api";
 
 // Channel APIs
 export const getChannels = () => api.get("/chat/channels");
+export const getCreatedChannels = () => api.get("/chat/channels/created");
 export const createChannel = (payload) => api.post("/chat/channels", payload);
 export const updateChannel = (channelId, payload) => api.put(`/chat/channels/${channelId}`, payload);
 export const deleteChannel = (channelId) => api.delete(`/chat/channels/${channelId}`);

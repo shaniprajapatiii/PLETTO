@@ -8,6 +8,7 @@ const {
    removeMember,
    muteChannel,
    unmuteChannel,
+   getCreatedChannels,
 } = require("../controllers/chat.controller");
 const {
    getMessages,
@@ -27,6 +28,7 @@ const router = express.Router();
 
 // Channel routes
 router.get("/channels", auth, getChannels);
+router.get("/channels/created", auth, getCreatedChannels);
 router.post("/channels", auth, createChannel);
 router.put("/channels/:channelId", auth, updateChannel);
 router.delete("/channels/:channelId", auth, deleteChannel);

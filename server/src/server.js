@@ -184,6 +184,41 @@ io.on("connection", (socket) => {
       });
    });
 
+   // ============ CHANNEL MANAGEMENT (Real-time) ============
+   socket.on("channelCreated", async (channelId) => {
+      try {
+         const channel = await Channel.findOne({ _id: channelId, workspace: socket.user.workspaceId })
+            .populate("members", "name email avatar")
+            .populate("createdBy", "name");
+         if (!channel) return;
+
+         io.to(socket.user.workspaceId).emit("channelCreated", channel);
+      } catch (error) {
+         console.error("channelCreated error:", error.message);
+      }
+   });
+
+   socket.on("channelUpdated", async (channelId) => {
+      try {
+         const channel = await Channel.findOne({ _id: channelId, workspace: socket.user.workspaceId })
+            .populate("members", "name email avatar")
+            .populate("createdBy", "name");
+         if (!channel) return;
+
+         io.to(socket.user.workspaceId).emit("channelUpdated", channel);
+      } catch (error) {
+         console.error("channelUpdated error:", error.message);
+      }
+   });
+
+   socket.on("channelDeleted", async (channelId) => {
+      try {
+         io.to(socket.user.workspaceId).emit("channelDeleted", { channelId });
+      } catch (error) {
+         console.error("channelDeleted error:", error.message);
+      }
+   });
+
    // ============ MESSAGING ============
    socket.on("sendMessage", async ({ channelId, text, attachments = [] }) => {
       try {

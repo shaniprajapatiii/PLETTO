@@ -16,6 +16,7 @@ import {
    HiHashtag as HashIcon,
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
+import { useSocket } from "../../context/SocketContext";
 import { createBoard } from "../../services/whiteboardService";
 import { createDoc } from "../../services/docsService";
 import { createChannel, getChannels } from "../../services/chatService";
@@ -27,6 +28,7 @@ const navItems = [
    { label: "Dashboard", to: "/dashboard", icon: DashboardIcon },
    { label: "Documents", to: "/docs", icon: DocsIcon },
    { label: "Chat", to: "/chat", icon: ChatIcon },
+   { label: "My Channels", to: "/my-channels", icon: HashIcon },
    { label: "People", to: "/people", icon: PeopleIcon },
    { label: "Whiteboard", to: "/whiteboard", icon: WhiteboardIcon },
 ];
@@ -39,6 +41,7 @@ const starterNotifications = [
 
 export default function Layout() {
    const { user, workspace, loading, setUser, setWorkspace } = useAuth();
+   const socket = useSocket();
    const navigate = useNavigate();
    const location = useLocation();
    const [paletteOpen, setPaletteOpen] = useState(false);
@@ -144,6 +147,10 @@ export default function Layout() {
          const channel = response.data.channel || response.data.data;
          if (channel) {
             setChannels((current) => [channel, ...current]);
+            // Emit socket event for real-time broadcast
+            if (socket) {
+               socket.emit("channelCreated", channel._id);
+            }
             navigate(`/chat?channel=${channel._id}`);
          }
          setCreateChannelModalOpen(false);
