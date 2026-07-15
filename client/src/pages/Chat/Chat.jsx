@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { HiHashtag, HiPlus, HiSparkles, HiUsers, HiTrash, HiPencil, HiEmojiHappy, HiXCircle, HiReply } from "react-icons/hi";
+import { HiSparkles, HiUsers, HiTrash, HiPencil, HiEmojiHappy, HiXCircle, HiReply } from "react-icons/hi";
 import {
-   createChannel,
    getChannels,
    getMessages,
    editMessage,
@@ -13,7 +12,6 @@ import {
    addReaction,
    removeReaction,
 } from "../../services/chatService";
-import { getWorkspaceMembers } from "../../services/workspaceService";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 
@@ -26,10 +24,7 @@ export default function Chat() {
    const [activeChannel, setActiveChannel] = useState(null);
    const [messages, setMessages] = useState([]);
    const [pinnedMessages, setPinnedMessages] = useState([]);
-   const [name, setName] = useState("");
    const [messageText, setMessageText] = useState("");
-   const [members, setMembers] = useState([]);
-   const [selectedMemberId, setSelectedMemberId] = useState("");
    const [error, setError] = useState(null);
    const [, setSocketError] = useState(null);
    const [searchParams, setSearchParams] = useSearchParams();
@@ -99,18 +94,9 @@ export default function Chat() {
                setActiveChannel(fallback);
             }
          }
-         if (user) {
-            try {
-               const response = await getWorkspaceMembers();
-               const memberList = response.data.members || [];
-               setMembers(memberList.filter((member) => member.userId !== user._id));
-            } catch {
-               // ignore
-            }
-         }
       };
       initialize();
-   }, [activeChannel, searchParams, setSearchParams, user]);
+   }, [activeChannel, searchParams, setSearchParams]);
 
    useEffect(() => {
       activeChannelRef.current = activeChannel;
@@ -247,57 +233,6 @@ export default function Chat() {
       loadPinnedMessages(activeChannel._id);
    }, [activeChannel]);
 
-   const handleCreate = async (e) => {
-      e.preventDefault();
-      const trimmedName = name.trim();
-      if (!trimmedName) return;
-
-      setError(null);
-      try {
-         const res = await createChannel({ name: trimmedName, type: "public" });
-         const createdChannel = res.data.channel;
-         setName("");
-
-         if (createdChannel) {
-            setChannels((current) => [createdChannel, ...current]);
-            setActiveChannel(createdChannel);
-            const nextParams = new URLSearchParams(searchParams);
-            nextParams.set("channel", createdChannel._id);
-            setSearchParams(nextParams);
-         } else {
-            await refreshChannels();
-         }
-      } catch (error) {
-         setError(error.response?.data?.message || "Could not create channel");
-      }
-   };
-
-   const handleCreateDirect = async (e) => {
-      e.preventDefault();
-      if (!selectedMemberId || !user?._id) return;
-
-      setError(null);
-      try {
-         const res = await createChannel({
-            type: "dm",
-            members: [selectedMemberId, user._id],
-         });
-         const channel = res.data.channel;
-         setSelectedMemberId("");
-
-         if (channel) {
-            setChannels((current) => [channel, ...current]);
-            setActiveChannel(channel);
-            const nextParams = new URLSearchParams(searchParams);
-            nextParams.set("channel", channel._id);
-            setSearchParams(nextParams);
-         } else {
-            await refreshChannels();
-         }
-      } catch (error) {
-         setError(error.response?.data?.message || "Could not create direct chat");
-      }
-   };
 
    const selectChannel = (channel) => {
       setActiveChannel(channel);
@@ -398,73 +333,7 @@ export default function Chat() {
    };
 
    return (
-      <div className="grid gap-5 2xl:grid-cols-[300px_minmax(0,1fr)]">
-         {/* Sidebar */}
-         <div className="rounded-[24px] border border-white/10 bg-[#060606]/85 p-4 shadow-[0_16px_50px_rgba(0,0,0,0.24)]">
-            <div className="flex items-center justify-between gap-3">
-               <div>
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Channels</div>
-                  <div className="mt-1 text-lg font-semibold text-white">Rooms</div>
-               </div>
-               <button className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm font-medium text-gold">
-                  <HiPlus className="h-4 w-4" />
-                  New
-               </button>
-            </div>
-
-            <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-2 rounded-[18px] border border-white/10 bg-white/[0.03] p-3">
-               <input
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-muted-foreground"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Create a room"
-               />
-               <button className="rounded-[14px] bg-gradient-gold px-4 py-2 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
-                  Create room
-               </button>
-            </form>
-
-            {members.length > 0 && (
-               <form onSubmit={handleCreateDirect} className="mt-4 rounded-[18px] border border-white/10 bg-white/[0.03] p-3">
-                  <label className="mb-2 block text-sm font-medium text-white">Direct message</label>
-                  <select
-                     className="w-full rounded-[14px] border border-white/10 bg-transparent px-3 py-2 text-sm text-white outline-none"
-                     value={selectedMemberId}
-                     onChange={(e) => setSelectedMemberId(e.target.value)}
-                  >
-                     <option value="">Pick a teammate</option>
-                     {members.map((member) => (
-                        <option key={member.userId} value={member.userId}>
-                           {member.name || member.email}
-                        </option>
-                     ))}
-                  </select>
-                  <button type="submit" className="mt-3 w-full rounded-[14px] bg-gold px-4 py-2 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
-                     Start chat
-                  </button>
-               </form>
-            )}
-
-            <div className="mt-4 space-y-2">
-               {channels.map((channel) => (
-                  <button
-                     key={channel._id}
-                     type="button"
-                     onClick={() => selectChannel(channel)}
-                     className={`flex w-full items-center gap-3 rounded-[16px] border px-3 py-3 text-left transition ${activeChannel?._id === channel._id ? "border-gold/30 bg-[rgba(245,181,50,0.12)]" : "border-white/10 bg-white/[0.025] hover:border-gold/20"}`}
-                  >
-                     <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[rgba(245,181,50,0.14)] text-gold">
-                        <HiHashtag className="h-5 w-5" />
-                     </div>
-                     <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium text-white">{channel.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">{new Date(channel.createdAt).toLocaleDateString()}</div>
-                     </div>
-                  </button>
-               ))}
-            </div>
-         </div>
-
+      <div className="flex flex-col gap-5">
          {/* Main Chat */}
          <div className="flex min-h-[680px] flex-col rounded-[24px] border border-white/10 bg-[#060606]/85 p-4 shadow-[0_16px_50px_rgba(0,0,0,0.24)]">
             {/* Header */}

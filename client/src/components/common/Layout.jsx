@@ -6,6 +6,7 @@ import {
    HiChatAlt2 as ChatIcon,
    HiViewBoards as WhiteboardIcon,
    HiUsers as PeopleIcon,
+   HiUserCircle as ProfileIcon,
    HiCog as SettingsIcon,
    HiBell as BellIcon,
    HiPlus as PlusIcon,
@@ -52,7 +53,7 @@ export default function Layout() {
    const [channelSearchQuery, setChannelSearchQuery] = useState("");
    const [dockHidden, setDockHidden] = useState(false);
    const [showChatFlyout, setShowChatFlyout] = useState(false);
-   const notifRef = useRef(null);
+   const notifRef = useRef([]);
    const modalRef = useRef(null);
    const scrollYRef = useRef(0);
 
@@ -72,7 +73,8 @@ export default function Layout() {
 
    useEffect(() => {
       const onClick = (event) => {
-         if (notifRef.current && !notifRef.current.contains(event.target)) {
+         const clickedInsideNotif = notifRef.current.some((node) => node && node.contains(event.target));
+         if (!clickedInsideNotif) {
             setNotifOpen(false);
          }
          if (modalRef.current && !modalRef.current.contains(event.target) && (createChannelModalOpen || searchChannelsOpen)) {
@@ -204,16 +206,21 @@ export default function Layout() {
          <div className="flex min-h-screen flex-col">
             <header className="flex h-16 items-center gap-3 border-b border-white/8 bg-gradient-to-r from-[rgba(6,6,6,0.95)] via-[rgba(8,8,8,0.92)] to-[rgba(6,6,6,0.95)] px-4 shadow-[0_12px_42px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition sm:px-6">
                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-gold/80 font-semibold">
-                     <span>PLETTO</span>
-                     {breadCrumbs.map((segment, index) => (
-                        <span key={`${segment}-${index}`} className="flex items-center gap-2">
-                           <span className="text-white/30">/</span>
-                           <span className={index === breadCrumbs.length - 1 ? "text-white" : "text-muted-foreground"}>
-                              {segment}
+                  <div className="flex flex-wrap items-center gap-3">
+                     <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                        <Logo withText={false} className="h-5 w-5" />
+                        <span className="text-sm font-semibold tracking-[0.24em] text-white">PLETTO</span>
+                     </div>
+                     <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-gold/80 font-semibold">
+                        {breadCrumbs.map((segment, index) => (
+                           <span key={`${segment}-${index}`} className="flex items-center gap-2">
+                              <span className="text-white/30">/</span>
+                              <span className={index === breadCrumbs.length - 1 ? "text-white" : "text-muted-foreground"}>
+                                 {segment}
+                              </span>
                            </span>
-                        </span>
-                     ))}
+                        ))}
+                     </div>
                   </div>
                   <h1 className="mt-0.5 text-[1rem] font-semibold text-white">{title}</h1>
                </div>
@@ -222,8 +229,40 @@ export default function Layout() {
                   <PresenceStack />
                </div>
 
-               <div ref={notifRef} className="relative">
+               <div className="flex flex-wrap items-center gap-2 justify-end">
                   <button
+                     type="button"
+                     onClick={() => setSearchChannelsOpen(true)}
+                     className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                  >
+                     <SearchIcon className="h-4 w-4" />
+                  </button>
+                  <button
+                     type="button"
+                     onClick={() => setCreateChannelModalOpen(true)}
+                     className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                  >
+                     <PlusIcon className="h-4 w-4" />
+                  </button>
+                  <button
+                     type="button"
+                     onClick={() => navigate("/profile")}
+                     className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                  >
+                     <ProfileIcon className="h-4 w-4" />
+                  </button>
+                  <button
+                     type="button"
+                     onClick={() => navigate("/settings")}
+                     className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                  >
+                     <SettingsIcon className="h-4 w-4" />
+                  </button>
+               </div>
+
+               <div ref={(el) => (notifRef.current[0] = el)} className="relative">
+                  <button
+                     ref={(el) => (notifRef.current[1] = el)}
                      onClick={() => setNotifOpen((value) => !value)}
                      className="relative rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-gold/30 hover:bg-white/[0.05] hover:text-white"
                   >
@@ -235,7 +274,7 @@ export default function Layout() {
                      ) : null}
                   </button>
                   {notifOpen ? (
-                     <div className="absolute right-0 mt-2 w-80 rounded-[18px] border border-white/10 bg-[#070707] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+                     <div ref={(el) => (notifRef.current[2] = el)} className="absolute right-0 z-50 mt-2 w-80 rounded-[18px] border border-white/10 bg-[#070707] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
                         <div className="flex items-center justify-between px-2 py-2">
                            <div className="text-xs uppercase tracking-[0.2em] font-semibold text-gold">Notifications</div>
                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -471,12 +510,31 @@ export default function Layout() {
                </button>
             </div>
 
-            <button
-               onClick={() => navigate("/settings")}
-               className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
-            >
-               <SettingsIcon className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2">
+               <button
+                  onClick={() => setNotifOpen((value) => !value)}
+                  className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
+               >
+                  <BellIcon className="h-5 w-5" />
+                  {unreadCount > 0 ? (
+                     <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1.5 text-[10px] font-semibold text-[var(--noir-900)] shadow-[0_0_0_4px_rgba(0,0,0,0.25)]">
+                        {unreadCount}
+                     </span>
+                  ) : null}
+               </button>
+               <button
+                  onClick={() => navigate("/profile")}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
+               >
+                  <ProfileIcon className="h-5 w-5" />
+               </button>
+               <button
+                  onClick={() => navigate("/settings")}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
+               >
+                  <SettingsIcon className="h-5 w-5" />
+               </button>
+            </div>
          </div>
 
          <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
