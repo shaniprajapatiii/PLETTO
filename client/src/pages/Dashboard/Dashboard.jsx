@@ -1,16 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { HiArrowRight, HiChatAlt2, HiClock, HiDocumentText, HiLightningBolt, HiSparkles, HiUsers, HiViewBoards } from "react-icons/hi";
+import { HiArrowRight, HiChatAlt2, HiClock, HiDocumentText, HiLightningBolt, HiSparkles, HiUsers, HiViewBoards, HiViewGrid } from "react-icons/hi";
 import { getChannels } from "../../services/chatService";
 import { getDocs } from "../../services/docsService";
 import { getBoards } from "../../services/whiteboardService";
 import { getWorkspaceMembers } from "../../services/workspaceService";
 import { PageShell } from "../../components/common/PageShell";
 
+const tabs = [
+   { id: "overview", label: "Overview", icon: HiViewGrid, description: "Quick snapshot of the workspace" },
+   { id: "channels", label: "Channels", icon: HiChatAlt2, description: "Live rooms and conversations" },
+   { id: "documents", label: "Documents", icon: HiDocumentText, description: "Shared knowledge and notes" },
+   { id: "whiteboards", label: "Whiteboards", icon: HiViewBoards, description: "Planning boards and ideas" },
+];
+
 export default function Dashboard() {
    const [stats, setStats] = useState({ channels: 0, documents: 0, boards: 0 });
    const [preview, setPreview] = useState({ channels: [], documents: [], boards: [] });
    const [members, setMembers] = useState([]);
+   const [activeTab, setActiveTab] = useState("overview");
 
    useEffect(() => {
       const load = async () => {
@@ -27,7 +35,7 @@ export default function Dashboard() {
          const workspaceMembers = membersRes.status === "fulfilled" ? membersRes.value.data.members || [] : [];
 
          setStats({ channels: channels.length, documents: documents.length, boards: boards.length });
-         setPreview({ channels: channels.slice(0, 3), documents: documents.slice(0, 3), boards: boards.slice(0, 3) });
+         setPreview({ channels: channels.slice(0, 4), documents: documents.slice(0, 4), boards: boards.slice(0, 4) });
          setMembers(workspaceMembers);
       };
       load();
@@ -42,6 +50,35 @@ export default function Dashboard() {
       return items;
    }, [preview]);
 
+   const tabContent = useMemo(() => {
+      switch (activeTab) {
+         case "channels":
+            return {
+               title: "Channel pulse",
+               subtitle: "The rooms that are actively driving work today.",
+               items: preview.channels.length > 0 ? preview.channels.map((item) => ({ title: item.name, description: "Open room ready for discussion" })) : [{ title: "No channels yet", description: "Create a room to start the conversation" }],
+            };
+         case "documents":
+            return {
+               title: "Knowledge at a glance",
+               subtitle: "Shared docs and notes that keep everyone aligned.",
+               items: preview.documents.length > 0 ? preview.documents.map((item) => ({ title: item.title, description: "Collaborative document" })) : [{ title: "No documents yet", description: "Open the notes workspace to capture ideas" }],
+            };
+         case "whiteboards":
+            return {
+               title: "Planning boards",
+               subtitle: "Visual workspaces that turn ideas into momentum.",
+               items: preview.boards.length > 0 ? preview.boards.map((item) => ({ title: item.name, description: "Live board" })) : [{ title: "No boards yet", description: "Create a board to map priorities" }],
+            };
+         default:
+            return {
+               title: "Workspace overview",
+               subtitle: "A condensed view of your most important signals.",
+               items: activity,
+            };
+      }
+   }, [activeTab, preview, activity]);
+
    return (
       <div className="space-y-5">
          <PageShell
@@ -54,75 +91,128 @@ export default function Dashboard() {
                </div>
             }
          >
-            <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-               <div className="space-y-5">
-                  <div className="grid gap-4 lg:grid-cols-3">
-                     <Panel title="Channels" value={stats.channels} description="Active rooms for your team." icon={<HiChatAlt2 className="h-6 w-6" />} />
-                     <Panel title="Documents" value={stats.documents} description="Shared knowledge in your workspace." icon={<HiDocumentText className="h-6 w-6" />} />
-                     <Panel title="Whiteboards" value={stats.boards} description="Live boards ready for ideation." icon={<HiViewBoards className="h-6 w-6" />} />
-                  </div>
-
-                  <div className="rounded-[24px] border border-white/10 bg-white/[0.025] p-5">
-                     <div className="flex items-center justify-between gap-3">
-                        <div>
-                           <div className="text-[11px] uppercase tracking-[0.28em] text-gold">Recent activity</div>
-                           <h3 className="mt-2 text-xl font-semibold text-white">What changed lately</h3>
-                        </div>
-                        <div className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Streaming</div>
-                     </div>
-                     <div className="mt-4 space-y-3">
-                        {activity.length > 0 ? activity.map((item, index) => {
-                           const Icon = item.icon;
-                           return (
-                              <div key={`${item.title}-${index}`} className="flex items-center gap-3 rounded-[16px] border border-white/10 bg-[rgba(2,6,23,0.65)] px-4 py-3">
-                                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(245,181,50,0.14)] text-gold">
-                                    <Icon className="h-4 w-4" />
-                                 </div>
-                                 <div className="min-w-0 flex-1">
-                                    <div className="truncate text-sm font-medium text-white">{item.title}</div>
-                                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                                       <HiClock className="h-3.5 w-3.5" />
-                                       {item.subtitle}
-                                    </div>
-                                 </div>
-                              </div>
-                           );
-                        }) : (
-                           <div className="rounded-[16px] border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm text-muted-foreground">Create a room, document, or board to populate this feed.</div>
-                        )}
-                     </div>
-                  </div>
+            <div className="space-y-4">
+               <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
+                  {tabs.map((tab) => {
+                     const Icon = tab.icon;
+                     const active = activeTab === tab.id;
+                     return (
+                        <button
+                           key={tab.id}
+                           type="button"
+                           onClick={() => setActiveTab(tab.id)}
+                           className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${active ? "border-gold/40 bg-[rgba(245,181,50,0.12)] text-gold" : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/20 hover:text-white"}`}
+                        >
+                           <Icon className="h-4 w-4" />
+                           {tab.label}
+                        </button>
+                     );
+                  })}
                </div>
 
-               <div className="space-y-5">
-                  <div className="rounded-[24px] border border-white/10 bg-white/[0.025] p-5">
-                     <div className="flex items-center gap-2 text-gold">
-                        <HiUsers className="h-4 w-4" />
-                        Active collaborators
+               <div className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4 sm:p-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                     <div>
+                        <div className="text-[11px] uppercase tracking-[0.28em] text-gold">{activeTab}</div>
+                        <h3 className="mt-2 text-xl font-semibold text-white">{tabContent.title}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{tabContent.subtitle}</p>
                      </div>
-                     <div className="mt-4 flex flex-wrap gap-2">
-                        {members.length > 0 ? members.map((member) => (
-                           <div key={member._id || member.email} className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-white">
-                              {member.name || member.email || "Member"}
-                           </div>
-                        )) : (
-                           <div className="rounded-[16px] border border-dashed border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-muted-foreground">No collaborators to display yet.</div>
-                        )}
-                     </div>
+                     <div className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Live</div>
                   </div>
 
-                  <div className="rounded-[24px] border border-white/10 bg-white/[0.025] p-5">
-                     <div className="flex items-center gap-2 text-gold">
-                        <HiLightningBolt className="h-4 w-4" />
-                        Quick access
+                  {activeTab === "overview" ? (
+                     <div className="mt-6 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+                        <div className="space-y-4">
+                           <div className="grid gap-3 md:grid-cols-3">
+                              <Panel title="Channels" value={stats.channels} description="Active rooms for your team." icon={<HiChatAlt2 className="h-6 w-6" />} />
+                              <Panel title="Documents" value={stats.documents} description="Shared knowledge in your workspace." icon={<HiDocumentText className="h-6 w-6" />} />
+                              <Panel title="Whiteboards" value={stats.boards} description="Live boards ready for ideation." icon={<HiViewBoards className="h-6 w-6" />} />
+                           </div>
+                           <div className="rounded-[20px] border border-white/10 bg-[rgba(2,6,23,0.65)] p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                 <div>
+                                    <div className="text-[11px] uppercase tracking-[0.28em] text-gold">Recent activity</div>
+                                    <h4 className="mt-2 text-lg font-semibold text-white">What changed lately</h4>
+                                 </div>
+                                 <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-muted-foreground">Streaming</div>
+                              </div>
+                              <div className="mt-4 space-y-3">
+                                 {activity.length > 0 ? activity.map((item, index) => {
+                                    const Icon = item.icon;
+                                    return (
+                                       <div key={`${item.title}-${index}`} className="flex items-center gap-3 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3">
+                                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(245,181,50,0.14)] text-gold">
+                                             <Icon className="h-4 w-4" />
+                                          </div>
+                                          <div className="min-w-0 flex-1">
+                                             <div className="truncate text-sm font-medium text-white">{item.title}</div>
+                                             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                                                <HiClock className="h-3.5 w-3.5" />
+                                                {item.subtitle}
+                                             </div>
+                                          </div>
+                                       </div>
+                                    );
+                                 }) : (
+                                    <div className="rounded-[16px] border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm text-muted-foreground">Create a room, document, or board to populate this feed.</div>
+                                 )}
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="space-y-4">
+                           <div className="rounded-[20px] border border-white/10 bg-[rgba(2,6,23,0.65)] p-4">
+                              <div className="flex items-center gap-2 text-gold">
+                                 <HiUsers className="h-4 w-4" />
+                                 Active collaborators
+                              </div>
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                 {members.length > 0 ? members.map((member) => (
+                                    <div key={member._id || member.email} className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-white">
+                                       {member.name || member.email || "Member"}
+                                    </div>
+                                 )) : (
+                                    <div className="rounded-[16px] border border-dashed border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-muted-foreground">No collaborators to display yet.</div>
+                                 )}
+                              </div>
+                           </div>
+
+                           <div className="rounded-[20px] border border-white/10 bg-[rgba(2,6,23,0.65)] p-4">
+                              <div className="flex items-center gap-2 text-gold">
+                                 <HiLightningBolt className="h-4 w-4" />
+                                 Quick access
+                              </div>
+                              <div className="mt-4 grid gap-3">
+                                 <QuickLink to="/chat" title="Open chat" description="Jump into the active room and continue the conversation." />
+                                 <QuickLink to="/people" title="Browse people" description="Open profiles and start a private message." />
+                                 <QuickLink to="/docs" title="Open docs" description="Review shared notes and the latest updates." />
+                                 <QuickLink to="/whiteboard" title="Open whiteboard" description="Move from discussion to visual planning." />
+                              </div>
+                           </div>
+                        </div>
                      </div>
-                     <div className="mt-4 grid gap-3">
-                        <QuickLink to="/chat" title="Open chat" description="Jump into the active room and continue the conversation." />
-                        <QuickLink to="/people" title="Browse people" description="Open profiles and start a private message." />
-                        <QuickLink to="/docs" title="Open docs" description="Review shared notes and the latest updates." />
-                        <QuickLink to="/whiteboard" title="Open whiteboard" description="Move from discussion to visual planning." />
+                  ) : (
+                     <div className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+                        <div className="rounded-[20px] border border-white/10 bg-[rgba(2,6,23,0.65)] p-4">
+                           <div className="text-[11px] uppercase tracking-[0.28em] text-gold">Highlights</div>
+                           <div className="mt-4 space-y-3">
+                              {tabContent.items.map((item, index) => (
+                                 <div key={`${item.title}-${index}`} className="rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3">
+                                    <div className="text-sm font-medium text-white">{item.title}</div>
+                                    <div className="mt-1 text-sm text-muted-foreground">{item.description}</div>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+                        <div className="rounded-[20px] border border-white/10 bg-[rgba(2,6,23,0.65)] p-4">
+                           <div className="text-[11px] uppercase tracking-[0.28em] text-gold">Suggested next step</div>
+                           <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                              <div className="rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3">Keep the current focus visible with one crisp update for the team.</div>
+                              <div className="rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3">Open the relevant workspace area to continue the momentum from here.</div>
+                           </div>
+                        </div>
                      </div>
-                  </div>
+                  )}
                </div>
             </div>
          </PageShell>

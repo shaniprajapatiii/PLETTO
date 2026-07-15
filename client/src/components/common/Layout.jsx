@@ -204,14 +204,19 @@ export default function Layout() {
    return (
       <div className="min-h-screen bg-[#030303] text-slate-100">
          <div className="flex min-h-screen flex-col">
-            <header className="flex h-16 items-center gap-3 border-b border-white/8 bg-gradient-to-r from-[rgba(6,6,6,0.95)] via-[rgba(8,8,8,0.92)] to-[rgba(6,6,6,0.95)] px-4 shadow-[0_12px_42px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition sm:px-6">
+            <header className="flex flex-wrap items-center gap-3 border-b border-white/8 bg-gradient-to-r from-[rgba(6,6,6,0.95)] via-[rgba(8,8,8,0.92)] to-[rgba(6,6,6,0.95)] px-4 py-3 shadow-[0_12px_42px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition sm:px-6 sm:py-0">
                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-3">
-                     <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
-                        <Logo withText={false} className="h-5 w-5" />
-                        <span className="text-sm font-semibold tracking-[0.24em] text-white">PLETTO</span>
-                     </div>
-                     <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-gold/80 font-semibold">
+                  <div className="flex flex-wrap items-center gap-2">
+                     <button
+                        type="button"
+                        onClick={() => navigate("/dashboard")}
+                        className="flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2 transition hover:border-white/20 hover:bg-white/[0.05]"
+                        aria-label="Go to dashboard"
+                     >
+                        <Logo withText={false} iconClassName="h-5 w-5" />
+                        <span className="whitespace-nowrap text-sm font-semibold tracking-[0.24em] text-white">PLETTO</span>
+                     </button>
+                     <div className="hidden md:flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-gold/80 font-semibold">
                         {breadCrumbs.map((segment, index) => (
                            <span key={`${segment}-${index}`} className="flex items-center gap-2">
                               <span className="text-white/30">/</span>
@@ -222,18 +227,19 @@ export default function Layout() {
                         ))}
                      </div>
                   </div>
-                  <h1 className="mt-0.5 text-[1rem] font-semibold text-white">{title}</h1>
-               </div>
-
-               <div className="hidden items-center gap-2 md:flex">
-                  <PresenceStack />
+                  <h1 className="mt-2 text-base font-semibold text-white sm:mt-1 sm:text-[1rem]">{title}</h1>
                </div>
 
                <div className="flex flex-wrap items-center gap-2 justify-end">
+                  <div className="hidden md:flex items-center gap-2">
+                     <PresenceStack />
+                  </div>
+
                   <button
                      type="button"
                      onClick={() => setSearchChannelsOpen(true)}
                      className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                     aria-label="Search channels"
                   >
                      <SearchIcon className="h-4 w-4" />
                   </button>
@@ -241,20 +247,23 @@ export default function Layout() {
                      type="button"
                      onClick={() => setCreateChannelModalOpen(true)}
                      className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                     aria-label="Create channel"
                   >
                      <PlusIcon className="h-4 w-4" />
                   </button>
                   <button
                      type="button"
                      onClick={() => navigate("/profile")}
-                     className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                     className="hidden sm:inline-flex rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                     aria-label="Open profile"
                   >
                      <ProfileIcon className="h-4 w-4" />
                   </button>
                   <button
                      type="button"
                      onClick={() => navigate("/settings")}
-                     className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                     className="hidden sm:inline-flex rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                     aria-label="Open settings"
                   >
                      <SettingsIcon className="h-4 w-4" />
                   </button>
@@ -265,6 +274,7 @@ export default function Layout() {
                      ref={(el) => (notifRef.current[1] = el)}
                      onClick={() => setNotifOpen((value) => !value)}
                      className="relative rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-gold/30 hover:bg-white/[0.05] hover:text-white"
+                     aria-label="Open notifications"
                   >
                      <BellIcon className="h-4 w-4" />
                      {unreadCount > 0 ? (
@@ -441,10 +451,6 @@ export default function Layout() {
          )}
 
          <div className={`fixed bottom-5 left-1/2 z-40 flex w-[min(92vw,880px)] -translate-x-1/2 items-center justify-between gap-2 rounded-full border border-gold/60 bg-[#020202] bg-opacity-95 px-4 py-3 shadow-[0_28px_80px_rgba(0,0,0,0.45)] transition-transform duration-300 ${dockHidden ? "translate-y-[140%]" : "translate-y-0"}`}>
-            <button onClick={() => navigate("/dashboard")} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.04] text-gold transition hover:bg-white/[0.08]">
-               <Logo withText={false} className="h-5 w-5" />
-            </button>
-
             <div className="flex items-center gap-2">
                {navItems.map((item) => {
                   const Icon = item.icon;
@@ -460,6 +466,7 @@ export default function Layout() {
                               ? "bg-gold/15 text-gold shadow-[0_0_0_1px_rgba(245,181,50,0.18)]"
                               : "text-muted-foreground hover:bg-white/[0.08] hover:text-white"
                         }`}
+                        aria-label={item.label}
                      >
                         <Icon className="h-5 w-5" />
                         {item.to === "/chat" && channels.length > 0 ? (
@@ -497,14 +504,9 @@ export default function Layout() {
                })}
 
                <button
-                  onClick={() => setSearchChannelsOpen(true)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
-               >
-                  <SearchIcon className="h-5 w-5" />
-               </button>
-               <button
                   onClick={() => setCreateChannelModalOpen(true)}
                   className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
+                  aria-label="Create channel"
                >
                   <PlusIcon className="h-5 w-5" />
                </button>
@@ -512,25 +514,23 @@ export default function Layout() {
 
             <div className="flex items-center gap-2">
                <button
-                  onClick={() => setNotifOpen((value) => !value)}
-                  className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
+                  onclick={() => setSearchChannelsOpen(true)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
                >
-                  <BellIcon className="h-5 w-5" />
-                  {unreadCount > 0 ? (
-                     <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1.5 text-[10px] font-semibold text-[var(--noir-900)] shadow-[0_0_0_4px_rgba(0,0,0,0.25)]">
-                        {unreadCount}
-                     </span>
-                  ) : null}
+                  <SearchIcon className="h-5 w-5" />
                </button>
+
                <button
                   onClick={() => navigate("/profile")}
                   className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
+                  aria-label="Profile"
                >
                   <ProfileIcon className="h-5 w-5" />
                </button>
                <button
                   onClick={() => navigate("/settings")}
                   className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
+                  aria-label="Settings"
                >
                   <SettingsIcon className="h-5 w-5" />
                </button>
