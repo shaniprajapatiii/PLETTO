@@ -35,13 +35,13 @@ export default function Landing() {
       >
          <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(249,235,174,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(249,235,174,0.045)_1px,transparent_1px)] bg-[size:44px_44px]" />
          <header className="sticky top-0 z-30 px-4 py-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-7xl rounded-full border border-white/10 bg-[#050505]/85 px-3 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.32)] backdrop-blur-2xl">
+            <div className="mx-auto max-w-7xl rounded-full border border-white/10 bg-[#050505]/85 px-4 py-3 shadow-2xl backdrop-blur-2xl">
                <div className="flex items-center justify-between gap-3">
                   <Link to="/" className="flex items-center gap-3 text-white">
-                     <Logo className="h-9" />
+                     <Logo className="h-8" />
                      <div className="hidden sm:block">
-                        <div className="text-[10px] uppercase tracking-[0.3em] text-[#f9ebae]">PLETTO</div>
-                        <div className="text-xs text-slate-400">Collaborative workspace</div>
+                        <div className="text-xs font-bold tracking-widest text-[#f9ebae] uppercase">PLETTO</div>
+                        <div className="text-[10px] text-zinc-400">Workspace Operating System</div>
                      </div>
                   </Link>
 
@@ -50,7 +50,7 @@ export default function Landing() {
                         <a
                            key={section.href}
                            href={section.href}
-                           className="rounded-full px-3 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-[#f9ebae]"
+                           className="rounded-full px-3.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-white/5 hover:text-[#f9ebae]"
                         >
                            {section.label}
                         </a>
@@ -60,22 +60,22 @@ export default function Landing() {
                   <div className="hidden items-center gap-3 md:flex">
                      <Link
                         to="/login"
-                        className="rounded-full border border-[#f9ebae]/20 bg-[#121212]/80 px-4 py-2 text-sm text-slate-300 transition hover:border-[#f9ebae]/45 hover:text-white"
+                        className="rounded-full border border-[#f9ebae]/20 bg-[#121212]/80 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:border-[#f9ebae]/45 hover:text-white"
                      >
                         Login
                      </Link>
                      <Link
                         to="/register"
-                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] px-5 py-2 text-sm font-semibold text-[#140d03] shadow-[0_16px_40px_rgba(249,235,174,0.18)] transition hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] px-5 py-2 text-xs font-bold text-[#140d03] shadow-[0_16px_40px_rgba(249,235,174,0.18)] transition hover:-translate-y-0.5"
                      >
-                        Start free <ArrowRight className="h-4 w-4" />
+                        Start free <ArrowRight className="h-3.5 w-3.5" />
                      </Link>
                   </div>
 
                   <button
                      type="button"
                      onClick={() => setMobileMenuOpen((value) => !value)}
-                     className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-300 transition hover:border-[#f9ebae]/30 hover:text-white md:hidden"
+                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 transition hover:text-white md:hidden"
                      aria-label="Toggle navigation"
                      aria-expanded={mobileMenuOpen}
                   >
@@ -84,33 +84,33 @@ export default function Landing() {
                </div>
 
                {mobileMenuOpen ? (
-                  <div className="mt-3 rounded-[22px] border border-white/10 bg-[#0b0b0b]/95 p-3 md:hidden">
+                  <div className="mt-3 rounded-xl border border-white/10 bg-[#0b0b0b]/95 p-3 md:hidden space-y-2">
                      <nav className="flex flex-col gap-1">
                         {sections.map((section) => (
                            <a
                               key={section.href}
                               href={section.href}
                               onClick={() => setMobileMenuOpen(false)}
-                              className="rounded-2xl px-3 py-2 text-sm text-slate-300 transition hover:bg-white/5 hover:text-[#f9ebae]"
+                              className="rounded-lg px-3 py-2 text-xs text-zinc-300 hover:bg-white/5 hover:text-[#f9ebae]"
                            >
                               {section.label}
                            </a>
                         ))}
                      </nav>
-                     <div className="mt-3 flex flex-col gap-2">
+                     <div className="pt-2 border-t border-zinc-800 flex flex-col gap-2">
                         <Link
                            to="/login"
                            onClick={() => setMobileMenuOpen(false)}
-                           className="rounded-2xl border border-[#f9ebae]/20 bg-[#121212]/80 px-4 py-2 text-center text-sm text-slate-300"
+                           className="rounded-lg border border-[#f9ebae]/20 bg-[#121212]/80 px-4 py-2 text-center text-xs text-zinc-300"
                         >
                            Login
                         </Link>
                         <Link
                            to="/register"
                            onClick={() => setMobileMenuOpen(false)}
-                           className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] px-4 py-2 text-sm font-semibold text-[#140d03]"
+                           className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f9ebae] to-[#d8c46e] px-4 py-2 text-xs font-bold text-[#140d03]"
                         >
-                           Start free <ArrowRight className="h-4 w-4" />
+                           Start Free <ArrowRight className="h-3.5 w-3.5" />
                         </Link>
                      </div>
                   </div>
@@ -120,49 +120,48 @@ export default function Landing() {
 
          <main>
             <section className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
-               <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(249,235,174,0.16),transparent_40%),linear-gradient(145deg,rgba(249,235,174,0.1),rgba(10,10,10,0.96))]" />
-               <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+               <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:items-center">
                   <div className="space-y-8">
                      <div className="max-w-2xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#f9ebae]/20 bg-[#121212]/70 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-[#f9ebae] shadow-[0_8px_25px_rgba(0,0,0,0.2)]">
-                           <span className="h-2 w-2 rounded-full bg-[#f9ebae]" />
-                           Premium collaboration workspace
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#f9ebae]/20 bg-[#121212]/70 px-3 py-1 text-xs font-semibold text-[#f9ebae] shadow-[0_8px_25px_rgba(0,0,0,0.2)]">
+                           <span className="h-2 w-2 rounded-full bg-[#f9ebae] animate-pulse" />
+                           Next-Gen Team Collaboration Platform
                         </div>
-                        <h1 className="mt-5 font-display text-5xl font-semibold leading-tight text-white sm:text-6xl lg:text-7xl">
-                           Create a workspace that feels <span className="text-[#f9ebae]">alive</span>.
+                        <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl leading-tight">
+                           A unified workspace built for <span className="text-[#f9ebae]">speed & clarity</span>.
                         </h1>
-                        <p className="mt-6 max-w-xl text-lg leading-8 text-slate-400">
-                           PLETTO brings docs, chat, boards, and live context together into one premium operating system for modern teams that ship with clarity.
+                        <p className="mt-5 max-w-xl text-base leading-relaxed text-zinc-400">
+                           PLETTO merges real-time docs, channel chat, interactive whiteboards, and presence into one hyper-efficient operating system.
                         </p>
                      </div>
 
-                     <div className="flex flex-col gap-4 sm:flex-row">
-                        <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] px-6 py-3 text-sm font-semibold text-[#140d03] shadow-[0_20px_50px_rgba(249,235,174,0.2)] transition hover:-translate-y-0.5">
-                           Create workspace <ArrowRight className="h-4 w-4" />
+                     <div className="flex flex-col gap-3 sm:flex-row">
+                        <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] px-6 py-3 text-xs font-bold text-[#140d03] shadow-lg shadow-[#f9ebae]/20 transition hover:-translate-y-0.5">
+                           Launch Workspace <ArrowRight className="h-4 w-4" />
                         </Link>
-                        <Link to="/login" className="inline-flex items-center justify-center rounded-2xl border border-[#f9ebae]/20 bg-[#121212]/80 px-6 py-3 text-sm text-white transition hover:border-[#f9ebae]/45">
-                           Sign in
+                        <Link to="/login" className="inline-flex items-center justify-center rounded-xl border border-[#f9ebae]/20 bg-[#121212]/80 px-6 py-3 text-xs font-semibold text-white transition hover:border-[#f9ebae]/45">
+                           Sign In
                         </Link>
                      </div>
 
-                     <div className="rounded-[1.5rem] border border-[#f9ebae]/15 bg-[#121212]/70 p-4 shadow-[0_16px_45px_rgba(0,0,0,0.24)] backdrop-blur-sm">
-                        <div className="grid gap-4 sm:grid-cols-3">
+                     <div className="rounded-xl border border-[#f9ebae]/15 bg-[#121212]/70 p-4 backdrop-blur-sm">
+                        <div className="grid gap-3 sm:grid-cols-3">
                            {[
-                              { label: "Live sync", value: "Sub-40ms" },
-                              { label: "Team scale", value: "Unlimited" },
-                              { label: "Security", value: "Enterprise" },
+                              { label: "Realtime Latency", value: "<40ms" },
+                              { label: "Workspace Capacity", value: "Unlimited" },
+                              { label: "Encryption Standard", value: "SOC-2 Ready" },
                            ].map((item) => (
-                              <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                                 <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{item.label}</div>
-                                 <div className="mt-1 text-lg font-semibold text-white">{item.value}</div>
+                              <div key={item.label} className="p-3 rounded-lg border border-white/10 bg-white/[0.03]">
+                                 <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{item.label}</div>
+                                 <div className="mt-1 text-sm font-bold text-white">{item.value}</div>
                               </div>
                            ))}
                         </div>
                      </div>
                   </div>
                   <div className="relative">
-                     <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle,rgba(249,235,174,0.16),transparent_60%)] blur-3xl" />
-                     <div className="relative rounded-[2rem] border border-[#f9ebae]/15 bg-[#0f0f0f]/90 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                     <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle,rgba(249,235,174,0.16),transparent_60%)] blur-3xl" />
+                     <div className="relative rounded-xl border border-[#f9ebae]/15 bg-[#0f0f0f]/90 p-4 shadow-2xl backdrop-blur-xl">
                         <AnimatedWorkspaceDiagram />
                      </div>
                   </div>

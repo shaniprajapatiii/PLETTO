@@ -395,262 +395,184 @@ export default function Chat() {
          {/* Main Chat */}
          <div className="flex min-h-[680px] flex-col rounded-[24px] border border-white/10 bg-[#060606]/85 p-4 shadow-[0_16px_50px_rgba(0,0,0,0.24)]">
             {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-800">
                <div>
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Active room</div>
-                  <div className="mt-1 text-xl font-semibold text-white">{activeChannel?.name || "Choose a room"}</div>
+                  <span className="text-[10px] font-bold text-[#f9ebae] uppercase tracking-widest">Active Channel</span>
+                  <h2 className="text-lg font-bold text-zinc-100 mt-0.5">{activeChannel?.name ? `# ${activeChannel.name}` : "Choose a channel"}</h2>
                </div>
-               <div className="flex gap-2">
+               <div className="flex items-center gap-2">
                   {pinnedMessages.length > 0 && (
                      <button
                         onClick={() => setShowPinned(!showPinned)}
-                        className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2 text-sm text-gold hover:bg-[rgba(249,235,174,0.12)]"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[rgba(249,235,174,0.3)] bg-[rgba(249,235,174,0.1)] text-xs font-semibold text-[#f9ebae] hover:bg-[rgba(249,235,174,0.2)] transition"
                      >
-                        📌 {pinnedMessages.length}
+                        <span>📌 {pinnedMessages.length} Pinned</span>
                      </button>
                   )}
-                  <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2 text-sm text-gold">
-                     <HiSparkles className="h-4 w-4" />
-                     Realtime
-                  </div>
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] font-semibold text-emerald-400">
+                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                     <span>{onlineUsers.length} Online</span>
+                  </span>
                </div>
             </div>
 
-            {/* Status */}
-            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm">
-               <div className="flex items-center gap-2 text-gold">
-                  <HiUsers className="h-4 w-4" />
-                  {onlineUsers.length} online
+            {/* Typing Indicator Bar */}
+            {typingUsers.length > 0 && (
+               <div className="mt-2 text-xs text-[#f9ebae] italic">
+                  {typingUsers.map((u) => u.name).join(", ")} is typing…
                </div>
-               <div className="rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">
-                  Live sync
-               </div>
-               {typingUsers.length > 0 && (
-                  <div className="text-sm text-white">
-                     {typingUsers.map((u) => u.name).join(", ")} is typing…
-                  </div>
-               )}
-            </div>
+            )}
 
             {/* Pinned Messages Panel */}
             {showPinned && pinnedMessages.length > 0 && (
-               <div className="mt-4 rounded-[16px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                     <span className="font-semibold text-white">Pinned Messages</span>
-                     <button onClick={() => setShowPinned(false)} className="text-muted-foreground hover:text-white">
-                        <HiXCircle className="h-5 w-5" />
+               <div className="mt-3 p-3.5 rounded-xl border border-[rgba(249,235,174,0.3)] bg-[rgba(249,235,174,0.05)] space-y-2">
+                  <div className="flex items-center justify-between">
+                     <span className="text-xs font-bold text-[#f9ebae]">Pinned Messages</span>
+                     <button onClick={() => setShowPinned(false)} className="text-zinc-400 hover:text-white">
+                        <HiXCircle className="h-4 w-4" />
                      </button>
                   </div>
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
                      {pinnedMessages.map((msg) => (
-                        <div key={msg._id} className="rounded-[12px] border border-white/10 bg-white/[0.05] p-3">
-                           <div className="flex items-center justify-between gap-2">
-                              <span className="text-xs font-medium text-gold">{msg.user?.name}</span>
-                              <button
-                                 onClick={() => handleUnpinMessage(msg._id)}
-                                 className="text-xs text-muted-foreground hover:text-white"
-                              >
-                                 Unpin
-                              </button>
+                        <div key={msg._id} className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950 flex items-center justify-between gap-2 text-xs">
+                           <div>
+                              <span className="font-bold text-zinc-200">{msg.user?.name}: </span>
+                              <span className="text-zinc-400">{msg.text}</span>
                            </div>
-                           <p className="mt-1 text-sm text-white">{msg.text}</p>
+                           <button onClick={() => handleUnpinMessage(msg._id)} className="text-[10px] text-zinc-500 hover:text-[#f9ebae]">
+                              Unpin
+                           </button>
                         </div>
                      ))}
                   </div>
                </div>
             )}
 
-            {/* Messages */}
-            <div className="mt-4 flex-1 overflow-auto rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.025)] p-4">
+            {/* Message Feed Canvas */}
+            <div className="mt-3 flex-1 overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-4 space-y-3 min-h-[450px]">
                {messages.length > 0 ? (
-                  <div className="space-y-3">
-                     {messages
-                        .filter((msg) => !msg.isDeleted)
-                        .map((msg) => (
-                           <div
-                              key={msg._id}
-                              className="group rounded-[16px] border border-white/10 bg-[rgba(255,255,255,0.05)] p-4 transition hover:border-gold/20 hover:bg-[rgba(255,255,255,0.08)]"
-                           >
-                              <div className="flex items-center justify-between gap-3">
-                                 <div className="flex items-center gap-3 flex-1">
-                                    <div className="text-sm font-semibold text-white">{msg.user?.name || "Unknown"}</div>
-                                    <span className="text-xs text-muted-foreground">
-                                       {new Date(msg.createdAt).toLocaleTimeString([], {
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                       })}
-                                    </span>
-                                    {msg.isEdited && <span className="text-xs text-muted-foreground">(edited)</span>}
-                                    {msg.isPinned && <span className="text-xs text-gold">📌</span>}
-                                 </div>
-                                 <div className="hidden gap-2 group-hover:flex">
-                                    <button
-                                       onClick={() => handlePinMessage(msg._id)}
-                                       className="p-1 text-muted-foreground hover:text-gold"
-                                       title="Pin message"
-                                    >
-                                       📌
-                                    </button>
-                                    <button
-                                       onClick={() => setShowEmojiPicker(msg._id)}
-                                       className="p-1 text-muted-foreground hover:text-gold"
-                                       title="Add reaction"
-                                    >
-                                       <HiEmojiHappy className="h-4 w-4" />
-                                    </button>
-                                    {msg.user?._id === user?._id && (
-                                       <>
-                                          <button
-                                             onClick={() => {
-                                                setEditingMessageId(msg._id);
-                                                setEditingText(msg.text);
-                                             }}
-                                             className="p-1 text-muted-foreground hover:text-gold"
-                                             title="Edit"
-                                          >
-                                             <HiPencil className="h-4 w-4" />
-                                          </button>
-                                          <button
-                                             onClick={() => handleDeleteMessage(msg._id)}
-                                             className="p-1 text-muted-foreground hover:text-red-400"
-                                             title="Delete"
-                                          >
-                                             <HiTrash className="h-4 w-4" />
-                                          </button>
-                                       </>
-                                    )}
-                                 </div>
+                  messages
+                     .filter((msg) => !msg.isDeleted)
+                     .map((msg) => (
+                        <div
+                           key={msg._id}
+                           className="group p-3.5 rounded-xl border border-zinc-800/60 bg-zinc-900/40 hover:bg-zinc-900/80 hover:border-zinc-700 transition space-y-1.5"
+                        >
+                           <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                 <span className="text-xs font-bold text-zinc-200">{msg.user?.name || "Member"}</span>
+                                 <span className="text-[10px] text-zinc-500">
+                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                 </span>
+                                 {msg.isEdited && <span className="text-[10px] text-zinc-500">(edited)</span>}
+                                 {msg.isPinned && <span className="text-xs text-[#f9ebae]">📌</span>}
                               </div>
 
-                              {/* Emoji picker */}
-                              {showEmojiPicker === msg._id && (
-                                 <div className="mt-2 flex gap-1 rounded-[12px] border border-white/10 bg-white/[0.05] p-2">
-                                    {EMOJI_REACTIONS.map((emoji) => (
-                                       <button
-                                          key={emoji}
-                                          onClick={() => handleAddReaction(msg._id, emoji)}
-                                          className="p-1 hover:bg-white/[0.1] rounded transition"
-                                       >
-                                          {emoji}
+                              <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition">
+                                 <button onClick={() => handlePinMessage(msg._id)} className="p-1 text-zinc-400 hover:text-[#f9ebae]" title="Pin message">
+                                    📌
+                                 </button>
+                                 <button onClick={() => setShowEmojiPicker(msg._id)} className="p-1 text-zinc-400 hover:text-[#f9ebae]" title="Reaction">
+                                    <HiEmojiHappy className="h-4 w-4" />
+                                 </button>
+                                 {msg.user?._id === user?._id && (
+                                    <>
+                                       <button onClick={() => { setEditingMessageId(msg._id); setEditingText(msg.text); }} className="p-1 text-zinc-400 hover:text-[#f9ebae]">
+                                          <HiPencil className="h-4 w-4" />
                                        </button>
-                                    ))}
-                                    <button
-                                       onClick={() => setShowEmojiPicker(null)}
-                                       className="p-1 text-muted-foreground hover:text-white"
-                                    >
-                                       <HiXCircle className="h-4 w-4" />
-                                    </button>
-                                 </div>
-                              )}
-
-                              {/* Edit mode */}
-                              {editingMessageId === msg._id ? (
-                                 <form
-                                    onSubmit={(e) => {
-                                       e.preventDefault();
-                                       handleEditMessage(msg._id, editingText);
-                                    }}
-                                    className="mt-2 flex gap-2"
-                                 >
-                                    <input
-                                       type="text"
-                                       value={editingText}
-                                       onChange={(e) => setEditingText(e.target.value)}
-                                       className="flex-1 rounded-[12px] border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none"
-                                    />
-                                    <button
-                                       type="submit"
-                                       className="rounded-[12px] bg-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
-                                    >
-                                       Save
-                                    </button>
-                                    <button
-                                       type="button"
-                                       onClick={() => setEditingMessageId(null)}
-                                       className="rounded-[12px] border border-white/10 px-3 py-2 text-sm text-white"
-                                    >
-                                       Cancel
-                                    </button>
-                                 </form>
-                              ) : (
-                                 <>
-                                    <p className="mt-2 text-sm leading-6 text-white">{msg.text}</p>
-
-                                    {/* Reactions display */}
-                                    {msg.reactions && msg.reactions.length > 0 && (
-                                       <div className="mt-2 flex flex-wrap gap-1">
-                                          {msg.reactions.map((reaction) => (
-                                             <button
-                                                key={reaction.emoji}
-                                                onClick={() => {
-                                                   if (reaction.users?.some((u) => u._id === user?._id)) {
-                                                      handleRemoveReaction(msg._id, reaction.emoji);
-                                                   } else {
-                                                      handleAddReaction(msg._id, reaction.emoji);
-                                                   }
-                                                }}
-                                                className={`rounded-full px-2 py-1 text-xs flex items-center gap-1 transition ${
-                                                   reaction.users?.some((u) => u._id === user?._id)
-                                                      ? "border-gold/50 bg-[rgba(249,235,174,0.12)]"
-                                                      : "border border-white/10 bg-white/[0.05] hover:bg-white/[0.1]"
-                                                }`}
-                                                title={reaction.users?.map((u) => u.name).join(", ")}
-                                             >
-                                                {reaction.emoji} {reaction.users?.length || 0}
-                                             </button>
-                                          ))}
-                                       </div>
-                                    )}
-                                 </>
-                              )}
+                                       <button onClick={() => handleDeleteMessage(msg._id)} className="p-1 text-zinc-400 hover:text-red-400">
+                                          <HiTrash className="h-4 w-4" />
+                                       </button>
+                                    </>
+                                 )}
+                              </div>
                            </div>
-                        ))}
-                     <div ref={messagesEndRef} />
-                  </div>
+
+                           {/* Emoji Picker Popup */}
+                           {showEmojiPicker === msg._id && (
+                              <div className="mt-1 flex gap-1 p-1.5 rounded-lg border border-zinc-800 bg-zinc-950">
+                                 {EMOJI_REACTIONS.map((emoji) => (
+                                    <button key={emoji} onClick={() => handleAddReaction(msg._id, emoji)} className="p-1 hover:bg-zinc-800 rounded text-sm">
+                                       {emoji}
+                                    </button>
+                                 ))}
+                                 <button onClick={() => setShowEmojiPicker(null)} className="p-1 text-zinc-500 hover:text-white">
+                                    <HiXCircle className="h-4 w-4" />
+                                 </button>
+                              </div>
+                           )}
+
+                           {/* Edit mode */}
+                           {editingMessageId === msg._id ? (
+                              <form onSubmit={(e) => { e.preventDefault(); handleEditMessage(msg._id, editingText); }} className="flex gap-2 mt-2">
+                                 <input
+                                    type="text"
+                                    value={editingText}
+                                    onChange={(e) => setEditingText(e.target.value)}
+                                    className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 outline-none focus:border-[#f9ebae]"
+                                 />
+                                 <button type="submit" className="px-3 py-1.5 rounded-lg bg-[#f9ebae] text-zinc-950 text-xs font-bold">Save</button>
+                                 <button type="button" onClick={() => setEditingMessageId(null)} className="px-3 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-400">Cancel</button>
+                              </form>
+                           ) : (
+                              <>
+                                 <p className="text-xs text-zinc-200 leading-relaxed">{msg.text}</p>
+                                 {msg.reactions && msg.reactions.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                       {msg.reactions.map((r) => (
+                                          <button
+                                             key={r.emoji}
+                                             onClick={() => {
+                                                if (r.users?.some((u) => u._id === user?._id)) {
+                                                   handleRemoveReaction(msg._id, r.emoji);
+                                                } else {
+                                                   handleAddReaction(msg._id, r.emoji);
+                                                }
+                                             }}
+                                             className={`px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1 border transition ${
+                                                r.users?.some((u) => u._id === user?._id)
+                                                   ? "border-[rgba(249,235,174,0.4)] bg-[rgba(249,235,174,0.15)] text-[#f9ebae] font-bold"
+                                                   : "border-zinc-800 bg-zinc-900 text-zinc-400"
+                                             }`}
+                                          >
+                                             {r.emoji} {r.users?.length || 0}
+                                          </button>
+                                       ))}
+                                    </div>
+                                 )}
+                              </>
+                           )}
+                        </div>
+                     ))
                ) : (
-                  <div className="grid h-full place-items-center text-center text-sm text-muted-foreground">
-                     {activeChannel ? "No messages yet. Start the conversation." : "Pick a room to begin."}
+                  <div className="flex flex-col items-center justify-center h-full text-center py-20 text-xs text-zinc-500">
+                     {activeChannel ? "No messages in this channel yet. Start the conversation!" : "Select a channel to begin messaging."}
                   </div>
                )}
             </div>
 
-            {/* Reply indicator */}
-            {replyingTo && (
-               <div className="mt-2 flex items-center justify-between rounded-[12px] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2">
-                  <div className="flex items-center gap-2">
-                     <HiReply className="h-4 w-4 text-gold" />
-                     <span className="text-sm text-white">Replying to {replyingTo.user?.name}</span>
-                  </div>
-                  <button onClick={() => setReplyingTo(null)} className="text-muted-foreground hover:text-white">
-                     <HiXCircle className="h-4 w-4" />
-                  </button>
-               </div>
-            )}
-
-            {/* Message input */}
-            <form onSubmit={handleSendMessage} className="mt-4 flex flex-col gap-3 sm:flex-row">
+            {/* Message Input Box */}
+            <form onSubmit={handleSendMessage} className="mt-3 flex gap-2">
                <input
-                  className="flex-1 rounded-[16px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none focus:border-gold/40"
-                  placeholder="Type your message…"
+                  className="flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-zinc-100 outline-none focus:border-[#f9ebae] placeholder:text-zinc-600 transition"
+                  placeholder="Type a message..."
                   value={messageText}
                   onChange={handleMessageChange}
                   disabled={!activeChannel}
                />
                <button
                   type="submit"
-                  className="rounded-[16px] bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 font-bold text-xs shadow-md shadow-[#f9ebae]/20 transition disabled:opacity-50"
                   disabled={!activeChannel || !messageText.trim()}
                >
                   Send
                </button>
             </form>
 
-            {error && (
-               <div className="mt-4 rounded-[16px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
-                  {error}
-               </div>
-            )}
+            {error && <div className="mt-2 p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-red-300">{error}</div>}
          </div>
       </div>
    );
 }
+
+

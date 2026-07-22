@@ -29,7 +29,6 @@ export default function People() {
    }, []);
 
    const filteredMembers = useMemo(() => {
-      // Deduplicate by email first
       const seen = new Set();
       const uniqueMembers = members.filter((member) => {
          if (seen.has(member.email)) return false;
@@ -69,67 +68,68 @@ export default function People() {
 
    return (
       <PageShell
-         title="People"
-         subtitle="Everyone in your workspace, with fast private messaging and profile details."
+         title="Team Directory"
+         subtitle="Browse teammates across your workspace, view profiles, and send direct messages."
          actions={
-            <div className="inline-flex items-center gap-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-4 py-2 text-sm text-gold">
-               <HiUserGroup className="h-5 w-5" />
-               {members.length} members
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[rgba(249,235,174,0.3)] bg-[rgba(249,235,174,0.08)] text-xs font-semibold text-[#f9ebae]">
+               <HiUserGroup className="h-4 w-4 text-[#f9ebae]" />
+               <span>{members.length} Members</span>
             </div>
          }
       >
-         <div className="space-y-5">
-            <div className="rounded-[1.75rem] border border-white/[0.06] bg-[rgba(255,255,255,0.03)] p-4">
-               <div className="relative">
-                  <HiSearch className="absolute left-4 top-3.5 h-4 w-4 text-gold/60" />
-                  <input
-                     value={search}
-                     onChange={(event) => setSearch(event.target.value)}
-                     placeholder="Search by name, email, or role"
-                     className="w-full rounded-[1.1rem] border border-white/[0.06] bg-[rgba(255,255,255,0.05)] py-3 pl-10 pr-4 text-sm text-white outline-none transition focus:border-gold/30"
-                  />
-               </div>
+         <div className="space-y-4">
+            {/* Search Control */}
+            <div className="relative">
+               <HiSearch className="absolute left-3.5 top-3 h-4 w-4 text-zinc-500" />
+               <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search members by name, email, or role..."
+                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] transition"
+               />
             </div>
 
-            {error ? <div className="rounded-[1.2rem] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
+            {error ? <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-red-300">{error}</div> : null}
 
-            <div className="space-y-3">
+            {/* Member Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {filteredMembers.length > 0 ? (
                   filteredMembers.map((member) => {
                      const avatarSrc = getAvatarSrc(member);
-                     const initials = getInitials(member.name, member.email);
                      return (
-                        <article key={member.email || member.userId || member._id} className="flex items-center justify-between gap-4 rounded-[26px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-5 shadow-[0_16px_50px_rgba(0,0,0,0.2)] transition hover:border-white/20 hover:bg-[rgba(255,255,255,0.06)]">
-                           <div className="flex min-w-0 flex-1 items-center gap-4">
-                              <img src={avatarSrc} alt={member.name || member.email || "Member"} className="h-20 w-20 flex-shrink-0 rounded-[1.1rem] border border-white/10 object-cover" />
-                              <div className="min-w-0 flex-1">
-                                 <div className="flex flex-wrap items-center gap-2">
-                                    <h3 className="truncate text-lg font-semibold text-white">{member.name || member.email || "Member"}</h3>
-                                    <span className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${member.role === "owner" ? "bg-gold/15 text-gold" : "bg-white/5 text-muted-foreground"}`}>
+                        <div key={member.email || member.userId || member._id} className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-950/60 hover:bg-zinc-900/60 hover:border-zinc-700 transition flex items-center justify-between gap-4">
+                           <div className="flex items-center gap-3.5 min-w-0">
+                              <div className="relative shrink-0">
+                                 <img src={avatarSrc} alt={member.name || member.email} className="h-12 w-12 rounded-lg border border-zinc-800 object-cover" />
+                                 <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-zinc-950" />
+                              </div>
+                              <div className="min-w-0">
+                                 <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-bold text-zinc-100 truncate">{member.name || member.email}</h3>
+                                    <span className={`px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded ${member.role === "owner" ? "bg-[rgba(249,235,174,0.12)] text-[#f9ebae] border border-[rgba(249,235,174,0.3)]" : "bg-zinc-900 text-zinc-400 border border-zinc-800"}`}>
                                        {member.role || "member"}
                                     </span>
                                  </div>
-                                 <p className="mt-1 truncate text-sm text-muted-foreground">{member.email || "No email available"}</p>
-                                 {member.bio ? <p className="mt-2 line-clamp-1 text-sm text-slate-300">{member.bio}</p> : <p className="mt-2 text-sm text-muted-foreground">No bio shared yet.</p>}
+                                 <p className="text-xs text-zinc-400 truncate mt-0.5">{member.email}</p>
+                                 <p className="text-[11px] text-zinc-500 truncate mt-1">{member.bio || "Team Member"}</p>
                               </div>
                            </div>
 
                            <button
                               type="button"
                               onClick={() => handleMessage(member)}
-                              disabled={busyId === member.userId}
-                              className="flex-shrink-0 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-4 py-2 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+                              disabled={busyId === member._id}
+                              className="px-3 py-1.5 rounded-lg bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold transition flex items-center gap-1.5 shrink-0 disabled:opacity-50"
                            >
-                              <HiChatAlt2 className="h-4 w-4" />
-                              {busyId === member.userId ? "Opening..." : "Message"}
-                              <HiArrowRight className="h-4 w-4" />
+                              <HiChatAlt2 size={14} />
+                              <span>Direct Message</span>
                            </button>
-                        </article>
+                        </div>
                      );
                   })
                ) : (
-                  <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-muted-foreground">
-                     No workspace members match your search.
+                  <div className="col-span-2 py-12 text-center text-xs text-zinc-500">
+                     No members match "{search}".
                   </div>
                )}
             </div>
@@ -137,3 +137,4 @@ export default function People() {
       </PageShell>
    );
 }
+

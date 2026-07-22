@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { HiPhotograph, HiUserCircle } from "react-icons/hi";
+import { HiPhotograph, HiUserCircle, HiPencil, HiLogout, HiCheck } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../services/profileService";
 import { getMe } from "../../services/authService";
@@ -98,138 +98,137 @@ export default function Profile() {
    };
 
    if (loading) {
-      return <div className="rounded-3xl border border-border bg-card/80 p-6 shadow-soft">Loading profile...</div>;
+      return (
+         <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500 border-t-transparent" />
+         </div>
+      );
    }
 
    return (
       <PageShell
-         title="Your account"
-         subtitle="Keep your workspace presence polished and update your profile whenever you need to."
+         title="Account Profile"
+         subtitle="Manage your personal workspace identity, avatar, and notification bio."
          actions={
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center gap-2">
                {!isEditing ? (
                   <button
                      type="button"
                      onClick={handleStartEdit}
-                     className="rounded-[1rem] border border-gold/20 bg-[rgba(249,235,174,0.1)] px-4 py-2 text-sm font-semibold text-gold transition hover:bg-[rgba(249,235,174,0.16)]"
+                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold shadow-md transition"
                   >
-                     Edit profile
+                     <HiPencil size={14} />
+                     <span>Edit Profile</span>
                   </button>
                ) : null}
                <button
                   type="button"
                   onClick={handleLogout}
-                  className="rounded-[1rem] border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-semibold text-red-300 transition"
                >
-                  Logout
+                  <HiLogout size={14} />
+                  <span>Sign Out</span>
                </button>
             </div>
          }
       >
          {!isEditing ? (
-            <div className="grid gap-6">
-               <div className="flex flex-col gap-5 rounded-[2rem] border border-white/[0.06] bg-[rgba(255,255,255,0.03)] p-5 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex items-center gap-4">
-                     <img src={avatarSrc} alt={profile.name || profile.email || "Profile"} className="h-20 w-20 rounded-[1.3rem] border border-white/[0.06] object-cover" />
+            <div className="space-y-6">
+               {/* User Banner Card */}
+               <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-950/60 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                     <div className="relative">
+                        <img src={avatarSrc} alt={profile.name || profile.email} className="h-20 w-20 rounded-xl border border-zinc-800 object-cover shadow-lg" />
+                        <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-zinc-950" />
+                     </div>
                      <div>
-                        <div className="text-sm uppercase tracking-[0.22em] text-gold">Profile overview</div>
-                        <h3 className="mt-2 text-xl font-semibold text-white">{profile.name || "Your name"}</h3>
-                        <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                           {profile.bio || "Add a short bio so your teammates know what you’re working on."}
-                        </p>
+                        <h2 className="text-xl font-bold text-zinc-100">{profile.name || "Workspace Member"}</h2>
+                        <p className="text-xs text-zinc-400 mt-0.5">{profile.email}</p>
+                        <p className="text-xs text-[#f9ebae] mt-2 font-medium">{profile.bio || "No bio added yet."}</p>
                      </div>
                   </div>
-                  <div className="rounded-[1rem] border border-white/[0.06] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm text-muted-foreground">
-                     <div className="font-medium text-white">{profile.email || "No email linked"}</div>
-                     <div className="mt-1">Workspace presence is ready to update.</div>
+               </div>
+
+               {/* Profile Info Grid */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
+                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Full Name</span>
+                     <p className="text-sm font-semibold text-zinc-100 mt-1">{profile.name || "—"}</p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
+                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Email Address</span>
+                     <p className="text-sm font-semibold text-zinc-100 mt-1">{profile.email || "—"}</p>
                   </div>
                </div>
 
-               <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.04)] p-4">
-                     <div className="text-sm uppercase tracking-[0.24em] text-gold">Display name</div>
-                     <div className="mt-2 text-lg font-semibold text-white">{profile.name || "—"}</div>
-                  </div>
-                  <div className="rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.04)] p-4">
-                     <div className="text-sm uppercase tracking-[0.24em] text-gold">Email</div>
-                     <div className="mt-2 text-lg font-semibold text-white">{profile.email || "—"}</div>
-                  </div>
+               <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">About Bio</span>
+                  <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">{profile.bio || "Share a quick summary of your focus area or role with your teammates."}</p>
                </div>
 
-               <div className="rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.04)] p-4">
-                  <div className="text-sm uppercase tracking-[0.24em] text-gold">About you</div>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                     {profile.bio || "Tell your team a little about your focus, role, or current priorities."}
-                  </p>
-               </div>
-
-               {message ? <div className="text-sm text-muted-foreground">{message}</div> : null}
+               {message ? <div className="text-xs text-emerald-400 font-semibold">{message}</div> : null}
             </div>
          ) : (
-            <form onSubmit={handleSave} className="grid gap-6">
-               <div className="flex flex-col gap-4 rounded-[2rem] border border-white/[0.06] bg-[rgba(255,255,255,0.03)] p-5 lg:flex-row lg:items-center lg:justify-between">
+            <form onSubmit={handleSave} className="space-y-6">
+               {/* Avatar Editor */}
+               <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950/60 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                     <img src={getAvatarSrc(editProfile)} alt={editProfile.name || editProfile.email || "Profile"} className="h-20 w-20 rounded-[1.3rem] border border-white/[0.06] object-cover" />
+                     <img src={getAvatarSrc(editProfile)} alt="Avatar Preview" className="h-16 w-16 rounded-xl border border-zinc-800 object-cover" />
                      <div>
-                        <div className="text-sm uppercase tracking-[0.22em] text-gold">Avatar preview</div>
-                        <p className="mt-2 max-w-md text-sm text-muted-foreground">Upload a fresh image or keep the current avatar. Changes save instantly when you confirm.</p>
+                        <h3 className="text-sm font-bold text-zinc-100">Avatar Image</h3>
+                        <p className="text-xs text-zinc-400">Upload a fresh profile picture.</p>
                      </div>
                   </div>
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-[1rem] border border-white/[0.06] bg-[rgba(255,255,255,0.05)] px-4 py-3 text-sm text-white transition hover:border-gold/30 hover:bg-[rgba(249,235,174,0.08)]">
-                     <HiPhotograph className="h-4 w-4 text-gold" />
-                     {uploading ? "Uploading..." : "Upload avatar"}
+                  <label className="cursor-pointer px-3.5 py-2 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 transition flex items-center gap-2">
+                     <HiPhotograph className="h-4 w-4 text-[#f9ebae]" />
+                     <span>{uploading ? "Uploading..." : "Upload Image"}</span>
                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />
                   </label>
                </div>
 
-               <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-                  <label className="space-y-2 text-sm text-muted-foreground">
-                     Name
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                     <label className="block text-xs font-semibold text-zinc-300">Display Name</label>
                      <input
-                        className="w-full rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none focus:border-gold"
+                        className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-sm text-zinc-100 outline-none focus:border-[#f9ebae]"
                         value={editProfile.name}
                         onChange={(e) => setEditProfile({ ...editProfile, name: e.target.value })}
                      />
-                  </label>
-                  <label className="space-y-2 text-sm text-muted-foreground">
-                     Email
+                  </div>
+                  <div>
+                     <label className="block text-xs font-semibold text-zinc-300">Email Address (Read-only)</label>
                      <input
-                        className="w-full rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none"
+                        className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 px-3.5 py-2 text-sm text-zinc-400 outline-none cursor-not-allowed"
                         value={editProfile.email}
                         readOnly
                      />
-                  </label>
+                  </div>
                </div>
-               <label className="space-y-2 text-sm text-muted-foreground">
-                  Bio
+
+               <div>
+                  <label className="block text-xs font-semibold text-zinc-300">Personal Bio</label>
                   <textarea
-                     className="w-full rounded-[1.5rem] border border-border bg-[rgba(255,255,255,0.06)] p-4 text-sm text-white outline-none focus:border-gold"
-                     rows={5}
+                     className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3.5 text-sm text-zinc-100 outline-none focus:border-[#f9ebae]"
+                     rows={4}
                      value={editProfile.bio}
                      onChange={(e) => setEditProfile({ ...editProfile, bio: e.target.value })}
                   />
-               </label>
-               <label className="space-y-2 text-sm text-muted-foreground">
-                  Avatar URL or uploaded image
-                  <input
-                     className="w-full rounded-[1.2rem] border border-border bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white outline-none focus:border-gold"
-                     value={editProfile.avatar}
-                     onChange={(e) => setEditProfile({ ...editProfile, avatar: e.target.value })}
-                  />
-               </label>
-               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-wrap gap-3">
-                     <button type="submit" className="rounded-[1.2rem] bg-gradient-gold px-6 py-3 text-sm font-semibold text-[var(--noir-900)] transition hover:-translate-y-0.5">
-                        Save profile
+               </div>
+
+               <div className="flex items-center justify-between pt-2">
+                  <div className="flex gap-2">
+                     <button type="submit" className="px-4 py-2 rounded-lg bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold shadow-md transition">
+                        Save Changes
                      </button>
-                     <button type="button" onClick={handleCancelEdit} className="rounded-[1.2rem] border border-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/20">
+                     <button type="button" onClick={handleCancelEdit} className="px-4 py-2 rounded-lg border border-zinc-800 text-xs text-zinc-400 hover:text-white">
                         Cancel
                      </button>
                   </div>
-                  {message ? <div className="text-sm text-muted-foreground">{message}</div> : null}
+                  {message ? <div className="text-xs text-red-400">{message}</div> : null}
                </div>
             </form>
          )}
       </PageShell>
    );
 }
+
