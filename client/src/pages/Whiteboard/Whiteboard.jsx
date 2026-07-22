@@ -255,10 +255,10 @@ export default function Whiteboard() {
                         key={board._id}
                         type="button"
                         onClick={() => selectBoard(board)}
-                        className={`w-full rounded-[1.2rem] border px-4 py-4 text-left transition ${activeBoard?._id === board._id ? "border-gold bg-[rgba(248,181,0,0.12)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
+                        className={`w-full rounded-[1.2rem] border px-4 py-4 text-left transition ${activeBoard?._id === board._id ? "border-gold bg-[rgba(249,235,174,0.12)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
                      >
                         <div className="flex items-center gap-3">
-                           <div className="grid h-12 w-12 place-items-center rounded-[1.1rem] bg-[rgba(248,181,0,0.14)] text-gold">
+                           <div className="grid h-12 w-12 place-items-center rounded-[1.1rem] bg-[rgba(249,235,174,0.14)] text-gold">
                               <HiOutlinePresentationChartBar className="h-6 w-6" />
                            </div>
                            <div>
@@ -305,9 +305,9 @@ export default function Whiteboard() {
                </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-[1.7rem] border border-border bg-[radial-gradient(circle_at_top_left,rgba(248,181,0.08),transparent_18%),#020617] p-3">
+            <div className="mt-6 overflow-hidden rounded-[1.7rem] border border-border bg-[radial-gradient(circle_at_top_left,rgba(249,235,174.08),transparent_18%),#020617] p-3">
                {remoteMessage ? (
-                  <div className="mb-3 rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0.08)] p-3 text-sm text-gold">
+                  <div className="mb-3 rounded-[1.2rem] border border-gold/20 bg-[rgba(249,235,174.08)] p-3 text-sm text-gold">
                      {remoteMessage}
                   </div>
                ) : null}
@@ -361,7 +361,7 @@ export default function Whiteboard() {
                      ))}
                      {remoteCursors.map((cursorItem) => (
                         <g key={cursorItem.user.id}>
-                           <circle cx={cursorItem.cursor.x} cy={cursorItem.cursor.y} r="12" fill="rgba(248,181,0,0.7)" />
+                           <circle cx={cursorItem.cursor.x} cy={cursorItem.cursor.y} r="12" fill="rgba(249,235,174,0.7)" />
                            <text x={cursorItem.cursor.x + 16} y={cursorItem.cursor.y + 4} fill="#ffffff" fontSize="18" fontWeight="600">
                               {cursorItem.user.name?.split(" ")[0] || "Teammate"}
                            </text>

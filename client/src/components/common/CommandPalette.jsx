@@ -99,7 +99,7 @@ export function CommandPalette({ open, onOpenChange }) {
                               onOpenChange(false);
                            }}
                            onMouseEnter={() => setSelectedIndex(index)}
-                           className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition ${selectedIndex === index ? "border-gold/40 bg-[rgba(248,181,0,0.08)]" : "border-border bg-[rgba(255,255,255,0.03)]"}`}
+                           className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition ${selectedIndex === index ? "border-gold/40 bg-[rgba(249,235,174,0.08)]" : "border-border bg-[rgba(255,255,255,0.03)]"}`}
                         >
                            <div className="flex items-center gap-3">
                               <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${selectedIndex === index ? "bg-gradient-gold text-[var(--noir-900)]" : "bg-[rgba(255,255,255,0.05)] text-gold"}`}>
@@ -110,7 +110,7 @@ export function CommandPalette({ open, onOpenChange }) {
                                  <div className="text-xs text-muted-foreground">{action.description}</div>
                               </div>
                            </div>
-                           <div className="flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-gold">
+                           <div className="flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-gold">
                               <HiLightningBolt className="h-3.5 w-3.5" />
                               Jump
                            </div>

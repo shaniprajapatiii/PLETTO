@@ -25,15 +25,15 @@ export default function Login() {
    };
 
    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#030303] px-4 py-10 sm:px-6">
-         <div className="w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a0a0a] shadow-[0_35px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl lg:grid lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="hidden bg-[#080808] p-8 lg:flex lg:flex-col lg:justify-between">
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(249,235,174,0.16),transparent_34%),#030303] px-4 py-10 sm:px-6">
+         <div className="w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a0a0a]/95 shadow-[0_35px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl lg:grid lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="hidden bg-[linear-gradient(145deg,rgba(249,235,174,0.12),rgba(10,10,10,0.96))] p-8 lg:flex lg:flex-col lg:justify-between">
                <div>
                   <Logo />
                   <h1 className="mt-10 text-3xl font-semibold text-white">Welcome back to a calmer way to work.</h1>
                   <p className="mt-4 max-w-md text-sm leading-7 text-muted-foreground">Keep conversations, docs, and boards in sync with the same premium collaboration flow your team expects.</p>
                </div>
-               <div className="rounded-[1.3rem] border border-white/10 bg-[rgba(255,255,255,0.04)] p-4 text-sm text-muted-foreground shadow-[0_12px_36px_rgba(0,0,0,0.16)]">
+               <div className="rounded-[1.3rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4 text-sm text-muted-foreground shadow-[0_12px_36px_rgba(0,0,0,0.16)]">
                   Secure by design · realtime by default · built for modern teams.
                </div>
             </div>
@@ -42,7 +42,7 @@ export default function Login() {
                   <div className="lg:hidden">
                      <Logo />
                   </div>
-                  <span className="rounded-full border border-gold/30 bg-[rgba(248,181,0,0.08)] px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-gold">Login</span>
+                  <span className="rounded-full border border-gold/30 bg-[rgba(249,235,174,0.08)] px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-gold">Login</span>
                </div>
                <h2 className="text-3xl font-semibold text-white">Sign in</h2>
                <p className="mt-3 text-sm text-muted-foreground">Access your workspace and continue where you left off.</p>

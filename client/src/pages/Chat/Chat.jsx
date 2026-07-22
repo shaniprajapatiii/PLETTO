@@ -404,12 +404,12 @@ export default function Chat() {
                   {pinnedMessages.length > 0 && (
                      <button
                         onClick={() => setShowPinned(!showPinned)}
-                        className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-gold hover:bg-[rgba(245,181,50,0.12)]"
+                        className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2 text-sm text-gold hover:bg-[rgba(249,235,174,0.12)]"
                      >
                         📌 {pinnedMessages.length}
                      </button>
                   )}
-                  <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-gold">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2 text-sm text-gold">
                      <HiSparkles className="h-4 w-4" />
                      Realtime
                   </div>
@@ -422,7 +422,7 @@ export default function Chat() {
                   <HiUsers className="h-4 w-4" />
                   {onlineUsers.length} online
                </div>
-               <div className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">
+               <div className="rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">
                   Live sync
                </div>
                {typingUsers.length > 0 && (
@@ -434,7 +434,7 @@ export default function Chat() {
 
             {/* Pinned Messages Panel */}
             {showPinned && pinnedMessages.length > 0 && (
-               <div className="mt-4 rounded-[16px] border border-gold/20 bg-[rgba(245,181,50,0.08)] p-4">
+               <div className="mt-4 rounded-[16px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4">
                   <div className="mb-3 flex items-center justify-between">
                      <span className="font-semibold text-white">Pinned Messages</span>
                      <button onClick={() => setShowPinned(false)} className="text-muted-foreground hover:text-white">
@@ -591,7 +591,7 @@ export default function Chat() {
                                                 }}
                                                 className={`rounded-full px-2 py-1 text-xs flex items-center gap-1 transition ${
                                                    reaction.users?.some((u) => u._id === user?._id)
-                                                      ? "border-gold/50 bg-[rgba(245,181,50,0.12)]"
+                                                      ? "border-gold/50 bg-[rgba(249,235,174,0.12)]"
                                                       : "border border-white/10 bg-white/[0.05] hover:bg-white/[0.1]"
                                                 }`}
                                                 title={reaction.users?.map((u) => u.name).join(", ")}
@@ -616,7 +616,7 @@ export default function Chat() {
 
             {/* Reply indicator */}
             {replyingTo && (
-               <div className="mt-2 flex items-center justify-between rounded-[12px] border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2">
+               <div className="mt-2 flex items-center justify-between rounded-[12px] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2">
                   <div className="flex items-center gap-2">
                      <HiReply className="h-4 w-4 text-gold" />
                      <span className="text-sm text-white">Replying to {replyingTo.user?.name}</span>

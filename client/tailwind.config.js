@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        gold: "rgb(249, 235, 174)",
+      },
       animation: {
         slideIn: "slideIn 180ms ease-out",
         fadeIn: "fadeIn 180ms ease-out",

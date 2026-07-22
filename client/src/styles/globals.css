@@ -9,13 +9,13 @@
   background-color: #080808;
   --noir-900: #080808;
   --noir-800: #0f0f0f;
-  --saffron: #f5b84a;
-  --saffron-soft: #f7c96d;
-  --border: rgba(245, 184, 74, 0.18);
+  --saffron: rgb(249, 235, 174);
+  --saffron-soft: rgba(249, 235, 174, 0.86);
+  --border: rgba(249, 235, 174, 0.18);
   --card: rgba(18, 18, 18, 0.9);
   --panel: rgba(255, 255, 255, 0.04);
   --muted: rgba(226, 232, 240, 0.74);
-  --glow: rgba(245, 184, 74, 0.16);
+  --glow: rgba(249, 235, 174, 0.16);
 }
 
 html {
@@ -29,11 +29,12 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #080808;
+  background-color: #030303;
   background-image:
-    linear-gradient(rgba(245, 184, 74, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(245, 184, 74, 0.045) 1px, transparent 1px);
-  background-size: 44px 44px, 44px 44px;
+    linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%);
+  background-size: 44px 44px, 44px 44px, auto;
   color: #f8fafc;
 }
 
@@ -59,15 +60,29 @@ button {
 }
 
 .text-gradient-gold {
-  color: #f5b84a;
+  color: rgb(249, 235, 174);
 }
 
 .bg-gradient-gold {
-  background-color: #f5b84a;
+  background-image: linear-gradient(135deg, rgb(249, 235, 174) 0%, rgba(249, 235, 174, 0.85) 45%, rgba(223, 203, 124, 0.95) 100%);
+}
+
+.text-gold,
+.bg-gold,
+.border-gold {
+  color: rgb(249, 235, 174);
+}
+
+.bg-gold {
+  background-color: rgb(249, 235, 174);
+}
+
+.border-gold {
+  border-color: rgb(249, 235, 174);
 }
 
 .shadow-gold {
-  box-shadow: 0 0 0 1px rgba(245, 184, 74, 0.16), 0 16px 38px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 0 0 1px rgba(249, 235, 174, 0.18), 0 16px 38px rgba(0, 0, 0, 0.28);
 }
 
 .shadow-soft {
@@ -91,11 +106,11 @@ button {
 }
 
 .grid-bg {
-  background-image: radial-gradient(circle at 50% 50%, rgba(245, 184, 74, 0.08), transparent 36%), radial-gradient(circle at 0% 0%, rgba(245, 184, 74, 0.08), transparent 28%);
+  background-image: radial-gradient(circle at 50% 50%, rgba(249, 235, 174, 0.08), transparent 36%), radial-gradient(circle at 0% 0%, rgba(249, 235, 174, 0.08), transparent 28%);
 }
 
 .glass-panel {
-  border: 1px solid rgba(245, 184, 74, 0.18);
+  border: 1px solid rgba(249, 235, 174, 0.16);
   background: linear-gradient(145deg, rgba(18, 18, 18, 0.95), rgba(16, 16, 16, 0.9));
   backdrop-filter: blur(20px);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.24);
@@ -134,10 +149,10 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(245, 184, 74, 0.55), rgba(255, 255, 255, 0.12));
+  background: linear-gradient(180deg, rgba(249, 235, 174, 0.55), rgba(255, 255, 255, 0.12));
   border-radius: 999px;
 }
 
 ::selection {
-  background: rgba(245, 184, 74, 0.25);
+  background: rgba(249, 235, 174, 0.25);
 }

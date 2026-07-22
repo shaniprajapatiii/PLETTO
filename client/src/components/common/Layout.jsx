@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
    HiViewGrid as DashboardIcon,
    HiDocumentText as DocsIcon,
@@ -14,6 +14,7 @@ import {
    HiSparkles as SparklesIcon,
    HiX as CloseIcon,
    HiHashtag as HashIcon,
+   HiMenu as MenuIcon,
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
@@ -54,11 +55,9 @@ export default function Layout() {
    const [channelPrivacy, setChannelPrivacy] = useState("public");
    const [invitees, setInvitees] = useState("");
    const [channelSearchQuery, setChannelSearchQuery] = useState("");
-   const [dockHidden, setDockHidden] = useState(false);
-   const [showChatFlyout, setShowChatFlyout] = useState(false);
+   const [mobileNavOpen, setMobileNavOpen] = useState(false);
    const notifRef = useRef([]);
    const modalRef = useRef(null);
-   const scrollYRef = useRef(0);
 
    useEffect(() => {
       if (!loading && workspace) {
@@ -86,29 +85,9 @@ export default function Layout() {
          }
       };
 
-      const onScroll = () => {
-         const currentY = window.scrollY;
-         if (currentY > scrollYRef.current + 12) {
-            setDockHidden(true);
-         } else if (currentY < scrollYRef.current - 1) {
-            setDockHidden(false);
-         }
-         scrollYRef.current = currentY;
-      };
-
-      const onMouseMove = (event) => {
-         if (window.innerHeight - event.clientY < 120) {
-            setDockHidden(false);
-         }
-      };
-
       window.addEventListener("mousedown", onClick);
-      window.addEventListener("scroll", onScroll, { passive: true });
-      window.addEventListener("mousemove", onMouseMove);
       return () => {
          window.removeEventListener("mousedown", onClick);
-         window.removeEventListener("scroll", onScroll);
-         window.removeEventListener("mousemove", onMouseMove);
       };
    }, [createChannelModalOpen, searchChannelsOpen]);
 
@@ -122,6 +101,7 @@ export default function Layout() {
             setCreateChannelModalOpen(false);
             setSearchChannelsOpen(false);
             setNotifOpen(false);
+            setMobileNavOpen(false);
          }
       };
 
@@ -132,13 +112,7 @@ export default function Layout() {
    const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications]);
    const title = navItems.find((item) => location.pathname.startsWith(item.to))?.label ?? "Workspace";
    const breadCrumbs = location.pathname.split("/").filter(Boolean);
-
-   const handleSignOut = () => {
-      localStorage.removeItem("token");
-      setUser(null);
-      setWorkspace(null);
-      navigate("/login");
-   };
+   const activeNavItem = navItems.find((item) => location.pathname.startsWith(item.to)) ?? navItems[0];
 
    const createChannelNow = async () => {
       if (!channelName.trim()) return;
@@ -147,7 +121,6 @@ export default function Layout() {
          const channel = response.data.channel || response.data.data;
          if (channel) {
             setChannels((current) => [channel, ...current]);
-            // Emit socket event for real-time broadcast
             if (socket) {
                socket.emit("channelCreated", channel._id);
             }
@@ -210,134 +183,241 @@ export default function Layout() {
 
    return (
       <div className="min-h-screen bg-[#030303] text-slate-100">
-         <div className="flex min-h-screen flex-col">
-            <header className="flex flex-wrap items-center gap-3 border-b border-white/8 bg-gradient-to-r from-[rgba(6,6,6,0.95)] via-[rgba(8,8,8,0.92)] to-[rgba(6,6,6,0.95)] px-4 py-3 shadow-[0_12px_42px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition sm:px-6 sm:py-0">
-               <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
+         <div className="flex min-h-screen flex-col lg:flex-row">
+            <aside className="hidden border-r border-white/10 bg-[linear-gradient(180deg,rgba(12,12,12,0.98),rgba(7,7,7,0.96))] px-5 py-6 lg:flex lg:w-72 lg:flex-col lg:justify-between" style={{ backgroundImage: "linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px), radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%)", backgroundSize: "44px 44px, 44px 44px, auto" }}>
+               <div>
+                  <button
+                     type="button"
+                     onClick={() => navigate("/dashboard")}
+                     className="flex items-center gap-3 rounded-[20px] border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-gold/20 hover:bg-white/[0.05]"
+                  >
+                     <Logo withText={false} iconClassName="h-6 w-6" />
+                     <div>
+                        <div className="text-sm font-semibold tracking-[0.24em] text-white">PLETTO</div>
+                        <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Studio</div>
+                     </div>
+                  </button>
+
+                  <div className="mt-8">
+                     <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Workspace</div>
+                     <nav className="mt-3 space-y-2">
+                        {navItems.map((item) => {
+                           const Icon = item.icon;
+                           const active = location.pathname.startsWith(item.to);
+                           return (
+                              <button
+                                 key={item.to}
+                                 type="button"
+                                 onClick={() => navigate(item.to)}
+                                 className={`flex w-full items-center gap-3 rounded-[18px] border px-3 py-3 text-left transition ${
+                                    active
+                                       ? "border-gold/30 bg-[rgba(249,235,174,0.12)] text-gold"
+                                       : "border-transparent bg-transparent text-muted-foreground hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+                                 }`}
+                              >
+                                 <Icon className="h-4 w-4" />
+                                 <span className="text-sm font-medium">{item.label}</span>
+                                 {item.to === "/chat" && channels.length > 0 ? (
+                                    <span className="ml-auto rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                       {channels.length}
+                                    </span>
+                                 ) : null}
+                              </button>
+                           );
+                        })}
+                     </nav>
+                  </div>
+               </div>
+
+               <div className="rounded-[24px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.18)]">
+                  <div className="flex items-center gap-3">
+                     <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-gold text-sm font-semibold text-[var(--noir-900)]">
+                        {(user?.name || user?.email || "U").charAt(0).toUpperCase()}
+                     </div>
+                     <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-white">{user?.name || "Your workspace"}</div>
+                        <div className="truncate text-xs text-muted-foreground">{workspace?.name || "Ready to collaborate"}</div>
+                     </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
                      <button
                         type="button"
-                        onClick={() => navigate("/dashboard")}
-                        className="flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2 transition hover:border-white/20 hover:bg-white/[0.05]"
-                        aria-label="Go to dashboard"
+                        onClick={() => setCreateChannelModalOpen(true)}
+                        className="flex-1 rounded-[16px] border border-gold/20 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition hover:border-gold/40 hover:bg-white/[0.06]"
                      >
-                        <Logo withText={false} iconClassName="h-5 w-5" />
-                        <span className="whitespace-nowrap text-sm font-semibold tracking-[0.24em] text-white">PLETTO</span>
+                        New channel
                      </button>
-                     <div className="hidden md:flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-gold/80 font-semibold">
-                        {breadCrumbs.map((segment, index) => (
-                           <span key={`${segment}-${index}`} className="flex items-center gap-2">
-                              <span className="text-white/30">/</span>
-                              <span className={index === breadCrumbs.length - 1 ? "text-white" : "text-muted-foreground"}>
-                                 {segment}
-                              </span>
-                           </span>
-                        ))}
-                     </div>
+                     <button
+                        type="button"
+                        onClick={() => setPaletteOpen(true)}
+                        className="rounded-[16px] bg-gradient-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
+                     >
+                        Ask AI
+                     </button>
                   </div>
-                  <h1 className="mt-2 text-base font-semibold text-white sm:mt-1 sm:text-[1rem]">{title}</h1>
                </div>
+            </aside>
 
-               <div className="flex flex-wrap items-center gap-2 justify-end">
-                  <div className="hidden md:flex items-center gap-2">
-                     <PresenceStack />
-                  </div>
-
-                  <button
-                     type="button"
-                     onClick={() => setSearchChannelsOpen(true)}
-                     className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
-                     aria-label="Search channels"
-                  >
-                     <SearchIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                     type="button"
-                     onClick={() => setCreateChannelModalOpen(true)}
-                     className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
-                     aria-label="Create channel"
-                  >
-                     <PlusIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                     type="button"
-                     onClick={() => navigate("/profile")}
-                     className="hidden sm:inline-flex rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
-                     aria-label="Open profile"
-                  >
-                     <ProfileIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                     type="button"
-                     onClick={() => navigate("/settings")}
-                     className="hidden sm:inline-flex rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
-                     aria-label="Open settings"
-                  >
-                     <SettingsIcon className="h-4 w-4" />
-                  </button>
-               </div>
-
-               <div ref={(el) => (notifRef.current[0] = el)} className="relative">
-                  <button
-                     ref={(el) => (notifRef.current[1] = el)}
-                     onClick={() => setNotifOpen((value) => !value)}
-                     className="relative rounded-full border border-white/10 bg-white/[0.03] p-2 text-muted-foreground transition hover:border-gold/30 hover:bg-white/[0.05] hover:text-white"
-                     aria-label="Open notifications"
-                  >
-                     <BellIcon className="h-4 w-4" />
-                     {unreadCount > 0 ? (
-                        <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-semibold text-[var(--noir-900)]">
-                           {unreadCount}
-                        </span>
-                     ) : null}
-                  </button>
-                  {notifOpen ? (
-                     <div ref={(el) => (notifRef.current[2] = el)} className="absolute right-0 z-50 mt-2 w-80 rounded-[18px] border border-white/10 bg-[#070707] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-                        <div className="flex items-center justify-between px-2 py-2">
-                           <div className="text-xs uppercase tracking-[0.2em] font-semibold text-gold">Notifications</div>
-                           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                              {unreadCount > 0 ? <button onClick={markAllRead}>Mark read</button> : null}
-                              <button onClick={clearAll}>Clear</button>
+            <div className="flex flex-1 flex-col">
+               <header className="border-b border-white/10 bg-[rgba(7,7,7,0.9)] px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-6" style={{ backgroundImage: "linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px), radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%)", backgroundSize: "44px 44px, 44px 44px, auto" }}>
+                  <div className="flex items-center justify-between gap-3">
+                     <div className="flex items-center gap-3">
+                        <button
+                           type="button"
+                           onClick={() => setMobileNavOpen(true)}
+                           className="rounded-2xl border border-white/10 bg-white/[0.04] p-2 text-muted-foreground transition hover:border-gold/20 hover:text-white lg:hidden"
+                           aria-label="Open navigation"
+                        >
+                           <MenuIcon className="h-4 w-4" />
+                        </button>
+                        <div>
+                           <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-gold">
+                              <span>Workspace</span>
+                              <span className="text-white/20">/</span>
+                              <span className="text-muted-foreground">{activeNavItem.label}</span>
                            </div>
+                           <h1 className="text-base font-semibold text-white">{title}</h1>
                         </div>
-                        {notifications.length > 0 ? (
-                           <div className="space-y-2">
-                              {notifications.map((notification) => (
-                                 <button
-                                    key={notification.id}
-                                    onClick={() => openNotification(notification)}
-                                    className={`w-full rounded-[14px] border px-3 py-3 text-left transition ${
-                                       notification.read
-                                          ? "border-white/10 bg-white/[0.03]"
-                                          : "border-gold/30 bg-[rgba(245,181,50,0.08)]"
-                                    }`}
-                                 >
-                                    <div className="text-sm font-semibold text-white">{notification.title}</div>
-                                    <div className="mt-1 text-xs text-muted-foreground">{notification.body}</div>
-                                 </button>
-                              ))}
-                           </div>
-                        ) : (
-                           <div className="rounded-[14px] border border-dashed border-white/10 bg-white/[0.03] px-3 py-5 text-center text-sm text-muted-foreground">
-                              You are all caught up.
-                           </div>
-                        )}
                      </div>
-                  ) : null}
-               </div>
 
-               <button
-                  onClick={() => setPaletteOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)] shadow-[0_4px_16px_rgba(245,181,50,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(245,181,50,0.35)]"
-               >
-                  <SparklesIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ask AI</span>
-               </button>
-            </header>
+                     <div className="flex items-center gap-2">
+                        <div className="hidden items-center gap-2 md:flex">
+                           <PresenceStack />
+                        </div>
+                        <button
+                           type="button"
+                           onClick={() => setPaletteOpen(true)}
+                           className="hidden rounded-full border border-gold/20 bg-[rgba(249,235,174,0.1)] px-3 py-2 text-sm font-semibold text-gold transition hover:bg-[rgba(249,235,174,0.16)] sm:inline-flex"
+                        >
+                           Ask AI
+                        </button>
+                        <button
+                           type="button"
+                           onClick={() => setSearchChannelsOpen(true)}
+                           className="rounded-full border border-white/10 bg-white/[0.04] p-2 text-muted-foreground transition hover:border-gold/20 hover:text-white"
+                           aria-label="Search channels"
+                        >
+                           <SearchIcon className="h-4 w-4" />
+                        </button>
+                        <div ref={(el) => (notifRef.current[0] = el)} className="relative">
+                           <button
+                              ref={(el) => (notifRef.current[1] = el)}
+                              onClick={() => setNotifOpen((value) => !value)}
+                              className="relative rounded-full border border-white/10 bg-white/[0.04] p-2 text-muted-foreground transition hover:border-gold/20 hover:text-white"
+                              aria-label="Open notifications"
+                           >
+                              <BellIcon className="h-4 w-4" />
+                              {unreadCount > 0 ? (
+                                 <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-semibold text-[var(--noir-900)]">
+                                    {unreadCount}
+                                 </span>
+                              ) : null}
+                           </button>
+                           {notifOpen ? (
+                              <div ref={(el) => (notifRef.current[2] = el)} className="absolute right-0 z-50 mt-2 w-80 rounded-[18px] border border-white/10 bg-[#070707] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+                                 <div className="flex items-center justify-between px-2 py-2">
+                                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Notifications</div>
+                                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                       {unreadCount > 0 ? <button onClick={markAllRead}>Mark read</button> : null}
+                                       <button onClick={clearAll}>Clear</button>
+                                    </div>
+                                 </div>
+                                 {notifications.length > 0 ? (
+                                    <div className="space-y-2">
+                                       {notifications.map((notification) => (
+                                          <button
+                                             key={notification.id}
+                                             onClick={() => openNotification(notification)}
+                                             className={`w-full rounded-[14px] border px-3 py-3 text-left transition ${
+                                                notification.read
+                                                   ? "border-white/10 bg-white/[0.03]"
+                                                   : "border-gold/30 bg-[rgba(249,235,174,0.08)]"
+                                             }`}
+                                          >
+                                             <div className="text-sm font-semibold text-white">{notification.title}</div>
+                                             <div className="mt-1 text-xs text-muted-foreground">{notification.body}</div>
+                                          </button>
+                                       ))}
+                                    </div>
+                                 ) : (
+                                    <div className="rounded-[14px] border border-dashed border-white/10 bg-white/[0.03] px-3 py-5 text-center text-sm text-muted-foreground">
+                                       You are all caught up.
+                                    </div>
+                                 )}
+                              </div>
+                           ) : null}
+                        </div>
+                        <button
+                           type="button"
+                           onClick={() => navigate("/profile")}
+                           className="rounded-full border border-white/10 bg-white/[0.04] p-2 text-muted-foreground transition hover:border-gold/20 hover:text-white"
+                           aria-label="Open profile"
+                        >
+                           <ProfileIcon className="h-4 w-4" />
+                        </button>
+                     </div>
+                  </div>
+               </header>
 
-            <main className="flex-1 overflow-auto bg-[#050505] p-4 sm:p-5 lg:p-6">
-               <Outlet />
-            </main>
+               <main className="flex-1 overflow-auto bg-[#050505] p-4 sm:p-6 lg:p-8" style={{ backgroundImage: "linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px), radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%)", backgroundSize: "44px 44px, 44px 44px, auto" }}>
+                  <div className="mx-auto w-full max-w-7xl">
+                     <Outlet />
+                  </div>
+               </main>
+            </div>
          </div>
+
+         {mobileNavOpen ? (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm lg:hidden" onClick={() => setMobileNavOpen(false)}>
+               <div className="h-full w-[88vw] max-w-[320px] border-r border-white/10 bg-[#070707] p-5" onClick={(event) => event.stopPropagation()}>
+                  <div className="flex items-center justify-between">
+                     <Logo withText={false} iconClassName="h-6 w-6" />
+                     <button type="button" onClick={() => setMobileNavOpen(false)} className="rounded-full border border-white/10 p-2 text-muted-foreground">
+                        <CloseIcon className="h-4 w-4" />
+                     </button>
+                  </div>
+                  <div className="mt-6 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Menu</div>
+                  <nav className="mt-3 space-y-2">
+                     {navItems.map((item) => {
+                        const Icon = item.icon;
+                        const active = location.pathname.startsWith(item.to);
+                        return (
+                           <button
+                              key={item.to}
+                              type="button"
+                              onClick={() => {
+                                 navigate(item.to);
+                                 setMobileNavOpen(false);
+                              }}
+                              className={`flex w-full items-center gap-3 rounded-[18px] border px-3 py-3 text-left transition ${
+                                 active
+                                    ? "border-gold/30 bg-[rgba(249,235,174,0.12)] text-gold"
+                                    : "border-transparent bg-transparent text-muted-foreground hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+                              }`}
+                           >
+                              <Icon className="h-4 w-4" />
+                              <span className="text-sm font-medium">{item.label}</span>
+                           </button>
+                        );
+                     })}
+                  </nav>
+                  <div className="mt-8 rounded-[24px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4">
+                     <div className="text-sm font-semibold text-white">{user?.name || "Welcome back"}</div>
+                     <div className="mt-1 text-sm text-muted-foreground">{workspace?.name || "Workspace ready"}</div>
+                     <button
+                        type="button"
+                        onClick={() => {
+                           setMobileNavOpen(false);
+                           setPaletteOpen(true);
+                        }}
+                        className="mt-4 w-full rounded-[16px] bg-gradient-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
+                     >
+                        Ask AI
+                     </button>
+                  </div>
+               </div>
+            </div>
+         ) : null}
 
          {(createChannelModalOpen || searchChannelsOpen) && (
             <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 px-4 py-6">
@@ -382,7 +462,7 @@ export default function Layout() {
                                     onClick={() => setChannelPrivacy(option.value)}
                                     className={`rounded-[18px] border px-4 py-4 text-left transition ${
                                        channelPrivacy === option.value
-                                          ? "border-gold/50 bg-[rgba(245,181,50,0.1)] text-white"
+                                          ? "border-gold/50 bg-[rgba(249,235,174,0.1)] text-white"
                                           : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/20"
                                     }`}
                                  >
@@ -412,7 +492,7 @@ export default function Layout() {
                            <button
                               type="button"
                               onClick={createChannelNow}
-                              className="rounded-full bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] shadow-[0_8px_35px_rgba(245,181,50,0.24)] transition hover:-translate-y-0.5"
+                              className="rounded-full bg-gradient-gold px-5 py-3 text-sm font-semibold text-[var(--noir-900)] shadow-[0_8px_35px_rgba(249,235,174,0.24)] transition hover:-translate-y-0.5"
                            >
                               Create channel
                            </button>
@@ -456,93 +536,6 @@ export default function Layout() {
                </div>
             </div>
          )}
-
-         <div className={`fixed bottom-5 left-1/2 z-40 flex w-[min(92vw,880px)] -translate-x-1/2 items-center justify-between gap-2 rounded-full border border-gold/60 bg-[#020202] bg-opacity-95 px-4 py-3 shadow-[0_28px_80px_rgba(0,0,0,0.45)] transition-transform duration-300 ${dockHidden ? "translate-y-[140%]" : "translate-y-0"}`}>
-            <div className="flex items-center gap-2">
-               {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = location.pathname.startsWith(item.to);
-                  return (
-                     <button
-                        key={item.to}
-                        onClick={() => navigate(item.to)}
-                        onMouseEnter={item.to === "/chat" ? () => setShowChatFlyout(true) : undefined}
-                        onMouseLeave={item.to === "/chat" ? () => setShowChatFlyout(false) : undefined}
-                        className={`relative flex h-11 w-11 items-center justify-center rounded-full transition ${
-                           active
-                              ? "bg-gold/15 text-gold shadow-[0_0_0_1px_rgba(245,181,50,0.18)]"
-                              : "text-muted-foreground hover:bg-white/[0.08] hover:text-white"
-                        }`}
-                        aria-label={item.label}
-                     >
-                        <Icon className="h-5 w-5" />
-                        {item.to === "/chat" && channels.length > 0 ? (
-                           <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white shadow-[0_0_0_4px_rgba(0,0,0,0.25)]">
-                              {channels.length}
-                           </span>
-                        ) : null}
-                        {item.to === "/chat" && showChatFlyout ? (
-                           <div className="absolute bottom-full mb-2 w-[220px] rounded-3xl border border-white/10 bg-[#080808] p-3 text-sm shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
-                              <div className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">Recent rooms</div>
-                              <div className="space-y-2">
-                                 {channels.slice(0, 4).map((channel) => (
-                                    <button
-                                       key={channel._id}
-                                       onClick={() => {
-                                          navigate(`/chat?channel=${channel._id}`);
-                                          setShowChatFlyout(false);
-                                       }}
-                                       className="flex w-full items-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.03] px-3 py-2 text-left text-sm text-white transition hover:border-gold/30 hover:bg-white/[0.06]"
-                                    >
-                                       <HashIcon className="h-4 w-4 text-gold" />
-                                       <span className="truncate">{channel.name}</span>
-                                    </button>
-                                 ))}
-                                 {channels.length === 0 ? (
-                                    <div className="rounded-[18px] border border-dashed border-white/10 bg-white/[0.03] px-3 py-4 text-center text-sm text-muted-foreground">
-                                       No recent channels yet.
-                                    </div>
-                                 ) : null}
-                              </div>
-                           </div>
-                        ) : null}
-                     </button>
-                  );
-               })}
-
-               <button
-                  onClick={() => setCreateChannelModalOpen(true)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
-                  aria-label="Create channel"
-               >
-                  <PlusIcon className="h-5 w-5" />
-               </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-               <button
-                  onclick={() => setSearchChannelsOpen(true)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
-               >
-                  <SearchIcon className="h-5 w-5" />
-               </button>
-
-               <button
-                  onClick={() => navigate("/profile")}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
-                  aria-label="Profile"
-               >
-                  <ProfileIcon className="h-5 w-5" />
-               </button>
-               <button
-                  onClick={() => navigate("/settings")}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition hover:bg-white/[0.08] hover:text-white"
-                  aria-label="Settings"
-               >
-                  <SettingsIcon className="h-5 w-5" />
-               </button>
-            </div>
-         </div>
 
          <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       </div>

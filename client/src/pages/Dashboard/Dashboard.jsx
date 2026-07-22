@@ -85,7 +85,7 @@ export default function Dashboard() {
             title="Mission control"
             subtitle="A simpler overview of what matters most right now."
             actions={
-               <div className="inline-flex items-center gap-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-2 text-sm text-gold">
+               <div className="inline-flex items-center gap-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2 text-sm text-gold">
                   <HiSparkles className="h-4 w-4" />
                   Live workspace
                </div>
@@ -101,7 +101,7 @@ export default function Dashboard() {
                            key={tab.id}
                            type="button"
                            onClick={() => setActiveTab(tab.id)}
-                           className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${active ? "border-gold/40 bg-[rgba(245,181,50,0.12)] text-gold" : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/20 hover:text-white"}`}
+                           className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${active ? "border-gold/40 bg-[rgba(249,235,174,0.12)] text-gold" : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/20 hover:text-white"}`}
                         >
                            <Icon className="h-4 w-4" />
                            {tab.label}
@@ -117,7 +117,7 @@ export default function Dashboard() {
                         <h3 className="mt-2 text-xl font-semibold text-white">{tabContent.title}</h3>
                         <p className="mt-1 text-sm text-muted-foreground">{tabContent.subtitle}</p>
                      </div>
-                     <div className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Live</div>
+                     <div className="rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-1 text-xs uppercase tracking-[0.22em] text-gold">Live</div>
                   </div>
 
                   {activeTab === "overview" ? (
@@ -141,7 +141,7 @@ export default function Dashboard() {
                                     const Icon = item.icon;
                                     return (
                                        <div key={`${item.title}-${index}`} className="flex items-center gap-3 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3">
-                                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(245,181,50,0.14)] text-gold">
+                                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(249,235,174,0.14)] text-gold">
                                              <Icon className="h-4 w-4" />
                                           </div>
                                           <div className="min-w-0 flex-1">
@@ -168,7 +168,7 @@ export default function Dashboard() {
                               </div>
                               <div className="mt-4 flex flex-wrap gap-2">
                                  {members.length > 0 ? members.map((member) => (
-                                    <div key={member._id || member.email} className="rounded-full border border-gold/20 bg-[rgba(245,181,50,0.08)] px-3 py-2 text-sm text-white">
+                                    <div key={member._id || member.email} className="rounded-full border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2 text-sm text-white">
                                        {member.name || member.email || "Member"}
                                     </div>
                                  )) : (
@@ -224,7 +224,7 @@ function Panel({ title, value, description, icon }) {
    return (
       <div className="rounded-[20px] border border-white/10 bg-[rgba(2,6,23,0.7)] p-5">
          <div className="flex items-center justify-between gap-3">
-            <div className="rounded-[1.25rem] bg-[rgba(245,181,50,0.12)] p-3 text-gold">{icon}</div>
+            <div className="rounded-[1.25rem] bg-[rgba(249,235,174,0.12)] p-3 text-gold">{icon}</div>
             <span className="text-xs uppercase tracking-[0.25em] text-gold">Live</span>
          </div>
          <div className="mt-8">
@@ -238,7 +238,7 @@ function Panel({ title, value, description, icon }) {
 
 function QuickLink({ to, title, description }) {
    return (
-      <Link to={to} className="flex items-center justify-between rounded-[16px] border border-white/10 bg-[rgba(2,6,23,0.65)] px-4 py-3 text-left transition hover:border-gold/20 hover:bg-[rgba(245,181,50,0.08)]">
+      <Link to={to} className="flex items-center justify-between rounded-[16px] border border-white/10 bg-[rgba(2,6,23,0.65)] px-4 py-3 text-left transition hover:border-gold/20 hover:bg-[rgba(249,235,174,0.08)]">
          <div>
             <div className="text-sm font-medium text-white">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">{description}</div>

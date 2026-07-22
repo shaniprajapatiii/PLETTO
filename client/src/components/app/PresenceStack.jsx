@@ -47,7 +47,7 @@ export function PresenceStack() {
                <div
                   key={person.id}
                   title={person.name}
-                  className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-[rgba(2,6,23,0.85)] bg-[rgba(245,181,50,0.1)] text-[10px] font-semibold text-[var(--noir-900)]"
+                  className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-[rgba(2,6,23,0.85)] bg-[rgba(249,235,174,0.1)] text-[10px] font-semibold text-[var(--noir-900)]"
                >
                   <img src={getAvatarSrc(person)} alt={person.name} className="h-full w-full object-cover" />
                </div>

@@ -19,7 +19,7 @@ export function PageShell({ title, subtitle, actions, children, className = "", 
 
 export function Surface({ children, className = "", interactive = false }) {
    return (
-      <div className={`rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.045)] p-3 shadow-[0_18px_50px_rgba(0,0,0,0.2)] sm:p-4 ${interactive ? "transition hover:border-gold/30 hover:bg-[rgba(245,181,50,0.08)]" : ""} ${className}`}>
+      <div className={`rounded-[20px] border border-white/10 bg-[rgba(255,255,255,0.045)] p-3 shadow-[0_18px_50px_rgba(0,0,0,0.2)] sm:p-4 ${interactive ? "transition hover:border-gold/30 hover:bg-[rgba(249,235,174,0.08)]" : ""} ${className}`}>
          {children}
       </div>
    );

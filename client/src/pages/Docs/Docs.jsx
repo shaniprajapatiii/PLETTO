@@ -283,7 +283,7 @@ export default function Docs() {
       <div className="grid gap-6 2xl:grid-cols-[320px_minmax(0,1fr)]">
          <PageShell title="Workspace notes" subtitle="Capture decisions, plans, and knowledge in one collaborative editor." compact className="p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-               <div className="rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-2 text-sm text-gold">
+               <div className="rounded-[1.2rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2 text-sm text-gold">
                   <div className="flex items-center gap-2">
                      <HiSparkles className="h-4 w-4" />
                      Live collaboration ready
@@ -293,7 +293,7 @@ export default function Docs() {
                   <button onClick={() => handleCreate("text")} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-gold text-[var(--noir-900)]">
                      <HiPlus className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handleCreate("markdown")} className="rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-2 text-sm font-semibold text-gold">
+                  <button onClick={() => handleCreate("markdown")} className="rounded-[1.2rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-4 py-2 text-sm font-semibold text-gold">
                      New markdown
                   </button>
                </div>
@@ -304,7 +304,7 @@ export default function Docs() {
                      <button
                         key={doc._id}
                         onClick={() => selectDoc(doc)}
-                        className={`w-full text-left rounded-[1.2rem] border px-4 py-4 transition ${active?._id === doc._id ? "border-gold bg-[rgba(248,181,0,0.1)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
+                        className={`w-full text-left rounded-[1.2rem] border px-4 py-4 transition ${active?._id === doc._id ? "border-gold bg-[rgba(249,235,174,0.1)]" : "border-border bg-[rgba(255,255,255,0.03)] hover:border-gold/30 hover:bg-[rgba(255,255,255,0.05)]"}`}
                      >
                         <div className="flex items-center gap-2 text-sm font-semibold text-white">
                            <HiDocumentText className="h-4 w-4 text-gold" />
@@ -321,7 +321,7 @@ export default function Docs() {
             </div>
          </PageShell>
 
-         <PageShell title={active?.title || "Live document"} subtitle="Collaborative drafting with presence-aware context and instant saving." actions={<div className="inline-flex items-center gap-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-3 py-2 text-sm text-gold"><HiUsers className="h-4 w-4" />Presence-aware editing</div>} className="p-5 sm:p-6">
+         <PageShell title={active?.title || "Live document"} subtitle="Collaborative drafting with presence-aware context and instant saving." actions={<div className="inline-flex items-center gap-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-3 py-2 text-sm text-gold"><HiUsers className="h-4 w-4" />Presence-aware editing</div>} className="p-5 sm:p-6">
             <div className="grid gap-6 xl:grid-cols-[1.45fr_0.55fr]">
                <div className="space-y-4">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -396,7 +396,7 @@ export default function Docs() {
                      />
                   )}
                   {remoteCursor ? (
-                     <div className="mt-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-3 text-sm text-gold">
+                     <div className="mt-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-4 py-3 text-sm text-gold">
                         {remoteCursor.name} is editing around position {remoteCursor.position?.selectionStart || 0}.
                      </div>
                   ) : null}

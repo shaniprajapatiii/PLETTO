@@ -72,7 +72,7 @@ export default function People() {
          title="People"
          subtitle="Everyone in your workspace, with fast private messaging and profile details."
          actions={
-            <div className="inline-flex items-center gap-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] px-4 py-2 text-sm text-gold">
+            <div className="inline-flex items-center gap-2 rounded-[1.2rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] px-4 py-2 text-sm text-gold">
                <HiUserGroup className="h-5 w-5" />
                {members.length} members
             </div>

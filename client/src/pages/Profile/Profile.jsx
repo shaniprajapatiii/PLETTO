@@ -111,7 +111,7 @@ export default function Profile() {
                   <button
                      type="button"
                      onClick={handleStartEdit}
-                     className="rounded-[1rem] border border-gold/20 bg-[rgba(245,181,50,0.1)] px-4 py-2 text-sm font-semibold text-gold transition hover:bg-[rgba(245,181,50,0.16)]"
+                     className="rounded-[1rem] border border-gold/20 bg-[rgba(249,235,174,0.1)] px-4 py-2 text-sm font-semibold text-gold transition hover:bg-[rgba(249,235,174,0.16)]"
                   >
                      Edit profile
                   </button>
@@ -175,7 +175,7 @@ export default function Profile() {
                         <p className="mt-2 max-w-md text-sm text-muted-foreground">Upload a fresh image or keep the current avatar. Changes save instantly when you confirm.</p>
                      </div>
                   </div>
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-[1rem] border border-white/10 bg-[rgba(255,255,255,0.05)] px-4 py-3 text-sm text-white transition hover:border-gold/30 hover:bg-[rgba(245,181,50,0.08)]">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-[1rem] border border-white/10 bg-[rgba(255,255,255,0.05)] px-4 py-3 text-sm text-white transition hover:border-gold/30 hover:bg-[rgba(249,235,174,0.08)]">
                      <HiPhotograph className="h-4 w-4 text-gold" />
                      {uploading ? "Uploading..." : "Upload avatar"}
                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />

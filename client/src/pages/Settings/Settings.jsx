@@ -68,7 +68,7 @@ export default function Settings() {
                </button>
             </form>
          }>
-            <div className="flex items-center gap-3 rounded-[1.3rem] border border-gold/20 bg-[rgba(248,181,0,0.08)] p-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 rounded-[1.3rem] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4 text-sm text-muted-foreground">
                <HiUsers className="h-5 w-5 text-gold" />
                Keep your team close with a clear roster, role visibility, and fast invites.
             </div>
@@ -84,7 +84,7 @@ export default function Settings() {
                               <h3 className="text-lg font-semibold text-white">{member.name}</h3>
                               <p className="mt-1 text-sm text-muted-foreground">{member.email}</p>
                            </div>
-                           <span className="rounded-full border border-gold/30 bg-[rgba(248,181,0,0.1)] px-3 py-1 text-xs uppercase tracking-[0.2em] text-gold">
+                           <span className="rounded-full border border-gold/30 bg-[rgba(249,235,174,0.1)] px-3 py-1 text-xs uppercase tracking-[0.2em] text-gold">
                               {member.role}
                            </span>
                         </div>
