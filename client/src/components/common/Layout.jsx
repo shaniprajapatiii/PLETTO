@@ -257,48 +257,59 @@ export default function Layout() {
    return (
       <div className="min-h-screen bg-[#030303] text-slate-100">
          <div className="flex min-h-screen flex-col lg:flex-row">
-            <aside
-               className={`hidden border-r border-white/10 px-2 py-3 lg:flex lg:flex-col lg:justify-between transition-all duration-200 ${sidebarCollapsed ? "lg:w-20" : "lg:w-72"} ${sidebarContrast ? "bg-[#060606]" : "bg-[linear-gradient(180deg,rgba(12,12,12,0.98),rgba(7,7,7,0.96))]"}`}
-               style={{ backgroundImage: sidebarContrast ? undefined : "linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px), radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%)", backgroundSize: "44px 44px, 44px 44px, auto" }}
-            >
-               <div className="space-y-3">
-                  <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"} gap-2`}>
-                     <button
-                        type="button"
-                        onClick={() => navigate("/dashboard")}
-                        className={`flex w-full items-center rounded-[18px] border border-white/10 bg-white/[0.03] px-2 py-2.5 text-left transition hover:border-gold/20 hover:bg-white/[0.05] ${sidebarCollapsed ? "justify-center" : "gap-3"}`}
-                     >
-                        <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-2">
-                           <Logo withText={false} iconClassName="h-5 w-5" />
+            <aside className={`hidden lg:flex lg:flex-col border-r border-white/10 bg-[rgba(255,255,255,0.03)] backdrop-blur-xl px-4 py-5 transition-[width,transform,opacity] duration-300 ease-out ${sidebarCollapsed ? "lg:w-20" : "lg:w-72"}`}>
+               <div className={`flex items-center justify-between gap-2 ${sidebarCollapsed ? "flex-col" : ""}`}>
+                  <button
+                     type="button"
+                     onClick={() => navigate("/dashboard")}
+                     className={`flex w-full items-center rounded-[18px] bg-white/[0.04] px-2 py-2.5 text-left transition hover:bg-white/[0.08] ${sidebarCollapsed ? "justify-center" : "gap-3"}`}
+                  >
+                     <div className="rounded-2xl bg-[#111111] p-2">
+                        <Logo withText={false} iconClassName="h-5 w-5" />
+                     </div>
+                     {!sidebarCollapsed ? (
+                        <div>
+                           <div className="text-sm font-semibold tracking-[0.24em] text-white">PLETTO</div>
+                           <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Studio</div>
                         </div>
-                        {!sidebarCollapsed ? (
-                           <div>
-                              <div className="text-sm font-semibold tracking-[0.24em] text-white">PLETTO</div>
-                              <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Studio</div>
-                           </div>
-                        ) : null}
-                     </button>
-                     <button
-                        type="button"
-                        onClick={() => setSidebarCollapsed((value) => !value)}
-                        className="hidden rounded-full border border-white/10 bg-white/[0.04] p-2 text-muted-foreground transition hover:border-gold/20 hover:text-white lg:inline-flex"
-                        aria-label="Toggle sidebar"
-                     >
-                        {sidebarCollapsed ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
-                     </button>
-                  </div>
+                     ) : null}
+                  </button>
+                  <button
+                     type="button"
+                     onClick={() => setSidebarCollapsed((value) => !value)}
+                     className={`rounded-full border border-gold/20 bg-[rgba(249,235,174,0.10)] p-2 text-gold transition hover:bg-[rgba(249,235,174,0.16)] ${sidebarCollapsed ? "inline-flex" : "hidden lg:inline-flex"}`}
+                     aria-label="Toggle sidebar"
+                     title="Toggle sidebar"
+                  >
+                     {sidebarCollapsed ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
+                  </button>
+               </div>
 
+               <div className="mt-5 flex items-center gap-2">
                   <button
                      type="button"
                      onClick={() => setSidebarContrast((value) => !value)}
-                     className={`flex w-full items-center rounded-[16px] border border-white/10 bg-white/[0.03] px-2 py-2.5 text-sm font-medium text-muted-foreground transition hover:border-gold/20 hover:text-white ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
+                     className={`flex flex-1 items-center rounded-[16px] bg-white/[0.04] px-2 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-white/[0.08] ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
+                     title="Contrast"
                   >
-                     <AdjustmentsIcon className="h-4 w-4" />
+                     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-2xl ${sidebarContrast ? "bg-[rgba(249,235,174,0.12)] text-gold" : "bg-white/[0.06] text-muted-foreground"}`}>
+                        <AdjustmentsIcon className="h-4 w-4" />
+                     </span>
                      {!sidebarCollapsed ? <span>Contrast</span> : null}
                   </button>
+                  <button
+                     type="button"
+                     onClick={() => setSearchChannelsOpen(true)}
+                     className="flex shrink-0 items-center rounded-[16px] bg-white/[0.04] px-2.5 py-2.5 text-muted-foreground transition hover:bg-white/[0.08]"
+                     title="Search"
+                  >
+                     <SearchIcon className="h-4 w-4" />
+                  </button>
+               </div>
 
-                  <div className="rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-2">
-                     <div className={`px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground ${sidebarCollapsed ? "hidden" : ""}`}>Discover</div>
+               <div className="mt-7 space-y-6 overflow-y-auto pr-1">
+                  <div className={`${sidebarCollapsed ? "" : "space-y-3"}`}>
+                     {!sidebarCollapsed ? <div className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Discover</div> : null}
                      <nav className="space-y-1">
                         {navItems.map((item) => {
                            const Icon = item.icon;
@@ -308,14 +319,16 @@ export default function Layout() {
                                  key={item.label}
                                  type="button"
                                  onClick={() => handleNavClick(item)}
-                                 className={`flex w-full items-center rounded-[16px] px-2 py-2.5 text-left transition ${sidebarCollapsed ? "justify-center" : "gap-3"} ${
-                                    active
-                                       ? "bg-[rgba(249,235,174,0.12)] text-gold"
-                                       : "text-muted-foreground hover:bg-white/[0.05] hover:text-white"
-                                 }`}
+                                 title={item.label}
+                                 className={`group flex w-full items-center rounded-[16px] bg-white/[0.03] px-2 py-2.5 text-left transition ${sidebarCollapsed ? "justify-center" : "gap-3"} ${active ? "bg-[rgba(249,235,174,0.16)] text-gold" : "text-muted-foreground hover:bg-white/[0.06] hover:text-white"}`}
                               >
-                                 <span className={`grid h-9 w-9 place-items-center rounded-2xl ${active ? "bg-[rgba(249,235,174,0.14)]" : "bg-white/[0.04]"}`}>
+                                 <span className={`relative grid h-9 w-9 place-items-center rounded-2xl ${active ? "bg-[rgba(249,235,174,0.18)] text-gold" : "bg-white/[0.06] text-muted-foreground"}`}>
                                     <Icon className="h-4 w-4" />
+                                    {sidebarCollapsed ? (
+                                       <span className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-white/10 bg-[#0b0b0b]/95 px-2.5 py-1 text-[11px] font-medium text-slate-200 opacity-0 transition group-hover:opacity-100">
+                                          {item.label}
+                                       </span>
+                                    ) : null}
                                  </span>
                                  {!sidebarCollapsed ? (
                                     <span className="min-w-0 flex-1">
@@ -334,20 +347,21 @@ export default function Layout() {
                      </nav>
                   </div>
 
-                  <div className="rounded-[24px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-3">
-                     <div className={`text-[10px] font-semibold uppercase tracking-[0.24em] text-gold ${sidebarCollapsed ? "hidden" : ""}`}>Create</div>
+                  <div className={`${sidebarCollapsed ? "" : "space-y-3"}`}>
+                     {!sidebarCollapsed ? <div className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Create</div> : null}
                      <button
                         type="button"
                         onClick={() => setCreateChannelModalOpen(true)}
-                        className={`mt-3 flex w-full items-center rounded-[16px] border border-gold/20 bg-[#0d0d0d] px-2 py-2.5 text-left text-sm font-medium text-white transition hover:border-gold/40 hover:bg-white/[0.05] ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
+                        className={`flex w-full items-center rounded-[16px] bg-white/[0.03] px-2 py-2.5 text-sm font-medium text-white transition hover:bg-white/[0.08] ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
+                        title="Create channel"
                      >
-                        <span className="grid h-8 w-8 place-items-center rounded-full bg-[rgba(249,235,174,0.12)] text-gold">
+                        <span className="grid h-8 w-8 place-items-center rounded-full bg-[rgba(249,235,174,0.16)] text-gold">
                            <PlusIcon className="h-4 w-4" />
                         </span>
                         {!sidebarCollapsed ? <span>Create channel</span> : null}
                      </button>
                      {!sidebarCollapsed ? (
-                        <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                            {createShortcuts.map((action) => {
                               const Icon = action.icon;
                               return (
@@ -355,7 +369,7 @@ export default function Layout() {
                                     key={action.label}
                                     type="button"
                                     onClick={() => handleQuickAction(action.action)}
-                                    className="rounded-[16px] border border-white/10 bg-[#0d0d0d] px-2.5 py-2.5 text-left text-sm text-slate-300 transition hover:border-gold/20 hover:bg-white/[0.05]"
+                                    className="rounded-[16px] bg-white/[0.03] px-2.5 py-2.5 text-left text-sm text-slate-300 transition hover:bg-white/[0.08]"
                                  >
                                     <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(249,235,174,0.12)] text-gold">
                                        <Icon className="h-3.5 w-3.5" />
@@ -368,8 +382,8 @@ export default function Layout() {
                      ) : null}
                   </div>
 
-                  <div className="rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-2">
-                     <div className={`px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground ${sidebarCollapsed ? "hidden" : ""}`}>Recent</div>
+                  <div className={`${sidebarCollapsed ? "" : "space-y-3"}`}>
+                     {!sidebarCollapsed ? <div className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Recent</div> : null}
                      <div className="space-y-1">
                         {recentItems.map((item) => {
                            const Icon = item.icon;
@@ -378,9 +392,10 @@ export default function Layout() {
                                  key={item.id}
                                  type="button"
                                  onClick={() => navigate(item.meta === "Channel" ? `/chat?channel=${item.id}` : item.meta === "Docs" ? "/docs" : "/whiteboard")}
-                                 className={`flex w-full items-center rounded-[16px] px-2 py-2.5 text-left transition ${sidebarCollapsed ? "justify-center" : "gap-2"} text-muted-foreground hover:bg-white/[0.05] hover:text-white`}
+                                 title={item.label}
+                                 className={`flex w-full items-center rounded-[16px] bg-white/[0.03] px-2 py-2.5 text-left transition ${sidebarCollapsed ? "justify-center" : "gap-2"} text-muted-foreground hover:bg-white/[0.08] hover:text-white`}
                               >
-                                 <span className="grid h-8 w-8 place-items-center rounded-2xl bg-white/[0.04] text-gold">
+                                 <span className="grid h-8 w-8 place-items-center rounded-2xl bg-[rgba(249,235,174,0.10)] text-gold">
                                     <Icon className="h-4 w-4" />
                                  </span>
                                  {!sidebarCollapsed ? (
@@ -396,35 +411,39 @@ export default function Layout() {
                   </div>
                </div>
 
-               <div className="rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-3">
-                  <button
-                     type="button"
-                     onClick={() => navigate("/profile")}
-                     className={`flex w-full items-center rounded-[16px] px-2 py-2.5 text-left transition hover:bg-white/[0.05] ${sidebarCollapsed ? "justify-center" : "gap-3"}`}
-                  >
-                     <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-gold text-sm font-semibold text-[var(--noir-900)]">
-                        {(user?.name || user?.email || "U").charAt(0).toUpperCase()}
-                     </div>
-                     {!sidebarCollapsed ? (
-                        <div className="min-w-0">
-                           <div className="truncate text-sm font-semibold text-white">{user?.name || "Profile"}</div>
-                           <div className="truncate text-xs text-muted-foreground">Open profile</div>
+               <div className={`mt-auto ${sidebarCollapsed ? "flex justify-center" : ""}`}>
+                  <div className={`w-full ${sidebarCollapsed ? "max-w-[64px]" : ""}`}>
+                     <button
+                        type="button"
+                        onClick={() => navigate("/profile")}
+                        className={`flex w-full items-center rounded-[16px] bg-white/[0.03] px-2 py-2.5 text-left transition hover:bg-white/[0.08] ${sidebarCollapsed ? "justify-center" : "gap-3"}`}
+                        title="Profile"
+                     >
+                        <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-gold text-sm font-semibold text-[var(--noir-900)] shadow-[0_0_0_1px_rgba(249,235,174,0.24)]">
+                           {(user?.name || user?.email || "U").charAt(0).toUpperCase()}
                         </div>
-                     ) : null}
-                  </button>
-                  <button
-                     type="button"
-                     onClick={handleLogout}
-                     className={`mt-2 flex w-full items-center rounded-[16px] border border-red-400/20 bg-red-500/10 px-2 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/20 ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
-                  >
-                     <LogoutIcon className="h-4 w-4" />
-                     {!sidebarCollapsed ? <span>Logout</span> : null}
-                  </button>
+                        {!sidebarCollapsed ? (
+                           <div className="min-w-0">
+                              <div className="truncate text-sm font-semibold text-white">{user?.name || "Profile"}</div>
+                              <div className="truncate text-xs text-muted-foreground">Open profile</div>
+                           </div>
+                        ) : null}
+                     </button>
+                     <button
+                        type="button"
+                        onClick={handleLogout}
+                        className={`mt-3 flex w-full items-center justify-center rounded-[16px] bg-red-500/10 px-2 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/20 ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
+                        title="Logout"
+                     >
+                        <LogoutIcon className="h-4 w-4" />
+                        {!sidebarCollapsed ? <span>Logout</span> : null}
+                     </button>
+                  </div>
                </div>
             </aside>
 
             <div className="flex flex-1 flex-col">
-               <header className="border-b border-white/10 bg-[rgba(7,7,7,0.9)] px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-6" style={{ backgroundImage: "linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px), radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%)", backgroundSize: "44px 44px, 44px 44px, auto" }}>
+               <header className="border-b border-white/10 bg-[rgba(7,7,7,0.72)] px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-6">
                   <div className="flex items-center justify-between gap-3">
                      <div className="flex items-center gap-3">
                         <button
@@ -524,8 +543,8 @@ export default function Layout() {
                   </div>
                </header>
 
-               <main className="flex-1 overflow-auto bg-[#050505] p-4 sm:p-6 lg:p-8" style={{ backgroundImage: "linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px), radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%)", backgroundSize: "44px 44px, 44px 44px, auto" }}>
-                  <div className="mx-auto w-full max-w-7xl">
+               <main className="flex-1 overflow-auto bg-transparent p-4 sm:p-6 lg:p-8">
+                  <div className="mx-auto w-full max-w-[1440px]">
                      <Outlet />
                   </div>
                </main>
@@ -550,85 +569,91 @@ export default function Layout() {
                      </button>
                   </div>
 
-                  <div className="mt-5 rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-2">
-                     <div className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Discover</div>
-                     <nav className="space-y-1">
-                        {navItems.map((item) => {
-                           const Icon = item.icon;
-                           const active = location.pathname.startsWith(item.to);
-                           return (
-                              <button
-                                 key={item.to}
-                                 type="button"
-                                 onClick={() => {
-                                    navigate(item.to);
-                                    setMobileNavOpen(false);
-                                 }}
-                                 className={`flex w-full items-center gap-3 rounded-[16px] px-3 py-2.5 text-left transition ${
-                                    active
-                                       ? "bg-[rgba(249,235,174,0.12)] text-gold"
-                                       : "text-muted-foreground hover:bg-white/[0.05] hover:text-white"
-                                 }`}
-                              >
-                                 <span className={`grid h-9 w-9 place-items-center rounded-2xl ${active ? "bg-[rgba(249,235,174,0.14)]" : "bg-white/[0.04]"}`}>
-                                    <Icon className="h-4 w-4" />
-                                 </span>
-                                 <span className="text-sm font-medium">{item.label}</span>
-                              </button>
-                           );
-                        })}
-                     </nav>
-                  </div>
-
-                  <div className="mt-4 rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-2">
-                     <div className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Quick create</div>
-                     <div className="grid grid-cols-2 gap-2">
-                        {createShortcuts.map((action) => {
-                           const Icon = action.icon;
-                           return (
-                              <button
-                                 key={action.label}
-                                 type="button"
-                                 onClick={() => {
-                                    handleQuickAction(action.action);
-                                    setMobileNavOpen(false);
-                                 }}
-                                 className="rounded-[16px] border border-white/10 bg-[#0d0d0d] px-2.5 py-2.5 text-left text-sm text-slate-300"
-                              >
-                                 <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(249,235,174,0.12)] text-gold">
-                                    <Icon className="h-3.5 w-3.5" />
-                                 </div>
-                                 <div className="text-[11px] font-medium">{action.label}</div>
-                              </button>
-                           );
-                        })}
+                  <div className="mt-5 p-2">
+                     <div className="rounded-[1.8rem] bg-[rgba(255,255,255,0.03)] p-3">
+                        <div className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Discover</div>
+                        <nav className="space-y-1">
+                           {navItems.map((item) => {
+                              const Icon = item.icon;
+                              const active = location.pathname.startsWith(item.to);
+                              return (
+                                 <button
+                                    key={item.to}
+                                    type="button"
+                                    onClick={() => {
+                                       navigate(item.to);
+                                       setMobileNavOpen(false);
+                                    }}
+                                    className={`flex w-full items-center gap-3 rounded-[16px] px-3 py-2.5 text-left transition ${
+                                       active
+                                          ? "bg-[rgba(249,235,174,0.12)] text-gold"
+                                          : "text-muted-foreground hover:bg-white/[0.05] hover:text-white"
+                                    }`}
+                                 >
+                                    <span className={`grid h-9 w-9 place-items-center rounded-2xl ${active ? "bg-[rgba(249,235,174,0.14)]" : "bg-white/[0.04]"}`}>
+                                       <Icon className="h-4 w-4" />
+                                    </span>
+                                    <span className="text-sm font-medium">{item.label}</span>
+                                 </button>
+                              );
+                           })}
+                        </nav>
                      </div>
                   </div>
 
-                  <div className="mt-4 rounded-[24px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4">
-                     <div className="text-sm font-semibold text-white">{user?.name || "Welcome back"}</div>
-                     <div className="mt-1 text-sm text-muted-foreground">{workspace?.name || "Workspace ready"}</div>
-                     <div className="mt-4 flex flex-col gap-2">
-                        <button
-                           type="button"
-                           onClick={() => {
-                              setMobileNavOpen(false);
-                              navigate("/settings");
-                           }}
-                           className="rounded-[16px] border border-gold/20 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white"
-                        >
-                           Open settings
-                        </button>
-                        <button
-                           type="button"
-                           onClick={() => {
-                              setMobileNavOpen(false);
-                              setPaletteOpen(true);
-                           }}
-                           className="rounded-[16px] bg-gradient-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
-                        >
-                           Ask AI
-                        </button>
+                  <div className="mt-4 p-2">
+                     <div className="rounded-[1.8rem] bg-[rgba(255,255,255,0.03)] p-3">
+                        <div className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Quick create</div>
+                        <div className="grid grid-cols-2 gap-2">
+                           {createShortcuts.map((action) => {
+                              const Icon = action.icon;
+                              return (
+                                 <button
+                                    key={action.label}
+                                    type="button"
+                                    onClick={() => {
+                                       handleQuickAction(action.action);
+                                       setMobileNavOpen(false);
+                                    }}
+                                    className="rounded-[16px] border border-white/[0.06] bg-[#0d0d0d] px-2.5 py-2.5 text-left text-sm text-slate-300 transition hover:border-white/10 hover:bg-white/[0.05]"
+                                 >
+                                    <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(249,235,174,0.12)] text-gold">
+                                       <Icon className="h-3.5 w-3.5" />
+                                    </div>
+                                    <div className="text-[11px] font-medium">{action.label}</div>
+                                 </button>
+                              );
+                           })}
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="mt-4 p-2">
+                     <div className="rounded-[1.8rem] border border-white/[0.06] bg-[rgba(255,255,255,0.03)] p-4">
+                        <div className="text-sm font-semibold text-white">{user?.name || "Welcome back"}</div>
+                        <div className="mt-1 text-sm text-muted-foreground">{workspace?.name || "Workspace ready"}</div>
+                        <div className="mt-4 flex flex-col gap-2">
+                           <button
+                              type="button"
+                              onClick={() => {
+                                 setMobileNavOpen(false);
+                                 navigate("/settings");
+                              }}
+                              className="rounded-[16px] border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition hover:border-white/10 hover:bg-white/[0.06]"
+                           >
+                              Open settings
+                           </button>
+                           <button
+                              type="button"
+                              onClick={() => {
+                                 setMobileNavOpen(false);
+                                 setPaletteOpen(true);
+                              }}
+                              className="rounded-[16px] bg-gradient-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
+                           >
+                              Ask AI
+                           </button>
+                        </div>
                      </div>
                   </div>
                </div>

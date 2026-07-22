@@ -79,14 +79,14 @@ export default function People() {
          }
       >
          <div className="space-y-5">
-            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+            <div className="rounded-[1.75rem] border border-white/[0.06] bg-[rgba(255,255,255,0.03)] p-4">
                <div className="relative">
                   <HiSearch className="absolute left-4 top-3.5 h-4 w-4 text-gold/60" />
                   <input
                      value={search}
                      onChange={(event) => setSearch(event.target.value)}
                      placeholder="Search by name, email, or role"
-                     className="w-full rounded-[1.1rem] border border-white/10 bg-[rgba(255,255,255,0.05)] py-3 pl-10 pr-4 text-sm text-white outline-none transition focus:border-gold/30"
+                     className="w-full rounded-[1.1rem] border border-white/[0.06] bg-[rgba(255,255,255,0.05)] py-3 pl-10 pr-4 text-sm text-white outline-none transition focus:border-gold/30"
                   />
                </div>
             </div>

@@ -128,9 +128,9 @@ export default function Profile() {
       >
          {!isEditing ? (
             <div className="grid gap-6">
-               <div className="flex flex-col gap-5 rounded-[24px] border border-white/10 bg-white/[0.03] p-5 lg:flex-row lg:items-center lg:justify-between">
+               <div className="flex flex-col gap-5 rounded-[2rem] border border-white/[0.06] bg-[rgba(255,255,255,0.03)] p-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-center gap-4">
-                     <img src={avatarSrc} alt={profile.name || profile.email || "Profile"} className="h-20 w-20 rounded-[1.3rem] border border-white/10 object-cover" />
+                     <img src={avatarSrc} alt={profile.name || profile.email || "Profile"} className="h-20 w-20 rounded-[1.3rem] border border-white/[0.06] object-cover" />
                      <div>
                         <div className="text-sm uppercase tracking-[0.22em] text-gold">Profile overview</div>
                         <h3 className="mt-2 text-xl font-semibold text-white">{profile.name || "Your name"}</h3>
@@ -139,7 +139,7 @@ export default function Profile() {
                         </p>
                      </div>
                   </div>
-                  <div className="rounded-[1rem] border border-white/10 bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm text-muted-foreground">
+                  <div className="rounded-[1rem] border border-white/[0.06] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm text-muted-foreground">
                      <div className="font-medium text-white">{profile.email || "No email linked"}</div>
                      <div className="mt-1">Workspace presence is ready to update.</div>
                   </div>
@@ -167,15 +167,15 @@ export default function Profile() {
             </div>
          ) : (
             <form onSubmit={handleSave} className="grid gap-6">
-               <div className="flex flex-col gap-4 rounded-[24px] border border-white/10 bg-white/[0.03] p-5 lg:flex-row lg:items-center lg:justify-between">
+               <div className="flex flex-col gap-4 rounded-[2rem] border border-white/[0.06] bg-[rgba(255,255,255,0.03)] p-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-center gap-4">
-                     <img src={getAvatarSrc(editProfile)} alt={editProfile.name || editProfile.email || "Profile"} className="h-20 w-20 rounded-[1.3rem] border border-white/10 object-cover" />
+                     <img src={getAvatarSrc(editProfile)} alt={editProfile.name || editProfile.email || "Profile"} className="h-20 w-20 rounded-[1.3rem] border border-white/[0.06] object-cover" />
                      <div>
                         <div className="text-sm uppercase tracking-[0.22em] text-gold">Avatar preview</div>
                         <p className="mt-2 max-w-md text-sm text-muted-foreground">Upload a fresh image or keep the current avatar. Changes save instantly when you confirm.</p>
                      </div>
                   </div>
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-[1rem] border border-white/10 bg-[rgba(255,255,255,0.05)] px-4 py-3 text-sm text-white transition hover:border-gold/30 hover:bg-[rgba(249,235,174,0.08)]">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-[1rem] border border-white/[0.06] bg-[rgba(255,255,255,0.05)] px-4 py-3 text-sm text-white transition hover:border-gold/30 hover:bg-[rgba(249,235,174,0.08)]">
                      <HiPhotograph className="h-4 w-4 text-gold" />
                      {uploading ? "Uploading..." : "Upload avatar"}
                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />

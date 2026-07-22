@@ -110,7 +110,7 @@ export default function Dashboard() {
                   })}
                </div>
 
-               <div className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4 sm:p-6">
+               <div className="rounded-[2rem] border border-white/[0.06] bg-[rgba(255,255,255,0.035)] p-4 sm:p-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                      <div>
                         <div className="text-[11px] uppercase tracking-[0.28em] text-gold">{activeTab}</div>
