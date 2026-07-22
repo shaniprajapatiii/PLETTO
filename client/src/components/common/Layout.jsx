@@ -15,6 +15,12 @@ import {
    HiX as CloseIcon,
    HiHashtag as HashIcon,
    HiMenu as MenuIcon,
+   HiTemplate as TemplatesIcon,
+   HiCalendar as CalendarIcon,
+   HiChevronLeft as ChevronLeftIcon,
+   HiChevronRight as ChevronRightIcon,
+   HiAdjustments as AdjustmentsIcon,
+   HiLogout as LogoutIcon,
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
@@ -26,12 +32,25 @@ import { CommandPalette } from "./CommandPalette";
 import { PresenceStack } from "../../components/app/PresenceStack";
 
 const navItems = [
-   { label: "Dashboard", to: "/dashboard", icon: DashboardIcon },
-   { label: "Documents", to: "/docs", icon: DocsIcon },
-   { label: "Chat", to: "/chat", icon: ChatIcon },
-   { label: "My Channels", to: "/my-channels", icon: HashIcon },
-   { label: "People", to: "/people", icon: PeopleIcon },
-   { label: "Whiteboard", to: "/whiteboard", icon: WhiteboardIcon },
+   { label: "Dashboard", to: "/dashboard", icon: DashboardIcon, description: "Overview" },
+   { label: "Documents", to: "/docs", icon: DocsIcon, description: "Knowledge" },
+   { label: "Chat", to: "/chat", icon: ChatIcon, description: "Messages" },
+   { label: "My Channels", to: "/my-channels", icon: HashIcon, description: "Rooms" },
+   { label: "People", to: "/people", icon: PeopleIcon, description: "Team" },
+   { label: "Whiteboard", to: "/whiteboard", icon: WhiteboardIcon, description: "Ideas" },
+   { label: "Search", action: "search", icon: SearchIcon, description: "Find quickly" },
+];
+
+const secondaryNavItems = [
+   { label: "Templates", to: "/docs", icon: TemplatesIcon, description: "Starter kits" },
+   { label: "Calendar", to: "/dashboard", icon: CalendarIcon, description: "Plan ahead" },
+   { label: "Settings", to: "/settings", icon: SettingsIcon, description: "Preferences" },
+];
+
+const createShortcuts = [
+   { label: "New Doc", action: "doc", icon: DocsIcon },
+   { label: "New Board", action: "board", icon: WhiteboardIcon },
+   { label: "New Channel", action: "channel", icon: HashIcon },
 ];
 
 const starterNotifications = [
@@ -56,6 +75,8 @@ export default function Layout() {
    const [invitees, setInvitees] = useState("");
    const [channelSearchQuery, setChannelSearchQuery] = useState("");
    const [mobileNavOpen, setMobileNavOpen] = useState(false);
+   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+   const [sidebarContrast, setSidebarContrast] = useState(false);
    const notifRef = useRef([]);
    const modalRef = useRef(null);
 
@@ -111,8 +132,60 @@ export default function Layout() {
 
    const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications]);
    const title = navItems.find((item) => location.pathname.startsWith(item.to))?.label ?? "Workspace";
-   const breadCrumbs = location.pathname.split("/").filter(Boolean);
    const activeNavItem = navItems.find((item) => location.pathname.startsWith(item.to)) ?? navItems[0];
+   const recentItems = useMemo(() => {
+      const items = [];
+
+      channels.forEach((channel) => {
+         items.push({
+            id: channel._id,
+            label: channel.name,
+            meta: "Channel",
+            icon: HashIcon,
+         });
+      });
+
+      notifications.slice(0, 3).forEach((notification) => {
+         const kind = notification.link?.includes("/docs") ? "Docs" : notification.link?.includes("/whiteboard") ? "Board" : "Update";
+         items.push({
+            id: notification.id,
+            label: notification.title,
+            meta: kind,
+            icon: kind === "Docs" ? DocsIcon : kind === "Board" ? WhiteboardIcon : SparklesIcon,
+         });
+      });
+
+      return items.slice(0, 6);
+   }, [channels, notifications]);
+
+   const handleNavClick = (item) => {
+      if (item.action === "search") {
+         setSearchChannelsOpen(true);
+         return;
+      }
+      if (item.to) {
+         navigate(item.to);
+      }
+   };
+
+   const handleQuickAction = (action) => {
+      if (action === "doc") {
+         handleCreateDoc();
+      } else if (action === "board") {
+         handleCreateBoard();
+      } else if (action === "channel") {
+         setCreateChannelModalOpen(true);
+      } else if (action === "settings") {
+         navigate("/settings");
+      }
+   };
+
+   const handleLogout = () => {
+      localStorage.removeItem("token");
+      setUser(null);
+      setWorkspace(null);
+      navigate("/login");
+   };
 
    const createChannelNow = async () => {
       if (!channelName.trim()) return;
@@ -184,41 +257,74 @@ export default function Layout() {
    return (
       <div className="min-h-screen bg-[#030303] text-slate-100">
          <div className="flex min-h-screen flex-col lg:flex-row">
-            <aside className="hidden border-r border-white/10 bg-[linear-gradient(180deg,rgba(12,12,12,0.98),rgba(7,7,7,0.96))] px-5 py-6 lg:flex lg:w-72 lg:flex-col lg:justify-between" style={{ backgroundImage: "linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px), radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%)", backgroundSize: "44px 44px, 44px 44px, auto" }}>
-               <div>
+            <aside
+               className={`hidden border-r border-white/10 px-2 py-3 lg:flex lg:flex-col lg:justify-between transition-all duration-200 ${sidebarCollapsed ? "lg:w-20" : "lg:w-72"} ${sidebarContrast ? "bg-[#060606]" : "bg-[linear-gradient(180deg,rgba(12,12,12,0.98),rgba(7,7,7,0.96))]"}`}
+               style={{ backgroundImage: sidebarContrast ? undefined : "linear-gradient(rgba(249, 235, 174, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 235, 174, 0.045) 1px, transparent 1px), radial-gradient(circle at top left, rgba(249, 235, 174, 0.16), transparent 34%)", backgroundSize: "44px 44px, 44px 44px, auto" }}
+            >
+               <div className="space-y-3">
+                  <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"} gap-2`}>
+                     <button
+                        type="button"
+                        onClick={() => navigate("/dashboard")}
+                        className={`flex w-full items-center rounded-[18px] border border-white/10 bg-white/[0.03] px-2 py-2.5 text-left transition hover:border-gold/20 hover:bg-white/[0.05] ${sidebarCollapsed ? "justify-center" : "gap-3"}`}
+                     >
+                        <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-2">
+                           <Logo withText={false} iconClassName="h-5 w-5" />
+                        </div>
+                        {!sidebarCollapsed ? (
+                           <div>
+                              <div className="text-sm font-semibold tracking-[0.24em] text-white">PLETTO</div>
+                              <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Studio</div>
+                           </div>
+                        ) : null}
+                     </button>
+                     <button
+                        type="button"
+                        onClick={() => setSidebarCollapsed((value) => !value)}
+                        className="hidden rounded-full border border-white/10 bg-white/[0.04] p-2 text-muted-foreground transition hover:border-gold/20 hover:text-white lg:inline-flex"
+                        aria-label="Toggle sidebar"
+                     >
+                        {sidebarCollapsed ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
+                     </button>
+                  </div>
+
                   <button
                      type="button"
-                     onClick={() => navigate("/dashboard")}
-                     className="flex items-center gap-3 rounded-[20px] border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-gold/20 hover:bg-white/[0.05]"
+                     onClick={() => setSidebarContrast((value) => !value)}
+                     className={`flex w-full items-center rounded-[16px] border border-white/10 bg-white/[0.03] px-2 py-2.5 text-sm font-medium text-muted-foreground transition hover:border-gold/20 hover:text-white ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
                   >
-                     <Logo withText={false} iconClassName="h-6 w-6" />
-                     <div>
-                        <div className="text-sm font-semibold tracking-[0.24em] text-white">PLETTO</div>
-                        <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Studio</div>
-                     </div>
+                     <AdjustmentsIcon className="h-4 w-4" />
+                     {!sidebarCollapsed ? <span>Contrast</span> : null}
                   </button>
 
-                  <div className="mt-8">
-                     <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Workspace</div>
-                     <nav className="mt-3 space-y-2">
+                  <div className="rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-2">
+                     <div className={`px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground ${sidebarCollapsed ? "hidden" : ""}`}>Discover</div>
+                     <nav className="space-y-1">
                         {navItems.map((item) => {
                            const Icon = item.icon;
-                           const active = location.pathname.startsWith(item.to);
+                           const active = item.to ? location.pathname.startsWith(item.to) : false;
                            return (
                               <button
-                                 key={item.to}
+                                 key={item.label}
                                  type="button"
-                                 onClick={() => navigate(item.to)}
-                                 className={`flex w-full items-center gap-3 rounded-[18px] border px-3 py-3 text-left transition ${
+                                 onClick={() => handleNavClick(item)}
+                                 className={`flex w-full items-center rounded-[16px] px-2 py-2.5 text-left transition ${sidebarCollapsed ? "justify-center" : "gap-3"} ${
                                     active
-                                       ? "border-gold/30 bg-[rgba(249,235,174,0.12)] text-gold"
-                                       : "border-transparent bg-transparent text-muted-foreground hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+                                       ? "bg-[rgba(249,235,174,0.12)] text-gold"
+                                       : "text-muted-foreground hover:bg-white/[0.05] hover:text-white"
                                  }`}
                               >
-                                 <Icon className="h-4 w-4" />
-                                 <span className="text-sm font-medium">{item.label}</span>
-                                 {item.to === "/chat" && channels.length > 0 ? (
-                                    <span className="ml-auto rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                 <span className={`grid h-9 w-9 place-items-center rounded-2xl ${active ? "bg-[rgba(249,235,174,0.14)]" : "bg-white/[0.04]"}`}>
+                                    <Icon className="h-4 w-4" />
+                                 </span>
+                                 {!sidebarCollapsed ? (
+                                    <span className="min-w-0 flex-1">
+                                       <span className="block text-sm font-medium">{item.label}</span>
+                                       <span className="mt-0.5 block text-[10px] uppercase tracking-[0.18em] text-white/35">{item.description}</span>
+                                    </span>
+                                 ) : null}
+                                 {!sidebarCollapsed && item.to === "/chat" && channels.length > 0 ? (
+                                    <span className="rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-semibold text-white">
                                        {channels.length}
                                     </span>
                                  ) : null}
@@ -227,34 +333,93 @@ export default function Layout() {
                         })}
                      </nav>
                   </div>
-               </div>
 
-               <div className="rounded-[24px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.18)]">
-                  <div className="flex items-center gap-3">
-                     <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-gold text-sm font-semibold text-[var(--noir-900)]">
-                        {(user?.name || user?.email || "U").charAt(0).toUpperCase()}
-                     </div>
-                     <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-white">{user?.name || "Your workspace"}</div>
-                        <div className="truncate text-xs text-muted-foreground">{workspace?.name || "Ready to collaborate"}</div>
-                     </div>
-                  </div>
-                  <div className="mt-4 flex gap-2">
+                  <div className="rounded-[24px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-3">
+                     <div className={`text-[10px] font-semibold uppercase tracking-[0.24em] text-gold ${sidebarCollapsed ? "hidden" : ""}`}>Create</div>
                      <button
                         type="button"
                         onClick={() => setCreateChannelModalOpen(true)}
-                        className="flex-1 rounded-[16px] border border-gold/20 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition hover:border-gold/40 hover:bg-white/[0.06]"
+                        className={`mt-3 flex w-full items-center rounded-[16px] border border-gold/20 bg-[#0d0d0d] px-2 py-2.5 text-left text-sm font-medium text-white transition hover:border-gold/40 hover:bg-white/[0.05] ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
                      >
-                        New channel
+                        <span className="grid h-8 w-8 place-items-center rounded-full bg-[rgba(249,235,174,0.12)] text-gold">
+                           <PlusIcon className="h-4 w-4" />
+                        </span>
+                        {!sidebarCollapsed ? <span>Create channel</span> : null}
                      </button>
-                     <button
-                        type="button"
-                        onClick={() => setPaletteOpen(true)}
-                        className="rounded-[16px] bg-gradient-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
-                     >
-                        Ask AI
-                     </button>
+                     {!sidebarCollapsed ? (
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                           {createShortcuts.map((action) => {
+                              const Icon = action.icon;
+                              return (
+                                 <button
+                                    key={action.label}
+                                    type="button"
+                                    onClick={() => handleQuickAction(action.action)}
+                                    className="rounded-[16px] border border-white/10 bg-[#0d0d0d] px-2.5 py-2.5 text-left text-sm text-slate-300 transition hover:border-gold/20 hover:bg-white/[0.05]"
+                                 >
+                                    <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(249,235,174,0.12)] text-gold">
+                                       <Icon className="h-3.5 w-3.5" />
+                                    </div>
+                                    <div className="text-[11px] font-medium">{action.label}</div>
+                                 </button>
+                              );
+                           })}
+                        </div>
+                     ) : null}
                   </div>
+
+                  <div className="rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-2">
+                     <div className={`px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground ${sidebarCollapsed ? "hidden" : ""}`}>Recent</div>
+                     <div className="space-y-1">
+                        {recentItems.map((item) => {
+                           const Icon = item.icon;
+                           return (
+                              <button
+                                 key={item.id}
+                                 type="button"
+                                 onClick={() => navigate(item.meta === "Channel" ? `/chat?channel=${item.id}` : item.meta === "Docs" ? "/docs" : "/whiteboard")}
+                                 className={`flex w-full items-center rounded-[16px] px-2 py-2.5 text-left transition ${sidebarCollapsed ? "justify-center" : "gap-2"} text-muted-foreground hover:bg-white/[0.05] hover:text-white`}
+                              >
+                                 <span className="grid h-8 w-8 place-items-center rounded-2xl bg-white/[0.04] text-gold">
+                                    <Icon className="h-4 w-4" />
+                                 </span>
+                                 {!sidebarCollapsed ? (
+                                    <div className="min-w-0 flex-1">
+                                       <div className="truncate text-sm font-medium text-white">{item.label}</div>
+                                       <div className="truncate text-[10px] uppercase tracking-[0.18em] text-white/35">{item.meta}</div>
+                                    </div>
+                                 ) : null}
+                              </button>
+                           );
+                        })}
+                     </div>
+                  </div>
+               </div>
+
+               <div className="rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-3">
+                  <button
+                     type="button"
+                     onClick={() => navigate("/profile")}
+                     className={`flex w-full items-center rounded-[16px] px-2 py-2.5 text-left transition hover:bg-white/[0.05] ${sidebarCollapsed ? "justify-center" : "gap-3"}`}
+                  >
+                     <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-gold text-sm font-semibold text-[var(--noir-900)]">
+                        {(user?.name || user?.email || "U").charAt(0).toUpperCase()}
+                     </div>
+                     {!sidebarCollapsed ? (
+                        <div className="min-w-0">
+                           <div className="truncate text-sm font-semibold text-white">{user?.name || "Profile"}</div>
+                           <div className="truncate text-xs text-muted-foreground">Open profile</div>
+                        </div>
+                     ) : null}
+                  </button>
+                  <button
+                     type="button"
+                     onClick={handleLogout}
+                     className={`mt-2 flex w-full items-center rounded-[16px] border border-red-400/20 bg-red-500/10 px-2 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/20 ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
+                  >
+                     <LogoutIcon className="h-4 w-4" />
+                     {!sidebarCollapsed ? <span>Logout</span> : null}
+                  </button>
                </div>
             </aside>
 
@@ -371,49 +536,100 @@ export default function Layout() {
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm lg:hidden" onClick={() => setMobileNavOpen(false)}>
                <div className="h-full w-[88vw] max-w-[320px] border-r border-white/10 bg-[#070707] p-5" onClick={(event) => event.stopPropagation()}>
                   <div className="flex items-center justify-between">
-                     <Logo withText={false} iconClassName="h-6 w-6" />
+                     <div className="flex items-center gap-3">
+                        <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-2">
+                           <Logo withText={false} iconClassName="h-5 w-5" />
+                        </div>
+                        <div>
+                           <div className="text-sm font-semibold tracking-[0.24em] text-white">PLETTO</div>
+                           <div className="text-[10px] uppercase tracking-[0.24em] text-gold">Studio</div>
+                        </div>
+                     </div>
                      <button type="button" onClick={() => setMobileNavOpen(false)} className="rounded-full border border-white/10 p-2 text-muted-foreground">
                         <CloseIcon className="h-4 w-4" />
                      </button>
                   </div>
-                  <div className="mt-6 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Menu</div>
-                  <nav className="mt-3 space-y-2">
-                     {navItems.map((item) => {
-                        const Icon = item.icon;
-                        const active = location.pathname.startsWith(item.to);
-                        return (
-                           <button
-                              key={item.to}
-                              type="button"
-                              onClick={() => {
-                                 navigate(item.to);
-                                 setMobileNavOpen(false);
-                              }}
-                              className={`flex w-full items-center gap-3 rounded-[18px] border px-3 py-3 text-left transition ${
-                                 active
-                                    ? "border-gold/30 bg-[rgba(249,235,174,0.12)] text-gold"
-                                    : "border-transparent bg-transparent text-muted-foreground hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
-                              }`}
-                           >
-                              <Icon className="h-4 w-4" />
-                              <span className="text-sm font-medium">{item.label}</span>
-                           </button>
-                        );
-                     })}
-                  </nav>
-                  <div className="mt-8 rounded-[24px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4">
+
+                  <div className="mt-5 rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-2">
+                     <div className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Discover</div>
+                     <nav className="space-y-1">
+                        {navItems.map((item) => {
+                           const Icon = item.icon;
+                           const active = location.pathname.startsWith(item.to);
+                           return (
+                              <button
+                                 key={item.to}
+                                 type="button"
+                                 onClick={() => {
+                                    navigate(item.to);
+                                    setMobileNavOpen(false);
+                                 }}
+                                 className={`flex w-full items-center gap-3 rounded-[16px] px-3 py-2.5 text-left transition ${
+                                    active
+                                       ? "bg-[rgba(249,235,174,0.12)] text-gold"
+                                       : "text-muted-foreground hover:bg-white/[0.05] hover:text-white"
+                                 }`}
+                              >
+                                 <span className={`grid h-9 w-9 place-items-center rounded-2xl ${active ? "bg-[rgba(249,235,174,0.14)]" : "bg-white/[0.04]"}`}>
+                                    <Icon className="h-4 w-4" />
+                                 </span>
+                                 <span className="text-sm font-medium">{item.label}</span>
+                              </button>
+                           );
+                        })}
+                     </nav>
+                  </div>
+
+                  <div className="mt-4 rounded-[24px] border border-white/10 bg-[#0b0b0b]/70 p-2">
+                     <div className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Quick create</div>
+                     <div className="grid grid-cols-2 gap-2">
+                        {createShortcuts.map((action) => {
+                           const Icon = action.icon;
+                           return (
+                              <button
+                                 key={action.label}
+                                 type="button"
+                                 onClick={() => {
+                                    handleQuickAction(action.action);
+                                    setMobileNavOpen(false);
+                                 }}
+                                 className="rounded-[16px] border border-white/10 bg-[#0d0d0d] px-2.5 py-2.5 text-left text-sm text-slate-300"
+                              >
+                                 <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(249,235,174,0.12)] text-gold">
+                                    <Icon className="h-3.5 w-3.5" />
+                                 </div>
+                                 <div className="text-[11px] font-medium">{action.label}</div>
+                              </button>
+                           );
+                        })}
+                     </div>
+                  </div>
+
+                  <div className="mt-4 rounded-[24px] border border-gold/20 bg-[rgba(249,235,174,0.08)] p-4">
                      <div className="text-sm font-semibold text-white">{user?.name || "Welcome back"}</div>
                      <div className="mt-1 text-sm text-muted-foreground">{workspace?.name || "Workspace ready"}</div>
-                     <button
-                        type="button"
-                        onClick={() => {
-                           setMobileNavOpen(false);
-                           setPaletteOpen(true);
-                        }}
-                        className="mt-4 w-full rounded-[16px] bg-gradient-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
-                     >
-                        Ask AI
-                     </button>
+                     <div className="mt-4 flex flex-col gap-2">
+                        <button
+                           type="button"
+                           onClick={() => {
+                              setMobileNavOpen(false);
+                              navigate("/settings");
+                           }}
+                           className="rounded-[16px] border border-gold/20 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white"
+                        >
+                           Open settings
+                        </button>
+                        <button
+                           type="button"
+                           onClick={() => {
+                              setMobileNavOpen(false);
+                              setPaletteOpen(true);
+                           }}
+                           className="rounded-[16px] bg-gradient-gold px-3 py-2 text-sm font-semibold text-[var(--noir-900)]"
+                        >
+                           Ask AI
+                        </button>
+                     </div>
                   </div>
                </div>
             </div>
