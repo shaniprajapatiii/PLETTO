@@ -13,11 +13,16 @@ exports.getChannels = async (req, res) => {
       const workspaceId = await getWorkspaceId(req.user.id);
       const channels = await Channel.find({
          workspace: workspaceId,
-         $or: [{ type: "public" }, { type: "dm", members: req.user.id }],
+         $or: [
+            { type: "public" },
+            { type: "private", members: req.user.id },
+            { type: "private", createdBy: req.user.id },
+            { type: "dm", members: req.user.id },
+         ],
       })
          .sort({ createdAt: -1 })
-         .populate("members", "name email avatar")
-         .populate("createdBy", "name");
+         .populate("members", "name email avatar color")
+         .populate("createdBy", "name email avatar");
 
       res.json({ success: true, channels });
    } catch (error) {
@@ -27,7 +32,7 @@ exports.getChannels = async (req, res) => {
 
 exports.createChannel = async (req, res) => {
    try {
-      const { name, type, members = [] } = req.body;
+      const { name, type = "public", members = [], topic = "", description = "" } = req.body;
       const workspaceId = await getWorkspaceId(req.user.id);
       if (!workspaceId) {
          return res.status(400).json({ success: false, message: "Workspace membership required" });
@@ -46,7 +51,7 @@ exports.createChannel = async (req, res) => {
             workspace: workspaceId,
             type: "dm",
             members: { $size: 2, $all: memberIds },
-         }).populate("members", "name email avatar");
+         }).populate("members", "name email avatar color");
 
          if (existingChannel) {
             return res.status(200).json({ success: true, channel: existingChannel });
@@ -62,11 +67,17 @@ exports.createChannel = async (req, res) => {
             createdBy: req.user.id,
          });
 
-         await channel.populate("members", "name email avatar");
+         await channel.populate("members", "name email avatar color");
+
+         const io = getIo();
+         if (io) {
+            io.to(workspaceId.toString()).emit("channelCreated", channel);
+         }
+
          return res.status(201).json({ success: true, channel });
       }
 
-      if (!name) {
+      if (!name || !name.trim()) {
          return res.status(400).json({ success: false, message: "Channel name is required" });
       }
 
@@ -75,25 +86,27 @@ exports.createChannel = async (req, res) => {
          memberIds.push(req.user.id.toString());
       }
 
+      const channelType = type === "private" ? "private" : "public";
+
       const channel = await Channel.create({
-         name,
-         type: "public",
+         name: name.trim().toLowerCase().replace(/\s+/g, "-"),
+         type: channelType,
          members: memberIds,
+         topic,
+         description,
          workspace: workspaceId,
          createdBy: req.user.id,
       });
 
-      await channel.populate("members", "name email avatar");
-      
+      await channel.populate("members", "name email avatar color");
+      await channel.populate("createdBy", "name email avatar");
+
       // Broadcast channel creation to all workspace members
       const io = getIo();
       if (io) {
-         io.to(workspaceId.toString()).emit("channelCreated", {
-            ...channel.toObject(),
-            createdBy: { name: req.user.name },
-         });
+         io.to(workspaceId.toString()).emit("channelCreated", channel);
       }
-      
+
       res.status(201).json({ success: true, channel });
    } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -180,13 +193,23 @@ exports.addMember = async (req, res) => {
          return res.status(404).json({ success: false, message: "Channel not found" });
       }
 
-      if (channel.members.includes(userId)) {
-         return res.status(400).json({ success: false, message: "User already a member" });
+      if (channel.type === "private" && channel.createdBy.toString() !== req.user.id.toString()) {
+         return res.status(403).json({ success: false, message: "Only channel creator can add members" });
+      }
+
+      if (channel.members.some((id) => id.toString() === userId.toString())) {
+         return res.status(400).json({ success: false, message: "User is already a member" });
       }
 
       channel.members.push(userId);
       await channel.save();
-      await channel.populate("members", "name avatar email");
+      await channel.populate("members", "name avatar email color");
+      await channel.populate("createdBy", "name email avatar");
+
+      const io = getIo();
+      if (io) {
+         io.to(workspaceId.toString()).emit("channelUpdated", channel);
+      }
 
       res.json({ success: true, channel });
    } catch (error) {
@@ -209,9 +232,19 @@ exports.removeMember = async (req, res) => {
          return res.status(404).json({ success: false, message: "Channel not found" });
       }
 
+      if (channel.type === "private" && channel.createdBy.toString() !== req.user.id.toString()) {
+         return res.status(403).json({ success: false, message: "Only channel creator can remove members" });
+      }
+
       channel.members = channel.members.filter((id) => id.toString() !== userId.toString());
       await channel.save();
-      await channel.populate("members", "name avatar email");
+      await channel.populate("members", "name avatar email color");
+      await channel.populate("createdBy", "name email avatar");
+
+      const io = getIo();
+      if (io) {
+         io.to(workspaceId.toString()).emit("channelUpdated", channel);
+      }
 
       res.json({ success: true, channel });
    } catch (error) {
@@ -265,10 +298,10 @@ exports.getCreatedChannels = async (req, res) => {
       const channels = await Channel.find({
          workspace: workspaceId,
          createdBy: req.user.id,
-         type: "public",
+         type: { $in: ["public", "private"] },
       })
          .sort({ createdAt: -1 })
-         .populate("members", "name email avatar")
+         .populate("members", "name email avatar color")
          .populate("createdBy", "name");
 
       // Get message count for each channel

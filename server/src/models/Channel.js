@@ -8,7 +8,7 @@ const channelSchema = new mongoose.Schema(
       },
       type: {
          type: String,
-         enum: ["public", "dm"],
+         enum: ["public", "private", "dm"],
          default: "public",
       },
       topic: {

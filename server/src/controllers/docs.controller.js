@@ -63,3 +63,22 @@ exports.updateDoc = async (req, res) => {
       res.status(500).json({ success: false, message: error.message });
    }
 };
+
+exports.deleteDoc = async (req, res) => {
+   try {
+      const { id } = req.params;
+      const workspaceId = await getWorkspaceId(req.user.id);
+      if (!workspaceId) {
+         return res.status(403).json({ success: false, message: "Workspace access required" });
+      }
+
+      const document = await Document.findOneAndDelete({ _id: id, workspace: workspaceId });
+      if (!document) {
+         return res.status(404).json({ success: false, message: "Document not found" });
+      }
+
+      res.json({ success: true, message: "Document deleted successfully" });
+   } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+   }
+};

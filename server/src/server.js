@@ -68,8 +68,8 @@ io.use(async (socket, next) => {
       const user = await User.findById(decoded.id).select("name avatar color");
 
       socket.user = {
-         id: decoded.id,
-         workspaceId: membership.workspace?._id,
+         id: decoded.id.toString(),
+         workspaceId: membership.workspace?._id ? membership.workspace._id.toString() : "",
          name: user?.name || "Unknown",
          avatar: user?.avatar || "",
          color: user?.color || "#6366f1",
@@ -85,6 +85,14 @@ const userChannels = new Map();
 
 io.on("connection", (socket) => {
    console.log(`User ${socket.user.id} connected`);
+
+   // Join workspace room and personal user room immediately on connection
+   if (socket.user.workspaceId) {
+      socket.join(socket.user.workspaceId);
+   }
+   if (socket.user.id) {
+      socket.join(`user:${socket.user.id}`);
+   }
 
    // ============ PRESENCE & TYPING ============
    socket.on("userOnline", async () => {
@@ -135,6 +143,15 @@ io.on("connection", (socket) => {
       try {
          const channel = await Channel.findOne({ _id: channelId, workspace: socket.user.workspaceId });
          if (!channel) return;
+
+         if (channel.type === "private" || channel.type === "dm") {
+            const isMember = channel.members?.some((id) => id.toString() === socket.user.id.toString());
+            const isCreator = channel.createdBy?.toString() === socket.user.id.toString();
+            if (!isMember && !isCreator) {
+               socket.emit("channelAccessDenied", { channelId, message: "Access denied to private channel" });
+               return;
+            }
+         }
 
          socket.join(channelId);
          userChannels.set(socket.id, channelId);
@@ -227,6 +244,12 @@ io.on("connection", (socket) => {
          const channel = await Channel.findOne({ _id: channelId, workspace: socket.user.workspaceId });
          if (!channel) return;
 
+         if (channel.type === "private" || channel.type === "dm") {
+            const isMember = channel.members?.some((id) => id.toString() === socket.user.id.toString());
+            const isCreator = channel.createdBy?.toString() === socket.user.id.toString();
+            if (!isMember && !isCreator) return;
+         }
+
          const message = await Message.create({
             channel: channelId,
             workspace: socket.user.workspaceId,
@@ -240,6 +263,18 @@ io.on("connection", (socket) => {
             .populate("reactions.users", "name avatar");
 
          io.to(channelId).emit("newMessage", populatedMessage);
+
+         // Broadcast to workspace room so all online workspace members receive new public channel messages
+         if (channel.type === "public" && socket.user.workspaceId) {
+            io.to(socket.user.workspaceId).emit("newMessage", populatedMessage);
+         }
+
+         // For DMs and Private channels, emit to each member's personal socket room
+         if (channel.members && channel.members.length > 0) {
+            channel.members.forEach((mId) => {
+               io.to(`user:${mId.toString()}`).emit("newMessage", populatedMessage);
+            });
+         }
 
          // Update channel last activity
          await Channel.findByIdAndUpdate(channelId, { lastActivityAt: new Date() });

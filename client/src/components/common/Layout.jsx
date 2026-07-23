@@ -34,7 +34,8 @@ const navGroups = [
       items: [
          { label: "Dashboard", to: "/dashboard", icon: DashboardIcon, badge: null },
          { label: "Documents", to: "/docs", icon: DocsIcon, badge: null },
-         { label: "Chat", to: "/chat", icon: ChatIcon, badge: "live" },
+         { label: "Channels", to: "/chat", icon: ChatIcon, badge: "live" },
+         { label: "Direct Messages", to: "/dm", icon: ChatIcon, badge: null },
          { label: "Whiteboard", to: "/whiteboard", icon: WhiteboardIcon, badge: null },
       ]
    },

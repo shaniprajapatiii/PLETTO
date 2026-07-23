@@ -1,8 +1,18 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import { HiCheck, HiDocumentText, HiEye, HiLightningBolt, HiPencil, HiPlus, HiSparkles, HiUsers } from "react-icons/hi";
-import { createDoc, getDocs, updateDoc } from "../../services/docsService";
+import {
+   HiCheck,
+   HiDocumentText,
+   HiEye,
+   HiPencil,
+   HiPlus,
+   HiTrash,
+   HiSearch,
+   HiArrowsExpand,
+} from "react-icons/hi";
+import { createDoc, getDocs, updateDoc, deleteDoc } from "../../services/docsService";
 import { useAuth } from "../../context/AuthContext";
 import { PageShell } from "../../components/common/PageShell";
 
@@ -24,7 +34,7 @@ function renderInlineMarkdown(value) {
 
 function renderMarkdownToHtml(markdown = "") {
    if (!markdown.trim()) {
-      return '<p class="text-sm text-muted-foreground">Start typing to build a polished note.</p>';
+      return '<p class="text-sm text-zinc-500">Start typing to build a polished note.</p>';
    }
 
    const blocks = [];
@@ -46,7 +56,7 @@ function renderMarkdownToHtml(markdown = "") {
             codeLines.push(lines[index]);
             index += 1;
          }
-         blocks.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+         blocks.push(`<pre className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 text-xs font-mono"><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
          index += 1;
          continue;
       }
@@ -57,7 +67,7 @@ function renderMarkdownToHtml(markdown = "") {
             quoteLines.push(renderInlineMarkdown(lines[index].replace(/^>\s+/, "")));
             index += 1;
          }
-         blocks.push(`<blockquote>${quoteLines.join("<br />")}</blockquote>`);
+         blocks.push(`<blockquote className="border-l-2 border-amber-400 pl-3 italic text-zinc-400 my-2">${quoteLines.join("<br />")}</blockquote>`);
          continue;
       }
 
@@ -67,18 +77,18 @@ function renderMarkdownToHtml(markdown = "") {
             items.push(`<li>${renderInlineMarkdown(lines[index].replace(/^[-*]\s+/, ""))}</li>`);
             index += 1;
          }
-         blocks.push(`<ul>${items.join("")}</ul>`);
+         blocks.push(`<ul className="list-disc list-inside space-y-1 text-xs text-zinc-300 my-2">${items.join("")}</ul>`);
          continue;
       }
 
       if (/^###\s+/.test(line)) {
-         blocks.push(`<h3>${renderInlineMarkdown(line.replace(/^###\s+/, ""))}</h3>`);
+         blocks.push(`<h3 className="text-base font-bold text-zinc-100 mt-4 mb-2">${renderInlineMarkdown(line.replace(/^###\s+/, ""))}</h3>`);
       } else if (/^##\s+/.test(line)) {
-         blocks.push(`<h2>${renderInlineMarkdown(line.replace(/^##\s+/, ""))}</h2>`);
+         blocks.push(`<h2 className="text-lg font-bold text-zinc-100 mt-5 mb-2">${renderInlineMarkdown(line.replace(/^##\s+/, ""))}</h2>`);
       } else if (/^#\s+/.test(line)) {
-         blocks.push(`<h1>${renderInlineMarkdown(line.replace(/^#\s+/, ""))}</h1>`);
+         blocks.push(`<h1 className="text-xl font-extrabold text-zinc-100 mt-6 mb-3">${renderInlineMarkdown(line.replace(/^#\s+/, ""))}</h1>`);
       } else {
-         blocks.push(`<p>${renderInlineMarkdown(line)}</p>`);
+         blocks.push(`<p className="text-xs leading-relaxed text-zinc-300 my-1">${renderInlineMarkdown(line)}</p>`);
       }
 
       index += 1;
@@ -89,16 +99,20 @@ function renderMarkdownToHtml(markdown = "") {
 
 export default function Docs() {
    const { workspace, user } = useAuth();
+   const [searchParams, setSearchParams] = useSearchParams();
+
    const [docs, setDocs] = useState([]);
    const [active, setActive] = useState(null);
    const [content, setContent] = useState("");
    const [title, setTitle] = useState("");
    const [docType, setDocType] = useState("text");
+   const [searchQuery, setSearchQuery] = useState("");
    const [error, setError] = useState(null);
    const [saving, setSaving] = useState(false);
    const [remoteCursor, setRemoteCursor] = useState(null);
    const [collabMessage, setCollabMessage] = useState(null);
    const [viewMode, setViewMode] = useState("edit");
+   const [isFullScreen, setIsFullScreen] = useState(false);
 
    const socketRef = useRef(null);
    const textareaRef = useRef(null);
@@ -108,6 +122,25 @@ export default function Docs() {
          const res = await getDocs();
          const fetchedDocs = res.data.documents || [];
          setDocs(fetchedDocs);
+
+         const docIdParam = searchParams.get("doc");
+         const fullScreenParam = searchParams.get("fullscreen");
+
+         if (fullScreenParam === "true") {
+            setIsFullScreen(true);
+         }
+
+         if (docIdParam) {
+            const matched = fetchedDocs.find((d) => d._id === docIdParam);
+            if (matched) {
+               setActive(matched);
+               setTitle(matched.title || "Untitled Document");
+               setContent(matched.content || "");
+               setDocType(matched.type || "text");
+               return;
+            }
+         }
+
          if (!active && fetchedDocs.length > 0) {
             const first = fetchedDocs[0];
             setActive(first);
@@ -118,7 +151,7 @@ export default function Docs() {
       } catch (err) {
          setError(err.response?.data?.message || "Could not load documents");
       }
-   }, [active]);
+   }, [active, searchParams]);
 
    useEffect(() => {
       refreshDocs();
@@ -155,8 +188,6 @@ export default function Docs() {
       socketRef.current.emit("joinDoc", active._id);
    }, [active]);
 
-
-
    const handleCreate = async (type = "text") => {
       try {
          const res = await createDoc({ title: "Untitled document", content: "", type });
@@ -167,6 +198,7 @@ export default function Docs() {
          setContent(document.content);
          setDocType(document.type || "text");
          setCollabMessage("New document ready for co-authoring.");
+         setSearchParams({ doc: document._id });
       } catch (err) {
          setError(err.response?.data?.message || "Could not create document");
       }
@@ -194,6 +226,29 @@ export default function Docs() {
       }
    };
 
+   const handleDelete = async (docId) => {
+      if (!window.confirm("Are you sure you want to delete this document? This action cannot be undone.")) {
+         return;
+      }
+
+      try {
+         await deleteDoc(docId);
+         const nextDocs = docs.filter((d) => d._id !== docId);
+         setDocs(nextDocs);
+         if (active?._id === docId) {
+            if (nextDocs.length > 0) {
+               selectDoc(nextDocs[0]);
+            } else {
+               setActive(null);
+               setTitle("");
+               setContent("");
+            }
+         }
+      } catch (err) {
+         setError(err.response?.data?.message || "Could not delete document");
+      }
+   };
+
    const selectDoc = (doc) => {
       setActive(doc);
       setTitle(doc.title);
@@ -201,6 +256,7 @@ export default function Docs() {
       setDocType(doc.type || "text");
       setCollabMessage(null);
       setViewMode("edit");
+      setSearchParams({ doc: doc._id });
    };
 
    const insertMarkdownSnippet = (prefix, suffix = "", placeholder = "text") => {
@@ -219,13 +275,121 @@ export default function Docs() {
          textarea.setSelectionRange(cursorStart, cursorEnd);
       });
    };
+
    const wordCount = useMemo(() => content.trim().split(/\s+/).filter(Boolean).length, [content]);
    const lastUpdated = active?.updatedAt ? new Date(active.updatedAt).toLocaleDateString() : "Not saved";
+
+   const filteredDocs = useMemo(() => {
+      if (!searchQuery.trim()) return docs;
+      const q = searchQuery.toLowerCase();
+      return docs.filter((d) => d.title?.toLowerCase().includes(q) || d.content?.toLowerCase().includes(q));
+   }, [docs, searchQuery]);
+
+   // Main Editor Container Renderer
+   const renderEditor = () => (
+      <div className={`space-y-4 ${isFullScreen ? "fixed inset-0 z-50 bg-zinc-950 p-6 overflow-y-auto" : ""}`}>
+         {active ? (
+            <>
+               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-800">
+                  <input
+                     className="text-lg font-bold text-zinc-100 bg-transparent border-b border-transparent focus:border-amber-400 outline-none w-full sm:w-2/3"
+                     value={title}
+                     onChange={(e) => setTitle(e.target.value)}
+                     placeholder="Document Title..."
+                  />
+
+                  <div className="flex items-center gap-2 shrink-0">
+                     <span className="text-[11px] text-zinc-500">{wordCount} words • {lastUpdated}</span>
+                     
+                     <button
+                        type="button"
+                        onClick={() => setIsFullScreen(!isFullScreen)}
+                        className="p-2 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white transition"
+                        title={isFullScreen ? "Exit Fullscreen" : "Full Screen Focus Mode"}
+                     >
+                        {isFullScreen ? <HiArrowsExpand className="rotate-180" size={16} /> : <HiArrowsExpand size={16} />}
+                     </button>
+
+                     <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 text-xs font-bold shadow-md transition disabled:opacity-50"
+                     >
+                        <HiCheck size={14} />
+                        <span>{saving ? "Saving..." : "Save"}</span>
+                     </button>
+
+                     <button
+                        onClick={() => handleDelete(active._id)}
+                        className="p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
+                        title="Delete Document"
+                     >
+                        <HiTrash size={14} />
+                     </button>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap items-center justify-between gap-2 bg-zinc-900/60 p-2 rounded-lg border border-zinc-800">
+                  <div className="flex items-center gap-1">
+                     <button
+                        onClick={() => setViewMode("edit")}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${viewMode === "edit" ? "bg-amber-400 text-zinc-950 font-bold" : "text-zinc-400 hover:text-white"}`}
+                     >
+                        <HiPencil size={12} />
+                        <span>Edit</span>
+                     </button>
+                     <button
+                        onClick={() => setViewMode("preview")}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${viewMode === "preview" ? "bg-amber-400 text-zinc-950 font-bold" : "text-zinc-400 hover:text-white"}`}
+                     >
+                        <HiEye size={12} />
+                        <span>Preview</span>
+                     </button>
+                  </div>
+
+                  {docType === "markdown" && viewMode === "edit" ? (
+                     <div className="flex flex-wrap gap-1">
+                        <button type="button" onClick={() => insertMarkdownSnippet("# ", "", "Heading")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800"># Heading</button>
+                        <button type="button" onClick={() => insertMarkdownSnippet("**", "**", "bold")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800">**Bold**</button>
+                        <button type="button" onClick={() => insertMarkdownSnippet("*", "*", "italic")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800">*Italic*</button>
+                        <button type="button" onClick={() => insertMarkdownSnippet("- ", "", "item")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800">- List</button>
+                        <button type="button" onClick={() => insertMarkdownSnippet("```\n", "\n```", "code")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800">Code</button>
+                     </div>
+                  ) : null}
+               </div>
+
+               {viewMode === "preview" ? (
+                  <div className={`p-4 rounded-xl border border-zinc-800 bg-zinc-900/30 overflow-y-auto ${isFullScreen ? "min-h-[75vh]" : "min-h-[50vh]"}`}>
+                     <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(content) }} />
+                  </div>
+               ) : (
+                  <textarea
+                     ref={textareaRef}
+                     className={`w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-amber-400 leading-relaxed ${isFullScreen ? "min-h-[75vh]" : "min-h-[50vh]"}`}
+                     value={content}
+                     onChange={(e) => setContent(e.target.value)}
+                     placeholder="Type your document content here..."
+                  />
+               )}
+
+               {collabMessage ? (
+                  <div className="p-2 rounded bg-amber-400/10 border border-amber-400/20 text-[11px] text-amber-300 font-medium">
+                     {collabMessage}
+                  </div>
+               ) : null}
+            </>
+         ) : (
+            <div className="py-20 text-center text-xs text-zinc-500">
+               Select a document from the list or create a new one.
+            </div>
+         )}
+      </div>
+   );
 
    return (
       <PageShell
          title="Knowledge Documents"
-         subtitle="Create, co-author, and share workspace documentation and team notes."
+         subtitle="Create, co-author, and manage workspace documentation and notes."
          actions={
             <div className="flex gap-2">
                <button
@@ -244,115 +408,69 @@ export default function Docs() {
             </div>
          }
       >
+         {error && (
+            <div className="p-3 mb-4 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+               {error}
+            </div>
+         )}
+
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Sidebar list */}
             <div className="lg:col-span-4 rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
                   <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Document List ({docs.length})</span>
                </div>
 
+               <div className="relative">
+                  <HiSearch className="absolute left-3 top-2.5 text-zinc-500" size={14} />
+                  <input
+                     value={searchQuery}
+                     onChange={(e) => setSearchQuery(e.target.value)}
+                     placeholder="Search documents..."
+                     className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-amber-400 transition"
+                  />
+               </div>
+
                <div className="space-y-1.5 max-h-[70vh] overflow-y-auto">
-                  {docs.length > 0 ? (
-                     docs.map((doc) => (
-                        <button
-                           key={doc._id}
-                           onClick={() => selectDoc(doc)}
-                           className={`w-full p-3 rounded-lg border text-left transition flex items-center gap-3 ${
-                              active?._id === doc._id
-                                 ? "border-amber-400/50 bg-amber-400/10 text-amber-300 font-semibold"
-                                 : "border-zinc-800/60 bg-zinc-900/40 text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200"
-                           }`}
-                        >
-                           <HiDocumentText className={`h-4 w-4 shrink-0 ${active?._id === doc._id ? "text-amber-300" : "text-zinc-500"}`} />
-                           <div className="min-w-0 flex-1">
-                              <div className="text-xs font-bold truncate text-zinc-200">{doc.title || "Untitled Document"}</div>
-                              <div className="text-[10px] text-zinc-500 truncate mt-0.5">Updated {new Date(doc.updatedAt).toLocaleDateString()}</div>
-                           </div>
-                        </button>
+                  {filteredDocs.length > 0 ? (
+                     filteredDocs.map((doc) => (
+                        <div key={doc._id} className="group relative">
+                           <button
+                              onClick={() => selectDoc(doc)}
+                              className={`w-full p-3 rounded-lg border text-left transition flex items-center gap-3 ${
+                                 active?._id === doc._id
+                                    ? "border-amber-400/50 bg-amber-400/10 text-amber-300 font-semibold"
+                                    : "border-zinc-800/60 bg-zinc-900/40 text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200"
+                              }`}
+                           >
+                              <HiDocumentText className={`h-4 w-4 shrink-0 ${active?._id === doc._id ? "text-amber-300" : "text-zinc-500"}`} />
+                              <div className="min-w-0 flex-1 pr-6">
+                                 <div className="text-xs font-bold truncate text-zinc-200">{doc.title || "Untitled Document"}</div>
+                                 <div className="text-[10px] text-zinc-500 truncate mt-0.5">Updated {new Date(doc.updatedAt).toLocaleDateString()}</div>
+                              </div>
+                           </button>
+
+                           <button
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleDelete(doc._id);
+                              }}
+                              className="absolute right-2 top-3 opacity-0 group-hover:opacity-100 p-1 text-zinc-500 hover:text-red-400 transition"
+                              title="Delete Document"
+                           >
+                              <HiTrash size={14} />
+                           </button>
+                        </div>
                      ))
                   ) : (
-                     <div className="py-8 text-center text-xs text-zinc-500">No documents yet. Create one to begin.</div>
+                     <div className="py-8 text-center text-xs text-zinc-500">No documents found.</div>
                   )}
                </div>
             </div>
 
-            <div className="lg:col-span-8 rounded-xl border border-zinc-800 bg-zinc-950/60 p-5 space-y-4">
-               {active ? (
-                  <>
-                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-800">
-                        <input
-                           className="text-lg font-bold text-zinc-100 bg-transparent border-b border-transparent focus:border-amber-400 outline-none w-full sm:w-2/3"
-                           value={title}
-                           onChange={(e) => setTitle(e.target.value)}
-                           placeholder="Document Title..."
-                        />
-
-                        <div className="flex items-center gap-2 shrink-0">
-                           <span className="text-[11px] text-zinc-500">{wordCount} words • {lastUpdated}</span>
-                           <button
-                              onClick={handleSave}
-                              disabled={saving}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 text-xs font-bold shadow-md transition disabled:opacity-50"
-                           >
-                              <HiCheck size={14} />
-                              <span>{saving ? "Saving..." : "Save"}</span>
-                           </button>
-                        </div>
-                     </div>
-
-                     <div className="flex flex-wrap items-center justify-between gap-2 bg-zinc-900/60 p-2 rounded-lg border border-zinc-800">
-                        <div className="flex items-center gap-1">
-                           <button
-                              onClick={() => setViewMode("edit")}
-                              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${viewMode === "edit" ? "bg-amber-400 text-zinc-950 font-bold" : "text-zinc-400 hover:text-white"}`}
-                           >
-                              <HiPencil size={12} />
-                              <span>Edit</span>
-                           </button>
-                           <button
-                              onClick={() => setViewMode("preview")}
-                              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${viewMode === "preview" ? "bg-amber-400 text-zinc-950 font-bold" : "text-zinc-400 hover:text-white"}`}
-                           >
-                              <HiEye size={12} />
-                              <span>Preview</span>
-                           </button>
-                        </div>
-
-                        {docType === "markdown" && viewMode === "edit" ? (
-                           <div className="flex flex-wrap gap-1">
-                              <button type="button" onClick={() => insertMarkdownSnippet("# ", "", "Heading")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800"># Heading</button>
-                              <button type="button" onClick={() => insertMarkdownSnippet("**", "**", "bold")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800">**Bold**</button>
-                              <button type="button" onClick={() => insertMarkdownSnippet("*", "*", "italic")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800">*Italic*</button>
-                              <button type="button" onClick={() => insertMarkdownSnippet("- ", "", "item")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800">- List</button>
-                              <button type="button" onClick={() => insertMarkdownSnippet("```\n", "\n```", "code")} className="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[11px] text-zinc-300 hover:bg-zinc-800">Code</button>
-                           </div>
-                        ) : null}
-                     </div>
-
-                     {viewMode === "preview" ? (
-                        <div className="min-h-[50vh] p-4 rounded-xl border border-zinc-800 bg-zinc-900/30 overflow-y-auto">
-                           <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(content) }} />
-                        </div>
-                     ) : (
-                        <textarea
-                           ref={textareaRef}
-                           className="min-h-[50vh] w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-amber-400 leading-relaxed"
-                           value={content}
-                           onChange={(e) => setContent(e.target.value)}
-                           placeholder="Type your document content here..."
-                        />
-                     )}
-
-                     {collabMessage ? (
-                        <div className="p-2 rounded bg-amber-400/10 border border-amber-400/20 text-[11px] text-amber-300 font-medium">
-                           {collabMessage}
-                        </div>
-                     ) : null}
-                  </>
-               ) : (
-                  <div className="py-20 text-center text-xs text-zinc-500">
-                     Select a document from the list or create a new one.
-                  </div>
-               )}
+            {/* Document Editor */}
+            <div className="lg:col-span-8 rounded-xl border border-zinc-800 bg-zinc-950/60 p-5">
+               {renderEditor()}
             </div>
          </div>
       </PageShell>

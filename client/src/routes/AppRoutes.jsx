@@ -11,6 +11,7 @@ import Whiteboard from "../pages/Whiteboard/Whiteboard";
 import Profile from "../pages/Profile/Profile";
 import Settings from "../pages/Settings/Settings";
 import MyChannels from "../pages/MyChannels/MyChannels";
+import DM from "../pages/DM/DM";
 import ProtectedRoute from "../components/common/ProtectedRoute";
 import Layout from "../components/common/Layout";
 
@@ -32,6 +33,7 @@ export default function AppRoutes() {
                <Route path="/dashboard" element={<Dashboard />} />
                <Route path="/docs" element={<Docs />} />
                <Route path="/chat" element={<Chat />} />
+               <Route path="/dm" element={<DM />} />
                <Route path="/my-channels" element={<MyChannels />} />
                <Route path="/people" element={<People />} />
                <Route path="/whiteboard" element={<Whiteboard />} />
