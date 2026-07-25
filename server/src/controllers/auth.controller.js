@@ -7,7 +7,7 @@ const WorkspaceMember = require("../models/WorkspaceMember");
 const generateToken = require("../utils/generateToken");
 
 async function getActiveWorkspace(userId) {
-   const membership = await WorkspaceMember.findOne({ user: userId }).populate("workspace");
+   const membership = await WorkspaceMember.findOne({ user: userId }).select("workspace role").populate("workspace", "name slug");
    return membership?.workspace ? { id: membership.workspace._id, name: membership.workspace.name, slug: membership.workspace.slug, role: membership.role } : null;
 }
 

@@ -56,6 +56,7 @@ export default function Chat() {
 
    const [typingUsers, setTypingUsers] = useState([]);
    const [onlineUsers, setOnlineUsers] = useState([]);
+   const isMountedRef = useRef(true);
 
    const [editingMessageId, setEditingMessageId] = useState(null);
    const [editingText, setEditingText] = useState("");
@@ -81,10 +82,14 @@ export default function Chat() {
       try {
          const res = await getChannels();
          const nextChannels = res.data.channels || [];
-         setChannels(nextChannels);
+         if (isMountedRef.current) {
+            setChannels(nextChannels);
+         }
          return nextChannels;
       } catch (err) {
-         setError(err.response?.data?.message || "Failed to load channels");
+         if (isMountedRef.current) {
+            setError(err.response?.data?.message || "Failed to load channels");
+         }
          return [];
       }
    };
@@ -92,7 +97,9 @@ export default function Chat() {
    const refreshWorkspaceMembers = async () => {
       try {
          const res = await getWorkspaceMembers();
-         setWorkspaceMembers(res.data.members || []);
+         if (isMountedRef.current) {
+            setWorkspaceMembers(res.data.members || []);
+         }
       } catch {
          // ignore
       }
@@ -101,16 +108,22 @@ export default function Chat() {
    const refreshMessages = async (channelId) => {
       try {
          const res = await getMessages(channelId);
-         setMessages(res.data.messages || []);
+         if (isMountedRef.current) {
+            setMessages(res.data.messages || []);
+         }
       } catch {
-         setError("Failed to load messages");
+         if (isMountedRef.current) {
+            setError("Failed to load messages");
+         }
       }
    };
 
    const loadPinnedMessages = async (channelId) => {
       try {
          const res = await getPinnedMessages(channelId);
-         setPinnedMessages(res.data.pinnedMessages || []);
+         if (isMountedRef.current) {
+            setPinnedMessages(res.data.pinnedMessages || []);
+         }
       } catch {
          // ignore
       }
@@ -120,6 +133,13 @@ export default function Chat() {
    useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
    }, [messages]);
+
+   useEffect(() => {
+      isMountedRef.current = true;
+      return () => {
+         isMountedRef.current = false;
+      };
+   }, []);
 
    useEffect(() => {
       const initialize = async () => {
@@ -426,6 +446,8 @@ export default function Chat() {
       return list.filter((c) => c.name?.toLowerCase().includes(q) || c.topic?.toLowerCase().includes(q));
    }, [channels, filterTab, searchQuery]);
 
+   const visibleMessages = useMemo(() => messages.filter((msg) => !msg.isDeleted), [messages]);
+
    const isCreatorOfActive = useMemo(() => {
       if (!activeChannel || !user) return false;
       const creatorId = activeChannel.createdBy?._id || activeChannel.createdBy;
@@ -670,10 +692,8 @@ export default function Chat() {
 
                   {/* Messages Canvas */}
                   <div className="mt-3 flex-1 overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/50 p-4 space-y-3 min-h-[350px]">
-                     {messages.length > 0 ? (
-                        messages
-                           .filter((msg) => !msg.isDeleted)
-                           .map((msg) => (
+                     {visibleMessages.length > 0 ? (
+                        visibleMessages.map((msg) => (
                               <div
                                  key={msg._id}
                                  className="group p-3.5 rounded-xl border border-zinc-800/60 bg-zinc-900/40 hover:bg-zinc-900/80 hover:border-zinc-700 transition space-y-1.5"

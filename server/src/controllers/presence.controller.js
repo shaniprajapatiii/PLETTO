@@ -3,8 +3,8 @@ const User = require("../models/User");
 const WorkspaceMember = require("../models/WorkspaceMember");
 
 async function getWorkspaceId(userId) {
-   const membership = await WorkspaceMember.findOne({ user: userId }).populate("workspace");
-   return membership?.workspace?._id;
+   const membership = await WorkspaceMember.findOne({ user: userId }).select("workspace").lean();
+   return membership?.workspace;
 }
 
 exports.getPresence = async (req, res) => {

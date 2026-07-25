@@ -23,6 +23,7 @@ export function SocketProvider({ children }) {
          reconnectionDelay: 1000,
          reconnectionDelayMax: 5000,
          reconnectionAttempts: 5,
+         transports: ["websocket"],
       });
 
       return nextSocket;

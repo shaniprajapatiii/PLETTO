@@ -40,5 +40,6 @@ presenceSchema.index(
    { updatedAt: 1 },
    { expireAfterSeconds: 86400, partialFilterExpression: { status: "offline" } }
 );
+presenceSchema.index({ workspace: 1, status: 1, lastSeen: -1 });
 
 module.exports = mongoose.model("Presence", presenceSchema);

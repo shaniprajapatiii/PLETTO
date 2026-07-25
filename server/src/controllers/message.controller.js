@@ -4,8 +4,8 @@ const Reaction = require("../models/Reaction");
 const WorkspaceMember = require("../models/WorkspaceMember");
 
 async function getWorkspaceId(userId) {
-   const membership = await WorkspaceMember.findOne({ user: userId }).populate("workspace");
-   return membership?.workspace?._id;
+   const membership = await WorkspaceMember.findOne({ user: userId }).select("workspace").lean();
+   return membership?.workspace;
 }
 
 exports.getMessages = async (req, res) => {
@@ -20,10 +20,9 @@ exports.getMessages = async (req, res) => {
       }
 
       const messages = await Message.find({ channel: channelId, workspace: workspaceId, isDeleted: false })
+         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
          .populate("reactions.users", "name avatar")
-         .populate("threadParent")
-         .populate("threadReplies")
          .sort({ createdAt: -1 })
          .skip(parseInt(offset))
          .limit(parseInt(limit));
@@ -86,8 +85,8 @@ exports.sendMessage = async (req, res) => {
       await Channel.findByIdAndUpdate(channelId, { lastActivityAt: new Date() });
 
       const populatedMessage = await Message.findById(message._id)
+         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
-         .populate("threadParent")
          .populate("reactions.users", "name avatar");
 
       res.status(201).json({ success: true, message: populatedMessage });
@@ -123,6 +122,7 @@ exports.editMessage = async (req, res) => {
       await message.save();
 
       const populatedMessage = await Message.findById(messageId)
+         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
          .populate("reactions.users", "name avatar");
 
@@ -168,6 +168,7 @@ exports.pinMessage = async (req, res) => {
       await message.save();
 
       const populatedMessage = await Message.findById(messageId)
+         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
          .populate("pinnedBy", "name avatar");
 
@@ -226,6 +227,7 @@ exports.addReaction = async (req, res) => {
       await message.save();
 
       const populatedMessage = await Message.findById(messageId)
+         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
          .populate("reactions.users", "name avatar");
 
@@ -261,6 +263,7 @@ exports.removeReaction = async (req, res) => {
       await message.save();
 
       const populatedMessage = await Message.findById(messageId)
+         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
          .populate("reactions.users", "name avatar");
 

@@ -114,4 +114,8 @@ const messageSchema = new mongoose.Schema(
    },
 );
 
+messageSchema.index({ channel: 1, workspace: 1, isDeleted: 1, createdAt: -1 });
+messageSchema.index({ workspace: 1, isPinned: 1, pinnedAt: -1, isDeleted: 1 });
+messageSchema.index({ threadParent: 1, isDeleted: 1, createdAt: 1 });
+
 module.exports = mongoose.model("Message", messageSchema);

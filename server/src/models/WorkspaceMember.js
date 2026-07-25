@@ -28,6 +28,8 @@ const workspaceMemberSchema =
       }
    );
 
+workspaceMemberSchema.index({ workspace: 1, user: 1 });
+
 module.exports =
    mongoose.model(
       "WorkspaceMember",

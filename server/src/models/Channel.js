@@ -56,4 +56,7 @@ const channelSchema = new mongoose.Schema(
    { timestamps: true },
 );
 
+channelSchema.index({ workspace: 1, type: 1, createdAt: -1 });
+channelSchema.index({ workspace: 1, createdBy: 1, type: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Channel", channelSchema);

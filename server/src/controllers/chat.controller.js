@@ -1,23 +1,25 @@
 const Channel = require("../models/Channel");
 const User = require("../models/User");
+const Message = require("../models/Message");
 const WorkspaceMember = require("../models/WorkspaceMember");
 const { getIo } = require("../utils/socket");
 
 async function getWorkspaceId(userId) {
-   const membership = await WorkspaceMember.findOne({ user: userId }).populate("workspace");
-   return membership?.workspace?._id;
+   const membership = await WorkspaceMember.findOne({ user: userId }).select("workspace").lean();
+   return membership?.workspace;
 }
 
 exports.getChannels = async (req, res) => {
    try {
-      const workspaceId = await getWorkspaceId(req.user.id);
+      const userId = req.user.id;
+      const workspaceId = await getWorkspaceId(userId);
       const channels = await Channel.find({
          workspace: workspaceId,
          $or: [
             { type: "public" },
-            { type: "private", members: req.user.id },
-            { type: "private", createdBy: req.user.id },
-            { type: "dm", members: req.user.id },
+            { type: "private", members: userId },
+            { type: "private", createdBy: userId },
+            { type: "dm", members: userId },
          ],
       })
          .sort({ createdAt: -1 })
@@ -294,26 +296,33 @@ exports.unmuteChannel = async (req, res) => {
 
 exports.getCreatedChannels = async (req, res) => {
    try {
-      const workspaceId = await getWorkspaceId(req.user.id);
+      const userId = req.user.id;
+      const workspaceId = await getWorkspaceId(userId);
       const channels = await Channel.find({
          workspace: workspaceId,
-         createdBy: req.user.id,
+         createdBy: userId,
          type: { $in: ["public", "private"] },
       })
          .sort({ createdAt: -1 })
          .populate("members", "name email avatar color")
          .populate("createdBy", "name");
 
-      // Get message count for each channel
-      const channelsWithStats = await Promise.all(
-         channels.map(async (channel) => {
-            const messageCount = await require("../models/Message").countDocuments({ channel: channel._id });
-            return {
-               ...channel.toObject(),
-               messageCount,
-            };
-         })
-      );
+      if (!channels.length) {
+         return res.json({ success: true, channels: [] });
+      }
+
+      const channelIds = channels.map((channel) => channel._id);
+      const messageCounts = await Message.aggregate([
+         { $match: { channel: { $in: channelIds } } },
+         { $group: { _id: "$channel", count: { $sum: 1 } } },
+      ]);
+
+      const countsByChannel = Object.fromEntries(messageCounts.map(({ _id, count }) => [_id.toString(), count]));
+
+      const channelsWithStats = channels.map((channel) => ({
+         ...channel.toObject(),
+         messageCount: countsByChannel[channel._id.toString()] || 0,
+      }));
 
       res.json({ success: true, channels: channelsWithStats });
    } catch (error) {

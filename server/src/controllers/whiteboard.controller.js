@@ -2,8 +2,8 @@ const Whiteboard = require("../models/Whiteboard");
 const WorkspaceMember = require("../models/WorkspaceMember");
 
 async function getWorkspaceId(userId) {
-   const membership = await WorkspaceMember.findOne({ user: userId }).populate("workspace");
-   return membership?.workspace?._id;
+   const membership = await WorkspaceMember.findOne({ user: userId }).select("workspace").lean();
+   return membership?.workspace;
 }
 
 exports.getBoards = async (req, res) => {
