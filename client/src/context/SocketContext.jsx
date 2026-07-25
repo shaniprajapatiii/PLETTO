@@ -14,7 +14,7 @@ export function SocketProvider({ children }) {
       }
 
       const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-      const socketBase = apiBase.replace(/\/api\/?$/, "");
+      const socketBase = (import.meta.env.VITE_SOCKET_URL || apiBase).replace(/\/api\/?$/, "");
       const nextSocket = io(socketBase, {
          auth: {
             token: localStorage.getItem("token"),
@@ -23,7 +23,8 @@ export function SocketProvider({ children }) {
          reconnectionDelay: 1000,
          reconnectionDelayMax: 5000,
          reconnectionAttempts: 5,
-         transports: ["websocket"],
+         transports: ["websocket", "polling"],
+         withCredentials: true,
       });
 
       return nextSocket;
@@ -33,7 +34,6 @@ export function SocketProvider({ children }) {
       if (!socket) return;
 
       socket.on("connect", () => {
-         console.log("Socket connected");
          socket.emit("userOnline");
       });
 

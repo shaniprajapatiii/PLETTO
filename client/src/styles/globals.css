@@ -15,9 +15,29 @@
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-active: rgba(249, 235, 174, 0.4);
   --accent-primary: #f9ebae;
+  --accent-secondary: #d8c46e;
+  --accent-soft: rgba(249, 235, 174, 0.12);
+  --accent-border: rgba(249, 235, 174, 0.28);
   --accent-glow: rgba(249, 235, 174, 0.15);
   --text-primary: #f4f4f5;
   --text-muted: #a1a1aa;
+}
+
+.text-accent {
+  color: var(--accent-primary);
+}
+
+.bg-accent {
+  background-color: var(--accent-primary);
+  color: #09090b;
+}
+
+.bg-accent-soft {
+  background-color: var(--accent-soft);
+}
+
+.border-accent {
+  border-color: var(--accent-border);
 }
 
 html, body {
@@ -49,13 +69,10 @@ img, svg {
   max-width: 100%;
 }
 
-/* Background canvas grid pattern - natural & seamless warm gold glow */
+/* Solid black canvas background */
 .saas-grid-bg {
-  background-image: 
-    radial-gradient(ellipse at 50% 0%, rgba(249, 235, 174, 0.12), transparent 70%),
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 100% 100%, 32px 32px, 32px 32px;
+  background-color: #000000;
+  background-image: none;
 }
 
 /* Premium Surface panels */

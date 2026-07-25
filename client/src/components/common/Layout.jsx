@@ -190,32 +190,24 @@ export default function Layout() {
    return (
       <div className="min-h-screen w-full bg-[#09090b] text-zinc-100 flex flex-col lg:flex-row overflow-x-hidden saas-grid-bg">
          {/* Desktop Sidebar */}
-         <aside className={`hidden lg:flex lg:flex-col border-r border-zinc-800/80 bg-zinc-950/95 backdrop-blur-xl h-screen sticky top-0 transition-all duration-300 z-30 ${sidebarCollapsed ? "w-20 px-3 py-5" : "w-64 px-4 py-5"}`}>
+         <aside className={`hidden lg:flex lg:flex-col border-r border-zinc-800/80 bg-zinc-950/95 backdrop-blur-xl h-screen sticky top-0 transition-all duration-300 z-30 shadow-[10px_0_40px_-20px_rgba(0,0,0,0.7)] ${sidebarCollapsed ? "w-20 px-3 py-5" : "w-[15rem] px-4 py-5"}`}>
             {/* Workspace Logo Header */}
-            <div className="flex items-center justify-between gap-2">
+            <div className={`flex ${sidebarCollapsed ? "flex-col items-center gap-2" : "items-center justify-between gap-2"}`}>
                <button
                   type="button"
                   onClick={() => navigate("/")}
-                  className="flex items-center gap-3 p-1 rounded-lg hover:bg-zinc-900 transition min-w-0"
+                  className="flex items-center gap-3 rounded-xl px-2 py-1.5 text-left transition hover:bg-zinc-900/80 min-w-0"
                >
-                  <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-amber-400 text-zinc-950 font-bold shadow-md shadow-amber-400/20 shrink-0">
-                     P
-                  </div>
-                  {!sidebarCollapsed ? (
-                     <div className="min-w-0 text-left">
-                        <div className="text-sm font-bold tracking-tight text-white truncate">PLETTO Workspace</div>
-                        <div className="text-[10px] font-semibold text-amber-300 uppercase tracking-widest">Enterprise</div>
-                     </div>
-                  ) : null}
+                  <Logo className="w-full" iconClassName="h-9 w-9" withText={!sidebarCollapsed} />
                </button>
 
                <button
                   type="button"
                   onClick={() => setSidebarCollapsed((v) => !v)}
-                  className={`p-1.5 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900 transition ${sidebarCollapsed ? "hidden" : "inline-flex"}`}
-                  title="Toggle sidebar"
+                  className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-2 text-zinc-400 transition hover:border-accent hover:text-accent"
+                  title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                >
-                  <ChevronLeftIcon className="h-4 w-4" />
+                  {sidebarCollapsed ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
                </button>
             </div>
 
@@ -225,19 +217,19 @@ export default function Layout() {
                   <button
                      type="button"
                      onClick={() => setPaletteOpen(true)}
-                     className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-zinc-800/80 bg-zinc-900/60 text-xs text-zinc-400 hover:border-amber-400/40 hover:text-zinc-200 transition group"
+                     className="w-full flex items-center justify-between rounded-xl border border-zinc-800/80 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-400 transition hover:border-accent hover:bg-zinc-900 hover:text-zinc-200 group"
                   >
                      <span className="flex items-center gap-2">
-                        <SearchIcon className="h-3.5 w-3.5 text-zinc-500 group-hover:text-amber-300" />
+                        <SearchIcon className="h-3.5 w-3.5 text-zinc-500 group-hover:text-accent" />
                         <span>Search workspace...</span>
                      </span>
-                     <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-medium rounded bg-zinc-800 text-zinc-400 border border-zinc-700">⌘K</kbd>
+                     <kbd className="rounded-md border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono font-medium text-zinc-400">⌘K</kbd>
                   </button>
                ) : (
                   <button
                      type="button"
                      onClick={() => setPaletteOpen(true)}
-                     className="w-full flex justify-center py-2 rounded-lg border border-zinc-800/80 bg-zinc-900/60 text-zinc-400 hover:text-white"
+                     className="flex w-full justify-center rounded-xl border border-zinc-800/80 bg-zinc-900/70 py-2 text-zinc-400 transition hover:border-accent hover:text-accent"
                      title="Search (⌘K)"
                   >
                      <SearchIcon className="h-4 w-4" />
@@ -247,7 +239,7 @@ export default function Layout() {
                <button
                   type="button"
                   onClick={() => setCreateChannelModalOpen(true)}
-                  className={`w-full flex items-center gap-2 py-2 px-3 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 text-xs font-bold shadow-md shadow-amber-400/20 transition ${sidebarCollapsed ? "justify-center" : ""}`}
+                  className={`flex w-full items-center gap-2 rounded-xl bg-accent px-3 py-2.5 text-xs font-bold text-zinc-950 shadow-[0_10px_30px_-12px_rgba(249,235,174,0.35)] transition hover:brightness-95 ${sidebarCollapsed ? "justify-center" : ""}`}
                >
                   <PlusIcon className="h-4 w-4 shrink-0" />
                   {!sidebarCollapsed ? <span>New Channel</span> : null}
@@ -259,9 +251,9 @@ export default function Layout() {
                {navGroups.map((group) => (
                   <div key={group.title} className="space-y-1">
                      {!sidebarCollapsed ? (
-                        <div className="px-3 text-[10px] font-bold text-zinc-500 tracking-wider uppercase">{group.title}</div>
+                        <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">{group.title}</div>
                      ) : null}
-                     <nav className="space-y-0.5">
+                     <nav className="space-y-1">
                         {group.items.map((item) => {
                            const Icon = item.icon;
                            const active = location.pathname.startsWith(item.to);
@@ -270,19 +262,21 @@ export default function Layout() {
                                  key={item.label}
                                  type="button"
                                  onClick={() => navigate(item.to)}
-                                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                                 className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-medium transition ${
                                     active
-                                       ? "bg-amber-400/10 text-amber-300 font-bold border-l-2 border-amber-400"
+                                       ? "border border-accent bg-accent-soft text-accent"
                                        : "text-zinc-400 hover:bg-zinc-900/70 hover:text-zinc-200"
-                                 } ${sidebarCollapsed ? "justify-center px-0" : ""}`}
+                                 } ${sidebarCollapsed ? "justify-center px-2" : ""}`}
                                  title={item.label}
                               >
-                                 <Icon className={`h-4 w-4 shrink-0 ${active ? "text-amber-300" : "text-zinc-400"}`} />
+                                 <div className={`flex h-7 w-7 items-center justify-center rounded-lg transition ${active ? "bg-accent-soft" : "bg-zinc-900/70 group-hover:bg-zinc-800"}`}>
+                                    <Icon className={`h-4 w-4 shrink-0 ${active ? "text-accent" : "text-zinc-400"}`} />
+                                 </div>
                                  {!sidebarCollapsed ? (
                                     <span className="flex-1 text-left truncate">{item.label}</span>
                                  ) : null}
                                  {!sidebarCollapsed && item.to === "/chat" && channels.length > 0 ? (
-                                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-400/20 text-amber-300 rounded-full">
+                                    <span className="rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold text-accent">
                                        {channels.length}
                                     </span>
                                  ) : null}
@@ -295,23 +289,23 @@ export default function Layout() {
             </div>
 
             {/* Bottom Profile Bar */}
-            <div className="mt-auto pt-4 border-t border-zinc-800/80">
-               <div className={`flex items-center gap-3 ${sidebarCollapsed ? "flex-col justify-center" : ""}`}>
+            <div className="mt-auto border-t border-zinc-800/80 pt-4">
+               <div className={`flex items-center gap-2 ${sidebarCollapsed ? "flex-col justify-center" : ""}`}>
                   <button
                      type="button"
                      onClick={() => navigate("/profile")}
-                     className={`flex-1 flex items-center gap-3 p-1.5 rounded-lg hover:bg-zinc-900/80 transition min-w-0 ${sidebarCollapsed ? "justify-center" : ""}`}
+                     className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-2 transition hover:border-accent hover:bg-zinc-900 ${sidebarCollapsed ? "justify-center" : ""}`}
                   >
                      <div className="relative shrink-0">
-                        <div className="flex items-center justify-center h-8 w-8 rounded-full bg-zinc-800 text-xs font-bold text-zinc-200 border border-zinc-700">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-xs font-bold text-zinc-200">
                            {(user?.name || user?.email || "U").charAt(0).toUpperCase()}
                         </div>
-                        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-zinc-950" />
+                        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-zinc-950 bg-emerald-500" />
                      </div>
                      {!sidebarCollapsed ? (
                         <div className="min-w-0 text-left">
-                           <div className="text-xs font-semibold text-zinc-200 truncate">{user?.name || "User Profile"}</div>
-                           <div className="text-[10px] text-zinc-500 truncate">{user?.email || "Online"}</div>
+                           <div className="truncate text-xs font-semibold text-zinc-200">{user?.name || "User Profile"}</div>
+                           <div className="truncate text-[10px] text-zinc-500">{user?.email || "Online"}</div>
                         </div>
                      ) : null}
                   </button>
@@ -319,7 +313,7 @@ export default function Layout() {
                   <button
                      type="button"
                      onClick={handleLogout}
-                     className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition"
+                     className="rounded-lg p-2 text-zinc-400 transition hover:bg-red-500/10 hover:text-red-400"
                      title="Logout"
                   >
                      <LogoutIcon className="h-4 w-4" />
@@ -356,9 +350,9 @@ export default function Layout() {
                   <button
                      type="button"
                      onClick={() => setPaletteOpen(true)}
-                     className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-xs font-semibold text-amber-300 hover:bg-amber-400/20 transition"
+                     className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent bg-accent-soft text-xs font-semibold text-accent transition hover:brightness-95"
                   >
-                     <SparklesIcon className="h-3.5 w-3.5 text-amber-300" />
+                     <SparklesIcon className="h-3.5 w-3.5 text-accent" />
                      <span>Ask AI</span>
                   </button>
 
@@ -371,7 +365,7 @@ export default function Layout() {
                      >
                         <BellIcon className="h-4 w-4" />
                         {unreadCount > 0 ? (
-                           <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                           <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-accent animate-pulse" />
                         ) : null}
                      </button>
 
@@ -380,7 +374,7 @@ export default function Layout() {
                            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
                               <span className="text-xs font-bold text-zinc-200">Notifications</span>
                               <div className="flex gap-2 text-[11px] text-zinc-400">
-                                 {unreadCount > 0 ? <button onClick={markAllRead} className="hover:text-amber-300">Mark read</button> : null}
+                                 {unreadCount > 0 ? <button onClick={markAllRead} className="hover:text-accent">Mark read</button> : null}
                                  <button onClick={clearAll} className="hover:text-zinc-200">Clear</button>
                               </div>
                            </div>
@@ -391,7 +385,7 @@ export default function Layout() {
                                        key={n.id}
                                        onClick={() => openNotification(n)}
                                        className={`w-full p-2.5 rounded-lg border text-left text-xs transition ${
-                                          n.read ? "border-zinc-800 bg-zinc-900/40 text-zinc-400" : "border-amber-400/30 bg-amber-400/5 text-zinc-200"
+                                          n.read ? "border-zinc-800 bg-zinc-900/40 text-zinc-400" : "border-accent bg-accent-soft text-zinc-200"
                                        }`}
                                     >
                                        <div className="font-semibold text-zinc-200">{n.title}</div>
@@ -419,21 +413,24 @@ export default function Layout() {
          {/* Mobile Drawer */}
          {mobileNavOpen ? (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm lg:hidden" onClick={() => setMobileNavOpen(false)}>
-               <div className="h-full w-72 border-r border-zinc-800 bg-zinc-950 p-5 flex flex-col space-y-6" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+               <div className="flex h-full w-72 flex-col space-y-6 border-r border-zinc-800 bg-zinc-950 p-5" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded bg-amber-400 text-zinc-950 font-bold flex items-center justify-center text-xs">P</div>
-                        <span className="font-bold text-sm text-zinc-100">PLETTO SaaS</span>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-xs font-black text-zinc-950">P</div>
+                        <div>
+                           <div className="text-sm font-semibold text-zinc-100">PLETTO Workspace</div>
+                           <div className="text-[10px] uppercase tracking-[0.24em] text-accent">Mobile</div>
+                        </div>
                      </div>
-                     <button type="button" onClick={() => setMobileNavOpen(false)} className="p-1 rounded text-zinc-400 hover:text-white">
+                     <button type="button" onClick={() => setMobileNavOpen(false)} className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-900 hover:text-white">
                         <CloseIcon className="h-5 w-5" />
                      </button>
                   </div>
 
-                  <nav className="flex-1 overflow-y-auto space-y-4">
+                  <nav className="flex-1 space-y-4 overflow-y-auto">
                      {navGroups.map((g) => (
                         <div key={g.title} className="space-y-1">
-                           <div className="text-[10px] font-bold text-zinc-500 tracking-wider uppercase px-2">{g.title}</div>
+                           <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">{g.title}</div>
                            {g.items.map((item) => {
                               const Icon = item.icon;
                               const active = location.pathname.startsWith(item.to);
@@ -442,7 +439,7 @@ export default function Layout() {
                                     key={item.label}
                                     type="button"
                                     onClick={() => { navigate(item.to); setMobileNavOpen(false); }}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium ${active ? "bg-amber-400/20 text-amber-300 font-semibold" : "text-zinc-400"}`}
+                                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-medium transition ${active ? "border border-accent bg-accent-soft text-accent" : "text-zinc-400 hover:bg-zinc-900/70 hover:text-zinc-200"}`}
                                  >
                                     <Icon className="h-4 w-4" />
                                     <span>{item.label}</span>

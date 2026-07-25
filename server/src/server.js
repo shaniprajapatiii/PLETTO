@@ -153,11 +153,15 @@ io.on("connection", (socket) => {
             }
          }
 
+         const previousChannel = userChannels.get(socket.id);
+         if (previousChannel && previousChannel !== channelId) {
+            socket.leave(previousChannel);
+         }
+
          socket.join(channelId);
          userChannels.set(socket.id, channelId);
          socket.emit("joinedChannel", channelId);
 
-         // Notify others that user is viewing this channel
          socket.to(channelId).emit("userJoinedChannel", {
             channelId,
             userId: socket.user.id,
