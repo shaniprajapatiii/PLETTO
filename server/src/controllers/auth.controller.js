@@ -1,12 +1,12 @@
 const bcrypt = require("bcryptjs");
 
 const User = require("../models/User");
-const Workspace = require("../models/Workspace");
 const WorkspaceMember = require("../models/WorkspaceMember");
-
 const generateToken = require("../utils/generateToken");
+const { ensureUserWorkspaceMembership } = require("../utils/workspaceHelper");
 
 async function getActiveWorkspace(userId) {
+   await ensureUserWorkspaceMembership(userId);
    const membership = await WorkspaceMember.findOne({ user: userId }).select("workspace role").populate("workspace", "name slug");
    return membership?.workspace ? { id: membership.workspace._id, name: membership.workspace.name, slug: membership.workspace.slug, role: membership.role } : null;
 }
@@ -43,17 +43,8 @@ exports.register = async (req, res) => {
          bio: "",
       });
 
-      const workspace = await Workspace.create({
-         name: `${name}'s Workspace`,
-         slug: name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now(),
-         owner: user._id,
-      });
-
-      await WorkspaceMember.create({
-         workspace: workspace._id,
-         user: user._id,
-         role: "owner",
-      });
+      await ensureUserWorkspaceMembership(user._id);
+      const workspace = await getActiveWorkspace(user._id);
 
       const token = generateToken(user._id);
 
@@ -68,12 +59,7 @@ exports.register = async (req, res) => {
             bio: user.bio,
             color: user.color,
          },
-         workspace: {
-            id: workspace._id,
-            name: workspace.name,
-            slug: workspace.slug,
-            role: "owner",
-         },
+         workspace,
       });
    } catch (error) {
       res.status(500).json({
@@ -159,3 +145,4 @@ exports.me = async (req, res) => {
       });
    }
 };
+

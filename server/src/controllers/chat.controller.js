@@ -3,8 +3,11 @@ const User = require("../models/User");
 const Message = require("../models/Message");
 const WorkspaceMember = require("../models/WorkspaceMember");
 const { getIo } = require("../utils/socket");
+const { ensureUserWorkspaceMembership } = require("../utils/workspaceHelper");
 
 async function getWorkspaceId(userId) {
+   const workspace = await ensureUserWorkspaceMembership(userId);
+   if (workspace) return workspace._id;
    const membership = await WorkspaceMember.findOne({ user: userId }).select("workspace").lean();
    return membership?.workspace;
 }
@@ -13,15 +16,29 @@ exports.getChannels = async (req, res) => {
    try {
       const userId = req.user.id;
       const workspaceId = await getWorkspaceId(userId);
-      const channels = await Channel.find({
-         workspace: workspaceId,
-         $or: [
+      const { type } = req.query;
+
+      let query = { workspace: workspaceId };
+
+      if (type === "channel") {
+         query.$or = [
+            { type: "public" },
+            { type: "private", members: userId },
+            { type: "private", createdBy: userId },
+         ];
+      } else if (type === "dm") {
+         query.type = "dm";
+         query.members = userId;
+      } else {
+         query.$or = [
             { type: "public" },
             { type: "private", members: userId },
             { type: "private", createdBy: userId },
             { type: "dm", members: userId },
-         ],
-      })
+         ];
+      }
+
+      const channels = await Channel.find(query)
          .sort({ createdAt: -1 })
          .populate("members", "name email avatar color")
          .populate("createdBy", "name email avatar");

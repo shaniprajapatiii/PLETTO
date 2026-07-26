@@ -85,8 +85,9 @@ export default function Layout() {
       if (!loading && workspace) {
          const loadChannels = async () => {
             try {
-               const response = await getChannels();
-               setChannels(response.data.channels || []);
+               const response = await getChannels({ type: "channel" });
+               const channelList = (response.data.channels || []).filter((c) => c.type !== "dm");
+               setChannels(channelList);
             } catch {
                setChannels([]);
             }

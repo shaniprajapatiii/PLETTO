@@ -38,12 +38,12 @@ export default function MyChannels() {
       try {
          setLoading(true);
          const [channelsRes, docsRes, boardsRes] = await Promise.all([
-            getChannels(),
+            getChannels({ type: "channel" }),
             getDocs(),
             getBoards(),
          ]);
 
-         setChannels(channelsRes.data.channels || []);
+         setChannels((channelsRes.data.channels || []).filter((c) => c.type !== "dm"));
          setDocs(docsRes.data.documents || []);
          setWhiteboards(boardsRes.data.whiteboards || []);
          setError(null);
@@ -101,10 +101,10 @@ export default function MyChannels() {
 
    // Unified items list
    const unifiedAssets = useMemo(() => {
-      const channelItems = channels.map((c) => ({
+      const channelItems = channels.filter((c) => c.type !== "dm").map((c) => ({
          id: c._id,
          type: "channel",
-         subType: c.type, // 'public', 'private', 'dm'
+         subType: c.type, // 'public', 'private'
          title: c.name,
          description: c.topic || (c.type === "private" ? "Private Workspace Room" : "Public Workspace Channel"),
          updatedAt: c.updatedAt || c.createdAt,

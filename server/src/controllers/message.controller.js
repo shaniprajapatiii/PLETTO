@@ -2,8 +2,12 @@ const Channel = require("../models/Channel");
 const Message = require("../models/Message");
 const Reaction = require("../models/Reaction");
 const WorkspaceMember = require("../models/WorkspaceMember");
+const { getIo } = require("../utils/socket");
+const { ensureUserWorkspaceMembership } = require("../utils/workspaceHelper");
 
 async function getWorkspaceId(userId) {
+   const workspace = await ensureUserWorkspaceMembership(userId);
+   if (workspace) return workspace._id;
    const membership = await WorkspaceMember.findOne({ user: userId }).select("workspace").lean();
    return membership?.workspace;
 }
@@ -88,6 +92,19 @@ exports.sendMessage = async (req, res) => {
          .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
          .populate("reactions.users", "name avatar");
+
+      const io = getIo();
+      if (io) {
+         io.to(channelId).emit("newMessage", populatedMessage);
+         if (channel.type === "public" && workspaceId) {
+            io.to(workspaceId.toString()).emit("newMessage", populatedMessage);
+         }
+         if (channel.members && channel.members.length > 0) {
+            channel.members.forEach((mId) => {
+               io.to(`user:${mId.toString()}`).emit("newMessage", populatedMessage);
+            });
+         }
+      }
 
       res.status(201).json({ success: true, message: populatedMessage });
    } catch (error) {

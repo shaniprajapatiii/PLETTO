@@ -13,10 +13,13 @@ const Document = require("./models/Document");
 const Whiteboard = require("./models/Whiteboard");
 const User = require("./models/User");
 const Presence = require("./models/Presence");
+const { ensureUserWorkspaceMembership, ensureAllUsersInPrimaryWorkspace } = require("./utils/workspaceHelper");
 
 const PORT = Number(process.env.PORT) || 5000;
 
-connectDB();
+connectDB().then(() => {
+   ensureAllUsersInPrimaryWorkspace();
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -60,6 +63,8 @@ io.use(async (socket, next) => {
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      await ensureUserWorkspaceMembership(decoded.id);
+
       const membership = await WorkspaceMember.findOne({ user: decoded.id }).populate("workspace");
       if (!membership) {
          return next(new Error("Workspace membership required"));

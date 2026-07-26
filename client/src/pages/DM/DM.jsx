@@ -60,7 +60,7 @@ export default function DM() {
          setLoading(true);
          const [membersRes, channelsRes] = await Promise.all([
             getWorkspaceMembers(),
-            getChannels(),
+            getChannels({ type: "dm" }),
          ]);
 
          const fetchedMembers = membersRes.data?.members || [];

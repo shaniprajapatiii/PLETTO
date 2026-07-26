@@ -80,8 +80,8 @@ export default function Chat() {
 
    const refreshChannels = async () => {
       try {
-         const res = await getChannels();
-         const nextChannels = res.data.channels || [];
+         const res = await getChannels({ type: "channel" });
+         const nextChannels = (res.data.channels || []).filter((c) => c.type !== "dm");
          if (isMountedRef.current) {
             setChannels(nextChannels);
          }
@@ -243,6 +243,7 @@ export default function Chat() {
       });
 
       socket.on("channelCreated", (newChannel) => {
+         if (newChannel.type === "dm") return;
          setChannels((curr) => {
             if (curr.some((c) => c._id === newChannel._id)) return curr;
             return [newChannel, ...curr];
@@ -436,10 +437,9 @@ export default function Chat() {
 
    // Filter channels based on selected tab and search query
    const filteredChannels = useMemo(() => {
-      let list = channels;
+      let list = channels.filter((c) => c.type !== "dm");
       if (filterTab === "public") list = list.filter((c) => c.type === "public");
       else if (filterTab === "private") list = list.filter((c) => c.type === "private");
-      else if (filterTab === "dm") list = list.filter((c) => c.type === "dm");
 
       if (!searchQuery.trim()) return list;
       const q = searchQuery.toLowerCase();
@@ -487,12 +487,11 @@ export default function Chat() {
                </div>
 
                {/* Filter Tabs */}
-               <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-zinc-900/80 border border-zinc-800/60 text-[10px] font-bold">
+               <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-zinc-900/80 border border-zinc-800/60 text-[10px] font-bold">
                   {[
                      { key: "all", label: "All" },
                      { key: "public", label: "# Public" },
                      { key: "private", label: "🔒 Private" },
-                     { key: "dm", label: "💬 DMs" },
                   ].map((tab) => (
                      <button
                         key={tab.key}
