@@ -562,7 +562,7 @@ export default function Chat() {
    return (
       <div className="flex min-h-[70vh] flex-col gap-4 lg:h-[calc(100vh-6rem)] lg:flex-row lg:min-h-0">
          {/* Sidebar: Channel Room Navigation */}
-         <div className={`${isMobileView && mobileView === "chat" ? "hidden" : "flex"} w-full flex-col rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-4 shadow-2xl backdrop-blur-xl lg:flex lg:w-80 lg:flex-col lg:shrink-0 lg:min-h-0`}>
+         <div className={`${isMobileView && mobileView === "chat" ? "fixed inset-0 z-20 -translate-x-full opacity-0 pointer-events-none" : "relative translate-x-0 opacity-100 pointer-events-auto"} w-full flex-col rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 lg:static lg:flex lg:w-80 lg:flex-col lg:shrink-0 lg:min-h-0 lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto`}>
             {/* Sidebar Top: Action Bar & Search */}
             <div className="space-y-3 pb-3 border-b border-zinc-800/80">
                <div className="flex items-center justify-between">
@@ -688,7 +688,7 @@ export default function Chat() {
          </div>
 
          {/* Main Chat Canvas */}
-         <div className={`${isMobileView && mobileView === "channels" ? "hidden" : "flex"} flex-1 min-h-[28rem] rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-4 flex-col shadow-2xl min-w-0 sm:p-5 lg:flex lg:min-h-0`}>
+         <div className={`${isMobileView && mobileView === "channels" ? "fixed inset-0 z-30 translate-x-full opacity-0 pointer-events-none" : "relative translate-x-0 opacity-100 pointer-events-auto"} flex-1 min-h-[28rem] rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-4 flex-col shadow-2xl min-w-0 sm:p-5 transition-all duration-300 lg:static lg:flex lg:min-h-0 lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto`}>
             {activeChannel ? (
                <>
                   {/* Channel Top Header Bar */}

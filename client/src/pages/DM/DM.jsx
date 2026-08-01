@@ -488,7 +488,7 @@ export default function DM() {
    return (
       <div className="flex min-h-[70vh] flex-col gap-4 overflow-hidden lg:h-[calc(100vh-6.5rem)] lg:flex-row">
          {/* Left Contacts Sidebar */}
-         <div className={`${isMobileView && mobileView === "chat" ? "hidden" : "flex"} w-full flex-col shrink-0 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-3.5 shadow-2xl overflow-hidden lg:flex lg:w-80 lg:min-h-0`}>
+         <div className={`${isMobileView && mobileView === "chat" ? "fixed inset-0 z-20 -translate-x-full opacity-0 pointer-events-none" : "relative translate-x-0 opacity-100 pointer-events-auto"} w-full flex-col shrink-0 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-3.5 shadow-2xl overflow-hidden transition-all duration-300 lg:static lg:flex lg:w-80 lg:min-h-0 lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto`}>
             {/* Header Title */}
             <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
                <div className="flex items-center gap-2">
@@ -620,7 +620,7 @@ export default function DM() {
          </div>
 
          {/* Main Conversation Panel */}
-         <div className={`${isMobileView && mobileView === "contacts" ? "hidden" : "flex"} min-h-[28rem] flex-1 flex-col min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl shadow-2xl overflow-hidden lg:flex lg:min-h-0`}>
+         <div className={`${isMobileView && mobileView === "contacts" ? "fixed inset-0 z-30 translate-x-full opacity-0 pointer-events-none" : "relative translate-x-0 opacity-100 pointer-events-auto"} min-h-[28rem] flex-1 flex-col min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl shadow-2xl overflow-hidden transition-all duration-300 lg:static lg:flex lg:min-h-0 lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto`}>
             {activeRecipient ? (
                <>
                   {/* Chat Conversation Top Header */}

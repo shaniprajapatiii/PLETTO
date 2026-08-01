@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { io } from "socket.io-client";
 import {
    HiOutlinePresentationChartBar,
    HiPencil,
@@ -17,18 +16,20 @@ import {
 } from "react-icons/hi";
 import { createBoard, getBoards, updateBoard, deleteBoard } from "../../services/whiteboardService";
 import { useAuth } from "../../context/AuthContext";
+import { useSocket } from "../../context/SocketContext";
 import { PageShell } from "../../components/common/PageShell";
 
 const COLORS = ["#f8b500", "#38bdf8", "#22c55e", "#f43f5e", "#ffffff", "#0f172a"];
 
 export default function Whiteboard() {
-   const { workspace, user } = useAuth();
+   const { user } = useAuth();
+   const socket = useSocket();
    const [searchParams, setSearchParams] = useSearchParams();
 
    const [boards, setBoards] = useState([]);
    const [activeBoard, setActiveBoard] = useState(null);
    const [name, setName] = useState("");
-   const [boardData, setBoardData] = useState({ strokes: [] });
+   const [boardData, setBoardData] = useState({ strokes: [], shapes: [] });
    const [searchQuery, setSearchQuery] = useState("");
    const [error, setError] = useState(null);
    const [message, setMessage] = useState(null);
@@ -46,19 +47,34 @@ export default function Whiteboard() {
    const socketRef = useRef(null);
    const activeBoardRef = useRef(null);
    const userRef = useRef(user);
+   const isDrawingRef = useRef(false);
+   const boardDataRef = useRef(boardData);
+   const activeStrokeRef = useRef(null);
+   const activeShapeRef = useRef(null);
 
    const selectBoard = useCallback((board) => {
+      if (!board) return;
+
+      const boardId = board._id || board.id;
+      if (!boardId) return;
+
       setActiveBoard(board);
+      activeBoardRef.current = board;
       setName(board.name || "");
-      setBoardData(board.data || { strokes: [] });
+      setBoardData(board.data || { strokes: [], shapes: [] });
       setMessage(null);
       setError(null);
       setRemoteMessage(null);
       setRemoteCursors([]);
       if (socketRef.current) {
-         socketRef.current.emit("joinBoard", board._id);
+         socketRef.current.emit("joinBoard", boardId);
       }
-      setSearchParams({ board: board._id });
+
+      setSearchParams((prev) => {
+         const next = new URLSearchParams(prev);
+         next.set("board", boardId);
+         return next;
+      });
    }, [setSearchParams]);
 
    const refreshBoards = useCallback(async () => {
@@ -74,21 +90,23 @@ export default function Whiteboard() {
             setIsFullScreen(true);
          }
 
+         const currentBoardId = activeBoardRef.current?._id || activeBoardRef.current?.id;
+
          if (boardIdParam) {
-            const matched = fetchedBoards.find((b) => b._id === boardIdParam);
+            const matched = fetchedBoards.find((b) => (b._id || b.id)?.toString() === boardIdParam);
             if (matched) {
                selectBoard(matched);
                return;
             }
          }
 
-         if (!activeBoard && fetchedBoards.length) {
+         if (!currentBoardId || !fetchedBoards.some((board) => (board._id || board.id)?.toString() === currentBoardId?.toString())) {
             selectBoard(fetchedBoards[0]);
          }
       } catch (err) {
          setError(err.response?.data?.message || "Failed to load boards");
       }
-   }, [activeBoard, selectBoard, searchParams]);
+   }, [searchParams, selectBoard]);
 
    useEffect(() => {
       void refreshBoards();
@@ -102,31 +120,31 @@ export default function Whiteboard() {
       userRef.current = user;
    }, [user]);
 
-   const socket = useMemo(() => {
-      if (!workspace) return null;
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-      const socketBase = apiBase.replace(/\/api\/?$/, "");
-      return io(socketBase, {
-         auth: {
-            token: localStorage.getItem("token"),
-         },
-      });
-   }, [workspace]);
+   useEffect(() => {
+      boardDataRef.current = boardData;
+   }, [boardData]);
 
    useEffect(() => {
-      if (!socket) return;
       socketRef.current = socket;
-      socket.on("connect_error", (err) => setError(err.message || "Socket connection failed"));
+      if (!socket) return;
 
-      socket.on("boardUpdate", ({ board, user: sender }) => {
+      const handleConnect = () => {
+         if (activeBoardRef.current?._id) {
+            socket.emit("joinBoard", activeBoardRef.current._id);
+         }
+      };
+
+      const handleConnectError = (err) => setError(err.message || "Socket connection failed");
+
+      const handleBoardUpdate = ({ board, user: sender }) => {
          const currentBoard = activeBoardRef.current;
          if (!currentBoard || board._id !== currentBoard._id) return;
          setActiveBoard(board);
          setBoardData(board.data || { strokes: [] });
          setRemoteMessage(`${sender.name || "A teammate"} updated the board`);
-      });
+      };
 
-      socket.on("boardCursor", ({ boardId, cursor, user: sender }) => {
+      const handleBoardCursor = ({ boardId, cursor, user: sender }) => {
          const currentBoard = activeBoardRef.current;
          const currentUser = userRef.current;
          if (!currentBoard || boardId !== currentBoard._id || sender.id === currentUser?._id) return;
@@ -135,13 +153,20 @@ export default function Whiteboard() {
             next.push({ user: sender, cursor });
             return next.slice(-4);
          });
-      });
+      };
+
+      socket.on("connect", handleConnect);
+      socket.on("connect_error", handleConnectError);
+      socket.on("boardUpdate", handleBoardUpdate);
+      socket.on("boardCursor", handleBoardCursor);
+
+      handleConnect();
 
       return () => {
-         socket.off("connect_error");
-         socket.off("boardUpdate");
-         socket.off("boardCursor");
-         socket.disconnect();
+         socket.off("connect", handleConnect);
+         socket.off("connect_error", handleConnectError);
+         socket.off("boardUpdate", handleBoardUpdate);
+         socket.off("boardCursor", handleBoardCursor);
       };
    }, [socket]);
 
@@ -167,14 +192,16 @@ export default function Whiteboard() {
       setError(null);
       setMessage(null);
       try {
-         const res = await updateBoard(activeBoard._id, { name, data: boardData });
-         setActiveBoard(res.data.board);
-         setBoards((prev) => prev.map((board) => (board._id === res.data.board._id ? res.data.board : board)));
+         const payload = { name, data: boardData };
+         const res = await updateBoard(activeBoard._id, payload);
+         const savedBoard = res.data.board;
+         setActiveBoard(savedBoard);
+         setBoards((prev) => prev.map((board) => (board._id === savedBoard._id ? savedBoard : board)));
          setMessage("Board saved successfully.");
-         if (socketRef.current) {
+         if (socketRef.current?.connected) {
             socketRef.current.emit("boardUpdate", {
                boardId: activeBoard._id,
-               data: res.data.board.data,
+               data: savedBoard.data,
             });
          }
       } catch (err) {
@@ -202,32 +229,67 @@ export default function Whiteboard() {
       }
    };
 
-   const getPoint = (event) => {
-      const rect = svgRef.current.getBoundingClientRect();
+   const getPointFromClientXY = (clientX, clientY) => {
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) {
+         return { x: 500, y: 350 };
+      }
+
+      return {
+         x: ((clientX - rect.left) / rect.width) * 1000,
+         y: ((clientY - rect.top) / rect.height) * 700,
+      };
+   };
+
+   const getCanvasPoint = (event) => {
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) {
+         return { x: 500, y: 350 };
+      }
+
       return {
          x: ((event.clientX - rect.left) / rect.width) * 1000,
          y: ((event.clientY - rect.top) / rect.height) * 700,
       };
    };
 
+   const getPoint = (event) => {
+      if (event.touches?.length) {
+         const touch = event.touches[0];
+         return getPointFromClientXY(touch.clientX, touch.clientY);
+      }
+      return getPointFromClientXY(event.clientX, event.clientY);
+   };
+
    const handlePointerDown = (event) => {
       if (!activeBoard) return;
+      if (event.button !== undefined && event.button !== 0) return;
       const point = getPoint(event);
+      isDrawingRef.current = true;
+      if (!point || Number.isNaN(point.x) || Number.isNaN(point.y)) return;
 
       if (tool === "eraser") {
-         const index = findNearestStroke(boardData.strokes || [], point);
-         if (index >= 0) {
-            const nextStrokes = [...(boardData.strokes || [])];
-            nextStrokes.splice(index, 1);
-            setBoardData({ ...boardData, strokes: nextStrokes });
-         }
+         setBoardData((prev) => {
+            const nextBoardData = { ...prev, strokes: [...(prev.strokes || [])] };
+            const index = findNearestStroke(nextBoardData.strokes, point);
+            if (index >= 0) {
+               nextBoardData.strokes.splice(index, 1);
+            }
+            boardDataRef.current = nextBoardData;
+            return nextBoardData;
+         });
          return;
       }
 
       if (tool === "rectangle") {
          const shape = { id: `${Date.now()}`, x: point.x, y: point.y, width: 0, height: 0, color };
+         activeShapeRef.current = shape;
          setActiveShape(shape);
-         setBoardData((prev) => ({ ...prev, shapes: [...(prev.shapes || []), shape] }));
+         setBoardData((prev) => {
+            const nextBoardData = { ...prev, shapes: [...(prev.shapes || []), shape] };
+            boardDataRef.current = nextBoardData;
+            return nextBoardData;
+         });
          return;
       }
 
@@ -237,43 +299,78 @@ export default function Whiteboard() {
          color,
          size,
       };
+      activeStrokeRef.current = stroke;
       setActiveStroke(stroke);
-      setBoardData((prev) => ({ ...prev, strokes: [...(prev.strokes || []), stroke] }));
+      setBoardData((prev) => {
+         const nextBoardData = { ...prev, strokes: [...(prev.strokes || []), stroke] };
+         boardDataRef.current = nextBoardData;
+         return nextBoardData;
+      });
    };
 
    const handlePointerMove = (event) => {
-      if (!activeBoard) return;
+      if (!activeBoard || !isDrawingRef.current) return;
       const point = getPoint(event);
+      if (!point || Number.isNaN(point.x) || Number.isNaN(point.y)) return;
 
-      if (tool === "rectangle" && activeShape) {
+      if (tool === "rectangle" && activeShapeRef.current) {
          const nextShape = {
-            ...activeShape,
-            width: point.x - activeShape.x,
-            height: point.y - activeShape.y,
+            ...activeShapeRef.current,
+            width: point.x - activeShapeRef.current.x,
+            height: point.y - activeShapeRef.current.y,
          };
+         activeShapeRef.current = nextShape;
          setActiveShape(nextShape);
-         setBoardData((prev) => ({
-            ...prev,
-            shapes: (prev.shapes || []).map((shape) => (shape.id === activeShape.id ? nextShape : shape)),
-         }));
+         setBoardData((prev) => {
+            const nextBoardData = {
+               ...prev,
+               shapes: (prev.shapes || []).map((shape) => (shape.id === activeShapeRef.current.id ? nextShape : shape)),
+            };
+            boardDataRef.current = nextBoardData;
+            return nextBoardData;
+         });
          return;
       }
 
-      if (!activeStroke || tool === "eraser") return;
+      if (!activeStrokeRef.current || tool === "eraser") return;
       const nextStroke = {
-         ...activeStroke,
-         points: [...activeStroke.points, point],
+         ...activeStrokeRef.current,
+         points: [...activeStrokeRef.current.points, point],
       };
+      activeStrokeRef.current = nextStroke;
       setActiveStroke(nextStroke);
-      setBoardData((prev) => ({
-         ...prev,
-         strokes: (prev.strokes || []).map((stroke, index) => (index === (prev.strokes || []).length - 1 ? nextStroke : stroke)),
-      }));
+      setBoardData((prev) => {
+         const nextBoardData = {
+            ...prev,
+            strokes: (prev.strokes || []).map((stroke, index) => (index === (prev.strokes || []).length - 1 ? nextStroke : stroke)),
+         };
+         boardDataRef.current = nextBoardData;
+         return nextBoardData;
+      });
    };
 
    const handlePointerUp = () => {
+      isDrawingRef.current = false;
+      activeStrokeRef.current = null;
+      activeShapeRef.current = null;
       setActiveStroke(null);
       setActiveShape(null);
+   };
+
+   const handleTouchStart = (event) => {
+      if (!activeBoard) return;
+      event.preventDefault();
+      handlePointerDown(event);
+   };
+
+   const handleTouchMove = (event) => {
+      if (!activeBoard) return;
+      event.preventDefault();
+      handlePointerMove(event);
+   };
+
+   const handleTouchEnd = () => {
+      handlePointerUp();
    };
 
    const strokeSummary = useMemo(() => `${(boardData.strokes || []).length} strokes · ${(boardData.shapes || []).length} shapes`, [boardData.strokes, boardData.shapes]);
@@ -364,6 +461,30 @@ export default function Whiteboard() {
                style={{ touchAction: "none", WebkitTapHighlightColor: "transparent" }}
                preserveAspectRatio="xMidYMid meet"
                onContextMenu={(event) => event.preventDefault()}
+               onTouchStart={handleTouchStart}
+               onTouchMove={handleTouchMove}
+               onTouchEnd={handleTouchEnd}
+               onTouchCancel={handleTouchEnd}
+               onMouseDown={(event) => {
+                  event.preventDefault();
+                  handlePointerDown(event);
+               }}
+               onMouseMove={(event) => {
+                  event.preventDefault();
+                  handlePointerMove(event);
+                  if (socketRef.current && activeBoard) {
+                     const point = getCanvasPoint(event);
+                     socketRef.current.emit("boardCursor", {
+                        boardId: activeBoard._id,
+                        cursor: point,
+                     });
+                  }
+               }}
+               onMouseUp={(event) => {
+                  event.preventDefault();
+                  handlePointerUp();
+               }}
+               onMouseLeave={handlePointerUp}
                onPointerDown={(event) => {
                   event.currentTarget.setPointerCapture?.(event.pointerId);
                   event.preventDefault();
@@ -373,11 +494,7 @@ export default function Whiteboard() {
                   event.preventDefault();
                   handlePointerMove(event);
                   if (socketRef.current && activeBoard) {
-                     const rect = svgRef.current.getBoundingClientRect();
-                     const point = {
-                        x: ((event.clientX - rect.left) / rect.width) * 1000,
-                        y: ((event.clientY - rect.top) / rect.height) * 700,
-                     };
+                     const point = getCanvasPoint(event);
                      socketRef.current.emit("boardCursor", {
                         boardId: activeBoard._id,
                         cursor: point,
@@ -435,7 +552,7 @@ export default function Whiteboard() {
          {/* Board Footer status */}
          <div className="flex items-center justify-between text-xs text-zinc-500 pt-1">
             <span>{strokeSummary}</span>
-            <button onClick={() => setBoardData({ strokes: [] })} className="text-zinc-400 hover:text-red-400 transition">
+            <button onClick={() => setBoardData({ strokes: [], shapes: [] })} className="text-zinc-400 hover:text-red-400 transition">
                Clear Canvas
             </button>
          </div>
@@ -488,8 +605,8 @@ export default function Whiteboard() {
 
                <div className="space-y-1.5 max-h-[70vh] overflow-y-auto">
                   {filteredBoards.length > 0 ? (
-                     filteredBoards.map((board) => (
-                        <div key={board._id} className="group relative">
+                     filteredBoards.map((board, index) => (
+                        <div key={(board._id || board.id || `board-${index}`).toString()} className="group relative">
                            <button
                               type="button"
                               onClick={() => selectBoard(board)}
