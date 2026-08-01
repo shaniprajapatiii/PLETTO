@@ -62,6 +62,8 @@ export default function Chat() {
    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
    const [showDetails, setShowDetails] = useState(true);
    const [unreadCounts, setUnreadCounts] = useState({});
+   const [mobileView, setMobileView] = useState("channels");
+   const [isMobileView, setIsMobileView] = useState(false);
    const [readReceipts, setReadReceipts] = useState({});
    const [activeThread, setActiveThread] = useState(null);
    const [threadReplies, setThreadReplies] = useState([]);
@@ -162,6 +164,19 @@ export default function Chat() {
          isMountedRef.current = false;
       };
    }, []);
+
+   useEffect(() => {
+      const updateViewport = () => setIsMobileView(window.innerWidth < 1024);
+      updateViewport();
+      window.addEventListener("resize", updateViewport);
+      return () => window.removeEventListener("resize", updateViewport);
+   }, []);
+
+   useEffect(() => {
+      if (!activeChannel) {
+         setMobileView("channels");
+      }
+   }, [activeChannel]);
 
    useEffect(() => {
       const initialize = async () => {
@@ -326,6 +341,9 @@ export default function Chat() {
    const handleSelectChannel = (channel) => {
       setActiveChannel(channel);
       setShowPinned(false);
+      if (isMobileView) {
+         setMobileView("chat");
+      }
       setEditingMessageId(null);
       setError(null);
       setActiveThread(null);
@@ -542,9 +560,9 @@ export default function Chat() {
    };
 
    return (
-      <div className="flex min-h-[70vh] flex-col gap-4 lg:h-[calc(100vh-6rem)] lg:flex-row">
+      <div className="flex min-h-[70vh] flex-col gap-4 lg:h-[calc(100vh-6rem)] lg:flex-row lg:min-h-0">
          {/* Sidebar: Channel Room Navigation */}
-         <div className="w-full rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-4 shadow-2xl backdrop-blur-xl lg:w-80 lg:flex lg:flex-col lg:shrink-0">
+         <div className={`${isMobileView && mobileView === "chat" ? "hidden" : "flex"} w-full flex-col rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-4 shadow-2xl backdrop-blur-xl lg:flex lg:w-80 lg:flex-col lg:shrink-0 lg:min-h-0`}>
             {/* Sidebar Top: Action Bar & Search */}
             <div className="space-y-3 pb-3 border-b border-zinc-800/80">
                <div className="flex items-center justify-between">
@@ -670,7 +688,7 @@ export default function Chat() {
          </div>
 
          {/* Main Chat Canvas */}
-         <div className="flex-1 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-5 flex flex-col shadow-2xl min-w-0">
+         <div className={`${isMobileView && mobileView === "channels" ? "hidden" : "flex"} flex-1 min-h-[28rem] rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-4 flex-col shadow-2xl min-w-0 sm:p-5 lg:flex lg:min-h-0`}>
             {activeChannel ? (
                <>
                   {/* Channel Top Header Bar */}
@@ -710,6 +728,17 @@ export default function Chat() {
                      </div>
 
                      <div className="flex flex-wrap items-center gap-2">
+                        {isMobileView ? (
+                           <button
+                              type="button"
+                              onClick={() => setMobileView("channels")}
+                              className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:text-white lg:hidden"
+                           >
+                              <HiChatAlt2 size={14} />
+                              <span>Channels</span>
+                           </button>
+                        ) : null}
+
                         <button
                            type="button"
                            onClick={() => setShowDetails((prev) => !prev)}
@@ -827,7 +856,7 @@ export default function Chat() {
                   )}
 
                   {/* Messages Canvas */}
-                  <div className="mt-3 flex-1 min-h-[280px] overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/50 p-3 space-y-3 sm:min-h-[350px] sm:p-4">
+                  <div className="mt-3 flex-1 min-h-[240px] overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/50 p-3 space-y-3 sm:min-h-[320px] sm:p-4 lg:min-h-0">
                      {isLoadingMessages ? (
                         <div className="flex h-full items-center justify-center text-sm text-zinc-500">Loading messages…</div>
                      ) : visibleMessages.length > 0 ? (

@@ -51,6 +51,8 @@ export default function DM() {
    const [contactFilter, setContactFilter] = useState("all"); // 'all', 'online'
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
+   const [mobileView, setMobileView] = useState("contacts");
+   const [isMobileView, setIsMobileView] = useState(false);
 
    const [typingUsers, setTypingUsers] = useState([]);
    const [onlineUserIds, setOnlineUserIds] = useState(new Set());
@@ -127,6 +129,19 @@ export default function DM() {
    useEffect(() => {
       loadData();
    }, []);
+
+   useEffect(() => {
+      const updateViewport = () => setIsMobileView(window.innerWidth < 1024);
+      updateViewport();
+      window.addEventListener("resize", updateViewport);
+      return () => window.removeEventListener("resize", updateViewport);
+   }, []);
+
+   useEffect(() => {
+      if (!activeRecipient) {
+         setMobileView("contacts");
+      }
+   }, [activeRecipient]);
 
    const scrollToBottom = (behavior = "smooth") => {
       if (!messageListRef.current) return;
@@ -271,6 +286,9 @@ export default function DM() {
       setActiveChannel(channel);
       setShowPinned(false);
       setEditingMessageId(null);
+      if (isMobileView) {
+         setMobileView("chat");
+      }
 
       const otherMemberObj = channel.members?.find((m) => normalizeId(m._id || m.userId) !== normalizeId(user?._id));
       if (otherMemberObj) {
@@ -307,6 +325,9 @@ export default function DM() {
             setChannels((prev) => [newChannel, ...prev.filter((c) => normalizeId(c._id) !== normalizeId(newChannel._id))]);
             setActiveChannel(newChannel);
             setActiveRecipient(targetMember);
+            if (isMobileView) {
+               setMobileView("chat");
+            }
             setSearchParams({ channel: newChannel._id });
          }
       } catch (err) {
@@ -465,9 +486,9 @@ export default function DM() {
    }
 
    return (
-      <div className="h-[calc(100vh-6.5rem)] flex gap-4 overflow-hidden">
+      <div className="flex min-h-[70vh] flex-col gap-4 overflow-hidden lg:h-[calc(100vh-6.5rem)] lg:flex-row">
          {/* Left Contacts Sidebar */}
-         <div className="w-80 flex flex-col shrink-0 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-3.5 shadow-2xl overflow-hidden">
+         <div className={`${isMobileView && mobileView === "chat" ? "hidden" : "flex"} w-full flex-col shrink-0 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-3.5 shadow-2xl overflow-hidden lg:flex lg:w-80 lg:min-h-0`}>
             {/* Header Title */}
             <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
                <div className="flex items-center gap-2">
@@ -599,7 +620,7 @@ export default function DM() {
          </div>
 
          {/* Main Conversation Panel */}
-         <div className="flex-1 flex flex-col min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl shadow-2xl overflow-hidden">
+         <div className={`${isMobileView && mobileView === "contacts" ? "hidden" : "flex"} min-h-[28rem] flex-1 flex-col min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl shadow-2xl overflow-hidden lg:flex lg:min-h-0`}>
             {activeRecipient ? (
                <>
                   {/* Chat Conversation Top Header */}
@@ -668,6 +689,17 @@ export default function DM() {
                               <span>{pinnedMessages.length} Pinned</span>
                            </button>
                         )}
+
+                        {isMobileView ? (
+                           <button
+                              type="button"
+                              onClick={() => setMobileView("contacts")}
+                              className="flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-zinc-700 hover:text-white lg:hidden"
+                           >
+                              <HiUser className="h-3.5 w-3.5 text-zinc-400" />
+                              <span>Contacts</span>
+                           </button>
+                        ) : null}
 
                         <button
                            type="button"

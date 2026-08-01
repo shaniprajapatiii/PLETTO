@@ -286,7 +286,7 @@ export default function Whiteboard() {
 
    // Main Whiteboard Editor Container
    const renderWhiteboardEditor = () => (
-      <div className={`space-y-3 ${isFullScreen ? "fixed inset-0 z-50 bg-zinc-950 p-6 overflow-y-auto" : ""}`}>
+      <div className={`space-y-3 ${isFullScreen ? "lg:sticky lg:top-4" : ""}`}>
          {/* Toolbar Header */}
          <div className="flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/80 p-2.5 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-1.5">
@@ -361,9 +361,16 @@ export default function Whiteboard() {
                ref={svgRef}
                viewBox="0 0 1000 700"
                className="h-full w-full cursor-crosshair"
-               style={{ touchAction: "none" }}
-               onPointerDown={handlePointerDown}
+               style={{ touchAction: "none", WebkitTapHighlightColor: "transparent" }}
+               preserveAspectRatio="xMidYMid meet"
+               onContextMenu={(event) => event.preventDefault()}
+               onPointerDown={(event) => {
+                  event.currentTarget.setPointerCapture?.(event.pointerId);
+                  event.preventDefault();
+                  handlePointerDown(event);
+               }}
                onPointerMove={(event) => {
+                  event.preventDefault();
                   handlePointerMove(event);
                   if (socketRef.current && activeBoard) {
                      const rect = svgRef.current.getBoundingClientRect();
@@ -377,7 +384,14 @@ export default function Whiteboard() {
                      });
                   }
                }}
-               onPointerUp={handlePointerUp}
+               onPointerUp={(event) => {
+                  event.currentTarget.releasePointerCapture?.(event.pointerId);
+                  handlePointerUp();
+               }}
+               onPointerCancel={(event) => {
+                  event.currentTarget.releasePointerCapture?.(event.pointerId);
+                  handlePointerUp();
+               }}
                onPointerLeave={handlePointerUp}
             >
                <rect x="0" y="0" width="1000" height="700" fill="transparent" />
