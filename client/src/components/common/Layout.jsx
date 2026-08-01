@@ -326,24 +326,24 @@ export default function Layout() {
          {/* Main Content Area */}
          <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
             {/* Header Navbar */}
-            <header className="h-14 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4 shrink-0 z-20">
-               <div className="flex items-center gap-3">
+            <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-zinc-800/80 bg-zinc-950/80 px-3 backdrop-blur-md sm:px-6 z-20">
+               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                   <button
                      type="button"
                      onClick={() => setMobileNavOpen(true)}
-                     className="p-2 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white lg:hidden"
+                     className="rounded-lg border border-zinc-800 p-2 text-zinc-400 transition hover:text-white lg:hidden"
                   >
                      <MenuIcon className="h-4 w-4" />
                   </button>
 
-                  <div className="flex items-center gap-2 text-xs">
-                     <span className="text-zinc-500 font-medium">Workspace</span>
-                     <span className="text-zinc-700">/</span>
-                     <span className="font-semibold text-zinc-200">{currentNavItem.label}</span>
+                  <div className="flex min-w-0 items-center gap-2 text-xs">
+                     <span className="hidden text-zinc-500 sm:inline">Workspace</span>
+                     <span className="hidden text-zinc-700 sm:inline">/</span>
+                     <span className="truncate font-semibold text-zinc-200">{currentNavItem.label}</span>
                   </div>
                </div>
 
-               <div className="flex items-center gap-3">
+               <div className="flex items-center gap-2 sm:gap-3">
                   <div className="hidden sm:flex items-center">
                      <PresenceStack />
                   </div>
@@ -351,7 +351,7 @@ export default function Layout() {
                   <button
                      type="button"
                      onClick={() => setPaletteOpen(true)}
-                     className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent bg-accent-soft text-xs font-semibold text-accent transition hover:brightness-95"
+                     className="hidden items-center gap-1.5 rounded-lg border border-accent bg-accent-soft px-3 py-1.5 text-xs font-semibold text-accent transition hover:brightness-95 sm:flex"
                   >
                      <SparklesIcon className="h-3.5 w-3.5 text-accent" />
                      <span>Ask AI</span>
@@ -404,8 +404,8 @@ export default function Layout() {
             </header>
 
             {/* Page Canvas Container */}
-            <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 max-w-full">
-               <div className="mx-auto w-full max-w-7xl">
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8 max-w-full">
+               <div className="mx-auto w-full max-w-7xl min-w-0">
                   <Outlet />
                </div>
             </main>

@@ -1,16 +1,16 @@
 export function PageShell({ title, subtitle, actions, children, className = "", compact = false }) {
    return (
-      <section className={`relative w-full max-w-full space-y-6 ${className}`}>
+      <section className={`relative w-full max-w-full space-y-5 sm:space-y-6 ${className}`}>
          {(title || subtitle || actions) && (
-            <div className={`flex flex-col gap-4 ${compact ? "sm:flex-row sm:items-center sm:justify-between" : "sm:flex-row sm:items-end sm:justify-between"}`}>
+            <div className={`flex flex-col gap-4 ${compact ? "md:flex-row md:items-center md:justify-between" : "md:flex-row md:items-end md:justify-between"}`}>
                <div className="max-w-2xl">
-                  {title ? <h1 className="text-2xl font-bold tracking-tight text-zinc-100 sm:text-3xl">{title}</h1> : null}
-                  {subtitle ? <p className="mt-1.5 text-sm text-zinc-400 sm:text-base leading-relaxed">{subtitle}</p> : null}
+                  {title ? <h1 className="text-xl font-bold tracking-tight text-zinc-100 sm:text-2xl lg:text-3xl">{title}</h1> : null}
+                  {subtitle ? <p className="mt-1.5 text-sm leading-relaxed text-zinc-400 sm:text-base">{subtitle}</p> : null}
                </div>
                {actions ? <div className="flex flex-wrap items-center gap-2.5 shrink-0">{actions}</div> : null}
             </div>
          )}
-         <div className="w-full max-w-full space-y-6">
+         <div className="w-full max-w-full space-y-4 sm:space-y-6">
             {children}
          </div>
       </section>

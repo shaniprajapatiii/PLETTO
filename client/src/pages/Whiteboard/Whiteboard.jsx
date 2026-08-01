@@ -288,8 +288,8 @@ export default function Whiteboard() {
    const renderWhiteboardEditor = () => (
       <div className={`space-y-3 ${isFullScreen ? "fixed inset-0 z-50 bg-zinc-950 p-6 overflow-y-auto" : ""}`}>
          {/* Toolbar Header */}
-         <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/80 backdrop-blur-md">
-            <div className="flex items-center gap-1.5">
+         <div className="flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/80 p-2.5 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-1.5">
                <button
                   onClick={() => setTool("pen")}
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${tool === "pen" ? "bg-[#f9ebae] text-zinc-950 font-bold shadow" : "text-zinc-400 hover:text-white"}`}
@@ -314,7 +314,7 @@ export default function Whiteboard() {
             </div>
 
             {/* Swatches & Zoom */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
                <div className="flex items-center gap-1.5">
                   {COLORS.map((swatch) => (
                      <button
@@ -356,11 +356,12 @@ export default function Whiteboard() {
          </div>
 
          {/* SVG Canvas Frame */}
-         <div className={`relative rounded-2xl border border-zinc-800 bg-zinc-950 overflow-hidden ${isFullScreen ? "h-[80vh]" : "h-[540px]"}`}>
+         <div className={`relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 ${isFullScreen ? "min-h-[70vh]" : "h-[min(65vh,560px)] sm:h-[min(72vh,640px)]"}`}>
             <svg
                ref={svgRef}
                viewBox="0 0 1000 700"
                className="h-full w-full cursor-crosshair"
+               style={{ touchAction: "none" }}
                onPointerDown={handlePointerDown}
                onPointerMove={(event) => {
                   handlePointerMove(event);
@@ -454,9 +455,9 @@ export default function Whiteboard() {
             </div>
          }
       >
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+         <div className="grid grid-cols-1 gap-6 items-start xl:grid-cols-12">
             {/* Left Board List Sidebar */}
-            <div className="lg:col-span-4 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3 xl:col-span-4">
                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
                   <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Whiteboards ({boards.length})</span>
                </div>
@@ -510,7 +511,7 @@ export default function Whiteboard() {
             </div>
 
             {/* Right Canvas & Tool Palette */}
-            <div className="lg:col-span-8 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3 sm:p-4 xl:col-span-8">
                {renderWhiteboardEditor()}
             </div>
          </div>
