@@ -173,7 +173,7 @@ export default function MyChannels() {
    return (
       <PageShell
          title="Workspace Control Center"
-         subtitle="Manage, monitor, and launch all public/private channels, documents, and whiteboards in full screen."
+         subtitle="Manage, monitor, and launch all public/private channels, documents, and whiteboards in focus mode."
          actions={
             <div className="flex gap-2">
                <button
@@ -357,7 +357,7 @@ export default function MyChannels() {
                            className="flex-1 py-2 px-3 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 rounded-xl transition text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-[#f9ebae]/10"
                         >
                            <HiArrowsExpand size={14} />
-                           <span>Open Full Screen</span>
+                           <span>Open Focus View</span>
                         </button>
 
                         <button

@@ -9,10 +9,12 @@ export default function Login() {
    const { setUser, setWorkspace } = useAuth();
    const [form, setForm] = useState({ email: "", password: "" });
    const [error, setError] = useState("");
+   const [loading, setLoading] = useState(false);
 
    const submit = async (e) => {
       e.preventDefault();
       setError("");
+      setLoading(true);
       try {
          const res = await loginUser(form);
          localStorage.setItem("token", res.data.token);
@@ -21,6 +23,8 @@ export default function Login() {
          navigate("/dashboard");
       } catch {
          setError("Login failed. Please check your credentials.");
+      } finally {
+         setLoading(false);
       }
    };
 
@@ -89,9 +93,17 @@ export default function Login() {
 
                   <button
                      type="submit"
-                     className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] text-zinc-950 font-bold text-sm shadow-md shadow-[#f9ebae]/20 transition duration-150"
+                     disabled={loading}
+                     className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] text-zinc-950 font-bold text-sm shadow-md shadow-[#f9ebae]/20 transition duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                     Sign In to Workspace
+                     {loading ? (
+                        <>
+                           <span className="h-4 w-4 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />
+                           <span>Signing In...</span>
+                        </>
+                     ) : (
+                        <span>Sign In to Workspace</span>
+                     )}
                   </button>
                </form>
 

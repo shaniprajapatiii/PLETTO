@@ -9,10 +9,12 @@ export default function Register() {
    const { setUser, setWorkspace } = useAuth();
    const [form, setForm] = useState({ name: "", email: "", password: "" });
    const [error, setError] = useState("");
+   const [loading, setLoading] = useState(false);
 
    const submit = async (e) => {
       e.preventDefault();
       setError("");
+      setLoading(true);
       try {
          const res = await registerUser(form);
          localStorage.setItem("token", res.data.token);
@@ -21,6 +23,8 @@ export default function Register() {
          navigate("/dashboard");
       } catch {
          setError("Unable to create account. Please try again with a valid email.");
+      } finally {
+         setLoading(false);
       }
    };
 
@@ -100,9 +104,17 @@ export default function Register() {
 
                   <button
                      type="submit"
-                     className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] text-zinc-950 font-bold text-sm shadow-md shadow-[#f9ebae]/20 transition duration-150"
+                     disabled={loading}
+                     className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#f9ebae] via-[#f9ebae] to-[#d8c46e] text-zinc-950 font-bold text-sm shadow-md shadow-[#f9ebae]/20 transition duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                     Create Account & Workspace
+                     {loading ? (
+                        <>
+                           <span className="h-4 w-4 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />
+                           <span>Creating Account...</span>
+                        </>
+                     ) : (
+                        <span>Create Account & Workspace</span>
+                     )}
                   </button>
                </form>
 

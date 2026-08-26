@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
    HiHashtag,
    HiLockClosed,
@@ -16,6 +16,11 @@ import {
    HiPaperClip,
    HiAnnotation,
    HiClock,
+   HiArrowLeft,
+   HiArrowsExpand,
+   HiSparkles,
+   HiCheck,
+   HiX,
 } from "react-icons/hi";
 import {
    getChannels,
@@ -37,13 +42,14 @@ import {
 import { getWorkspaceMembers } from "../../services/workspaceService";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
-import { getAvatarSrc } from "../../utils/avatar";
+import { PageShell } from "../../components/common/PageShell";
 
 const EMOJI_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "🎉", "✨"];
 
 export default function Chat() {
    const { user } = useAuth();
    const socket = useSocket();
+   const navigate = useNavigate();
    const [searchParams, setSearchParams] = useSearchParams();
 
    const [channels, setChannels] = useState([]);
@@ -53,18 +59,15 @@ export default function Chat() {
    const [workspaceMembers, setWorkspaceMembers] = useState([]);
    const [messageText, setMessageText] = useState("");
    const [error, setError] = useState(null);
-   const [filterTab, setFilterTab] = useState("all"); // 'all', 'public', 'private', 'dm'
+   const [filterTab, setFilterTab] = useState("all"); // 'all', 'public', 'private'
    const [searchQuery, setSearchQuery] = useState("");
 
    const [typingUsers, setTypingUsers] = useState([]);
    const [onlineUsers, setOnlineUsers] = useState([]);
    const [isLoadingChannels, setIsLoadingChannels] = useState(true);
    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-   const [showDetails, setShowDetails] = useState(true);
+   const [showDetails, setShowDetails] = useState(false);
    const [unreadCounts, setUnreadCounts] = useState({});
-   const [mobileView, setMobileView] = useState("channels");
-   const [isMobileView, setIsMobileView] = useState(false);
-   const [readReceipts, setReadReceipts] = useState({});
    const [activeThread, setActiveThread] = useState(null);
    const [threadReplies, setThreadReplies] = useState([]);
    const [threadReplyText, setThreadReplyText] = useState("");
@@ -74,7 +77,6 @@ export default function Chat() {
    const [editingMessageId, setEditingMessageId] = useState(null);
    const [editingText, setEditingText] = useState("");
    const [showPinned, setShowPinned] = useState(false);
-   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
 
    // Modal States
    const [showCreateModal, setShowCreateModal] = useState(false);
@@ -82,7 +84,6 @@ export default function Chat() {
    const [newChannelType, setNewChannelType] = useState("public"); // 'public' or 'private'
    const [newChannelTopic, setNewChannelTopic] = useState("");
    const [selectedMemberIds, setSelectedMemberIds] = useState([]);
-
    const [showManageMembersModal, setShowManageMembersModal] = useState(false);
 
    const socketRef = useRef(socket);
@@ -90,6 +91,8 @@ export default function Chat() {
    const userRef = useRef(user);
    const typingTimeoutRef = useRef(null);
    const messagesEndRef = useRef(null);
+
+   const normalizeId = (val) => (val?._id || val)?.toString();
 
    const refreshChannels = async () => {
       setIsLoadingChannels(true);
@@ -153,7 +156,6 @@ export default function Chat() {
       }
    };
 
-   // Scroll to bottom when messages update
    useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
    }, [messages]);
@@ -166,36 +168,16 @@ export default function Chat() {
    }, []);
 
    useEffect(() => {
-      const updateViewport = () => setIsMobileView(window.innerWidth < 1024);
-      updateViewport();
-      window.addEventListener("resize", updateViewport);
-      return () => window.removeEventListener("resize", updateViewport);
-   }, []);
-
-   useEffect(() => {
-      if (!activeChannel) {
-         setMobileView("channels");
-      }
-   }, [activeChannel]);
-
-   useEffect(() => {
       const initialize = async () => {
          refreshWorkspaceMembers();
          const nextChannels = await refreshChannels();
 
          const channelIdParam = searchParams.get("channel");
          if (channelIdParam) {
-            const target = nextChannels.find((ch) => ch._id === channelIdParam);
+            const target = nextChannels.find((ch) => normalizeId(ch._id) === channelIdParam);
             if (target) {
                setActiveChannel(target);
-               return;
             }
-         }
-
-         if (nextChannels.length > 0) {
-            const defaultChannel = nextChannels.find((c) => c.type === "public") || nextChannels[0];
-            setActiveChannel(defaultChannel);
-            setSearchParams({ channel: defaultChannel._id });
          }
       };
 
@@ -210,7 +192,7 @@ export default function Chat() {
       userRef.current = user;
    }, [user]);
 
-   // Socket events setup
+   // Socket Listeners
    useEffect(() => {
       if (!socket) return;
       socketRef.current = socket;
@@ -218,61 +200,63 @@ export default function Chat() {
       socket.emit("userOnline");
 
       socket.on("newMessage", (newMessage) => {
-         if (activeChannelRef.current?._id === newMessage.channel) {
+         const currentId = normalizeId(activeChannelRef.current?._id);
+         const targetId = normalizeId(newMessage.channel);
+         if (currentId && targetId && currentId === targetId) {
             setMessages((curr) => {
-               if (curr.some((m) => m._id === newMessage._id)) return curr;
+               if (curr.some((m) => normalizeId(m._id) === normalizeId(newMessage._id))) return curr;
                return [...curr, newMessage];
             });
-            setReadReceipts((curr) => ({ ...curr, [newMessage.channel]: true }));
-         } else {
+         } else if (targetId) {
             setUnreadCounts((curr) => ({
                ...curr,
-               [newMessage.channel]: (curr[newMessage.channel] || 0) + 1,
+               [targetId]: (curr[targetId] || 0) + 1,
             }));
          }
       });
 
       socket.on("messageEdited", (editedMessage) => {
-         if (activeChannelRef.current?._id === editedMessage.channel) {
-            setMessages((curr) => curr.map((m) => (m._id === editedMessage._id ? editedMessage : m)));
+         if (normalizeId(activeChannelRef.current?._id) === normalizeId(editedMessage.channel)) {
+            setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(editedMessage._id) ? editedMessage : m)));
          }
       });
 
       socket.on("messageDeleted", ({ messageId }) => {
-         setMessages((curr) => curr.filter((m) => m._id !== messageId));
+         setMessages((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(messageId)));
       });
 
       socket.on("reactionAdded", (message) => {
-         if (activeChannelRef.current?._id === message.channel) {
-            setMessages((curr) => curr.map((m) => (m._id === message._id ? message : m)));
+         if (normalizeId(activeChannelRef.current?._id) === normalizeId(message.channel)) {
+            setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(message._id) ? message : m)));
          }
       });
 
       socket.on("reactionRemoved", (message) => {
-         if (activeChannelRef.current?._id === message.channel) {
-            setMessages((curr) => curr.map((m) => (m._id === message._id ? message : m)));
+         if (normalizeId(activeChannelRef.current?._id) === normalizeId(message.channel)) {
+            setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(message._id) ? message : m)));
          }
       });
 
       socket.on("messagePinned", (message) => {
-         if (activeChannelRef.current?._id === message.channel) {
-            setPinnedMessages((curr) => [...curr, message]);
-            setMessages((curr) => curr.map((m) => (m._id === message._id ? message : m)));
+         if (normalizeId(activeChannelRef.current?._id) === normalizeId(message.channel)) {
+            setPinnedMessages((curr) => [...curr.filter((p) => normalizeId(p._id) !== normalizeId(message._id)), message]);
+            setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(message._id) ? message : m)));
          }
       });
 
       socket.on("messageUnpinned", ({ messageId }) => {
-         setPinnedMessages((curr) => curr.filter((m) => m._id !== messageId));
-         setMessages((curr) => curr.map((m) => (m._id === messageId ? { ...m, isPinned: false } : m)));
+         setPinnedMessages((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(messageId)));
+         setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(messageId) ? { ...m, isPinned: false } : m)));
       });
 
       socket.on("typing", ({ channelId, isTyping, user: typingUser }) => {
-         if (activeChannelRef.current?._id !== channelId) return;
-         if (typingUser.id === userRef.current?._id) return;
+         if (normalizeId(activeChannelRef.current?._id) !== normalizeId(channelId)) return;
+         if (normalizeId(typingUser?.id || typingUser?._id) === normalizeId(userRef.current?._id)) return;
 
          setTypingUsers((curr) => {
-            if (!isTyping) return curr.filter((u) => u.id !== typingUser.id);
-            if (curr.some((u) => u.id === typingUser.id)) return curr;
+            const typingId = normalizeId(typingUser?.id || typingUser?._id);
+            if (!isTyping) return curr.filter((u) => normalizeId(u.id || u._id) !== typingId);
+            if (curr.some((u) => normalizeId(u.id || u._id) === typingId)) return curr;
             return [...curr, typingUser];
          });
       });
@@ -288,28 +272,16 @@ export default function Chat() {
       socket.on("channelCreated", (newChannel) => {
          if (newChannel.type === "dm") return;
          setChannels((curr) => {
-            if (curr.some((c) => c._id === newChannel._id)) return curr;
+            if (curr.some((c) => normalizeId(c._id) === normalizeId(newChannel._id))) return curr;
             return [newChannel, ...curr];
          });
       });
 
-      socket.on("channelUpdated", (updatedChannel) => {
-         setChannels((curr) => curr.map((c) => (c._id === updatedChannel._id ? updatedChannel : c)));
-         if (activeChannelRef.current?._id === updatedChannel._id) {
-            setActiveChannel(updatedChannel);
-         }
-      });
-
       socket.on("channelDeleted", ({ channelId }) => {
-         setChannels((curr) => curr.filter((c) => c._id !== channelId));
-         if (activeChannelRef.current?._id === channelId) {
-            setActiveChannel(null);
+         setChannels((curr) => curr.filter((c) => normalizeId(c._id) !== normalizeId(channelId)));
+         if (normalizeId(activeChannelRef.current?._id) === normalizeId(channelId)) {
+            backToDirectory();
          }
-      });
-
-      socket.on("channelAccessDenied", ({ message }) => {
-         setError(message || "Access denied to private channel");
-         setActiveChannel(null);
       });
 
       return () => {
@@ -323,9 +295,7 @@ export default function Chat() {
          socket.off("typing");
          socket.off("presenceUpdate");
          socket.off("channelCreated");
-         socket.off("channelUpdated");
          socket.off("channelDeleted");
-         socket.off("channelAccessDenied");
       };
    }, [socket]);
 
@@ -335,15 +305,11 @@ export default function Chat() {
       refreshMessages(activeChannel._id);
       loadPinnedMessages(activeChannel._id);
       setUnreadCounts((curr) => ({ ...curr, [activeChannel._id]: 0 }));
-      setReadReceipts((curr) => ({ ...curr, [activeChannel._id]: true }));
    }, [activeChannel]);
 
    const handleSelectChannel = (channel) => {
       setActiveChannel(channel);
       setShowPinned(false);
-      if (isMobileView) {
-         setMobileView("chat");
-      }
       setEditingMessageId(null);
       setError(null);
       setActiveThread(null);
@@ -351,6 +317,12 @@ export default function Chat() {
       setThreadReplyText("");
       setUnreadCounts((curr) => ({ ...curr, [channel._id]: 0 }));
       setSearchParams({ channel: channel._id });
+   };
+
+   const backToDirectory = () => {
+      setActiveChannel(null);
+      setMessages([]);
+      setSearchParams({});
    };
 
    const handleCreateChannelSubmit = async (e) => {
@@ -372,9 +344,8 @@ export default function Chat() {
 
          const created = res.data.channel;
          if (created) {
-            setChannels((prev) => [created, ...prev.filter((c) => c._id !== created._id)]);
-            setActiveChannel(created);
-            setSearchParams({ channel: created._id });
+            setChannels((prev) => [created, ...prev.filter((c) => normalizeId(c._id) !== normalizeId(created._id))]);
+            handleSelectChannel(created);
          }
 
          setShowCreateModal(false);
@@ -394,9 +365,9 @@ export default function Chat() {
 
       try {
          await deleteChannel(channelId);
-         setChannels((curr) => curr.filter((c) => c._id !== channelId));
-         if (activeChannel?._id === channelId) {
-            setActiveChannel(null);
+         setChannels((curr) => curr.filter((c) => normalizeId(c._id) !== normalizeId(channelId)));
+         if (normalizeId(activeChannel?._id) === normalizeId(channelId)) {
+            backToDirectory();
          }
       } catch (err) {
          setError(err.response?.data?.message || "Only the channel creator can delete this channel.");
@@ -406,7 +377,7 @@ export default function Chat() {
    const handleToggleMember = async (targetUserId) => {
       if (!activeChannel) return;
       const isMember = activeChannel.members?.some(
-         (m) => (m._id || m) === targetUserId
+         (m) => normalizeId(m._id || m) === normalizeId(targetUserId)
       );
 
       try {
@@ -453,7 +424,6 @@ export default function Chat() {
          text: messageText.trim(),
       });
       setMessageText("");
-      setReadReceipts((curr) => ({ ...curr, [activeChannel._id]: true }));
       socketRef.current.emit("typing", { channelId: activeChannel._id, isTyping: false });
    };
 
@@ -523,7 +493,6 @@ export default function Chat() {
       }
    };
 
-   // Filter channels based on selected tab and search query
    const filteredChannels = useMemo(() => {
       let list = channels.filter((c) => c.type !== "dm");
       if (filterTab === "public") list = list.filter((c) => c.type === "public");
@@ -536,75 +505,50 @@ export default function Chat() {
 
    const visibleMessages = useMemo(() => messages.filter((msg) => !msg.isDeleted), [messages]);
 
-   const activeChannelMembers = useMemo(() => {
-      if (!activeChannel) return [];
-      return (activeChannel.members || []).map((member) => {
-         if (typeof member === "string") {
-            return { _id: member, name: "Member", email: "" };
-         }
-         return member;
-      });
-   }, [activeChannel]);
-
    const isCreatorOfActive = useMemo(() => {
       if (!activeChannel || !user) return false;
       const creatorId = activeChannel.createdBy?._id || activeChannel.createdBy;
-      return creatorId?.toString() === user._id?.toString();
+      return normalizeId(creatorId) === normalizeId(user._id);
    }, [activeChannel, user]);
 
-   const formatRelativeTime = (value) => {
-      if (!value) return "";
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return "";
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-   };
-
-   return (
-      <div className="flex min-h-[70vh] flex-col gap-4 lg:h-[calc(100vh-6rem)] lg:flex-row lg:min-h-0">
-         {/* Sidebar: Channel Room Navigation */}
-         <div className={`${isMobileView && mobileView === "chat" ? "fixed inset-0 z-20 -translate-x-full opacity-0 pointer-events-none" : "relative translate-x-0 opacity-100 pointer-events-auto"} w-full flex-col rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 lg:static lg:flex lg:w-80 lg:flex-col lg:shrink-0 lg:min-h-0 lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto`}>
-            {/* Sidebar Top: Action Bar & Search */}
-            <div className="space-y-3 pb-3 border-b border-zinc-800/80">
-               <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#f9ebae] uppercase tracking-widest flex items-center gap-1.5">
-                     <HiChatAlt2 size={16} />
-                     <span>Channels & Rooms</span>
-                  </span>
-                  <button
-                     type="button"
-                     onClick={() => setShowCreateModal(true)}
-                     className="px-2.5 py-1.5 rounded-lg bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold transition flex items-center gap-1 shadow-md shadow-[#f9ebae]/20"
-                  >
-                     <HiPlus size={14} />
-                     <span>Create</span>
-                  </button>
+   // Directory Catalog View (Default)
+   if (!activeChannel) {
+      return (
+         <PageShell
+            title="Channels & Rooms"
+            subtitle="Browse workspace channels, join discussion groups, or create a new public or private room."
+            actions={
+               <button
+                  type="button"
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold shadow-md transition"
+               >
+                  <HiPlus size={14} />
+                  <span>Create Channel</span>
+               </button>
+            }
+         >
+            {error && (
+               <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+                  {error}
                </div>
+            )}
 
-               {/* Search box */}
-               <div className="relative">
-                  <HiSearch className="absolute left-3 top-2.5 text-zinc-500" size={14} />
-                  <input
-                     value={searchQuery}
-                     onChange={(e) => setSearchQuery(e.target.value)}
-                     placeholder="Search rooms..."
-                     className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] transition"
-                  />
-               </div>
-
-               {/* Filter Tabs */}
-               <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-zinc-900/80 border border-zinc-800/60 text-[10px] font-bold">
+            {/* Filter and Search Control */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+               <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-full sm:w-auto">
                   {[
-                     { key: "all", label: "All" },
-                     { key: "public", label: "# Public" },
-                     { key: "private", label: "🔒 Private" },
+                     { key: "all", label: `All Rooms (${channels.length})` },
+                     { key: "public", label: `# Public (${channels.filter((c) => c.type === "public").length})` },
+                     { key: "private", label: `🔒 Private (${channels.filter((c) => c.type === "private").length})` },
                   ].map((tab) => (
                      <button
                         key={tab.key}
                         type="button"
                         onClick={() => setFilterTab(tab.key)}
-                        className={`py-1 rounded-lg transition ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                            filterTab === tab.key
-                              ? "bg-[#f9ebae] text-zinc-950 font-extrabold shadow"
+                              ? "bg-[#f9ebae] text-zinc-950 shadow"
                               : "text-zinc-400 hover:text-white"
                         }`}
                      >
@@ -612,663 +556,385 @@ export default function Chat() {
                      </button>
                   ))}
                </div>
+
+               <div className="relative w-full sm:w-80">
+                  <HiSearch className="absolute left-3.5 top-2.5 text-zinc-500" size={14} />
+                  <input
+                     value={searchQuery}
+                     onChange={(e) => setSearchQuery(e.target.value)}
+                     placeholder="Search rooms by name or topic..."
+                     className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-zinc-800 bg-zinc-950 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] transition"
+                  />
+               </div>
             </div>
 
-            {/* Channels List */}
-            <div className="flex-1 overflow-y-auto mt-3 space-y-1 pr-1">
-               {isLoadingChannels ? (
-                  <div className="py-10 text-center text-xs text-zinc-500">Loading rooms…</div>
-               ) : filteredChannels.length > 0 ? (
-                  filteredChannels.map((channel) => {
-                     const isSelected = activeChannel?._id === channel._id;
+            {/* Channels Cards Grid */}
+            {isLoadingChannels ? (
+               <div className="py-20 text-center text-xs text-zinc-500 flex flex-col items-center gap-3">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#f9ebae] border-t-transparent" />
+                  <span>Loading channels…</span>
+               </div>
+            ) : filteredChannels.length > 0 ? (
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredChannels.map((channel) => {
                      const isPrivate = channel.type === "private";
-                     const isDm = channel.type === "dm";
-
                      const unreadValue = unreadCounts[channel._id] || 0;
+
                      return (
-                        <button
+                        <div
                            key={channel._id}
-                           type="button"
-                           onClick={() => handleSelectChannel(channel)}
-                           className={`w-full p-2.5 rounded-xl flex items-center justify-between transition text-left ${
-                              isSelected
-                                 ? "bg-[#f9ebae]/12 border border-[#f9ebae]/40 text-white font-bold"
-                                 : "hover:bg-zinc-900/70 border border-transparent text-zinc-400 hover:text-zinc-200"
-                           }`}
+                           className="group p-5 rounded-2xl border border-zinc-800/80 bg-zinc-950/70 hover:border-[#f9ebae]/40 hover:bg-zinc-900/60 transition flex flex-col justify-between space-y-4 shadow-xl"
                         >
-                           <div className="flex items-center gap-2.5 min-w-0">
-                              <div
-                                 className={`h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                                    isSelected
-                                       ? "bg-[#f9ebae] text-zinc-950"
-                                       : isPrivate
-                                       ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                                       : isDm
-                                       ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
-                                       : "bg-zinc-900 text-zinc-400 border border-zinc-800"
-                                 }`}
-                              >
-                                 {isPrivate ? <HiLockClosed size={12} /> : isDm ? "💬" : <HiHashtag size={14} />}
+                           <div>
+                              <div className="flex items-center justify-between gap-2 mb-3">
+                                 <span
+                                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 ${
+                                       isPrivate
+                                          ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                                          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                    }`}
+                                 >
+                                    {isPrivate ? <HiLockClosed size={10} /> : <HiGlobeAlt size={10} />}
+                                    <span>{isPrivate ? "Private Group" : "Public Room"}</span>
+                                 </span>
+
+                                 {unreadValue > 0 && (
+                                    <span className="rounded-full bg-[#f9ebae] px-2 py-0.5 text-[10px] font-black text-zinc-950">
+                                       {unreadValue} unread
+                                    </span>
+                                 )}
                               </div>
-                              <div className="min-w-0">
-                                 <div className="text-xs truncate font-semibold">
-                                    {isDm ? channel.name : channel.name}
-                                 </div>
-                                 <div className="text-[10px] text-zinc-500 truncate">
-                                    {isPrivate
-                                       ? `${channel.members?.length || 0} allowed members`
-                                       : isDm
-                                       ? "Direct chat"
-                                       : "Public workspace room"}
-                                 </div>
+
+                              <div className="flex items-center gap-2">
+                                 <HiHashtag className="text-[#f9ebae] shrink-0" size={18} />
+                                 <h3 className="font-bold text-sm text-zinc-100 group-hover:text-[#f9ebae] transition truncate">
+                                    {channel.name}
+                                 </h3>
                               </div>
+
+                              <p className="text-xs text-zinc-400 mt-2 line-clamp-2 leading-relaxed">
+                                 {channel.topic || channel.description || (isPrivate ? "Private team group for restricted members." : "Public channel for open team discussion.")}
+                              </p>
                            </div>
 
-                           <div className="flex items-center gap-1.5">
-                              {isPrivate && (
-                                 <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                                    Private
-                                 </span>
-                              )}
-                              {unreadValue > 0 && (
-                                 <span className="min-w-5 rounded-full bg-[#f9ebae] px-1.5 py-0.5 text-[10px] font-black text-zinc-950">
-                                    {unreadValue}
-                                 </span>
-                              )}
+                           <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80 text-xs">
+                              <span className="text-[11px] font-semibold text-zinc-500 flex items-center gap-1">
+                                 <HiUsers size={12} />
+                                 {channel.members?.length || 0} members
+                              </span>
+
+                              <button
+                                 type="button"
+                                 onClick={() => handleSelectChannel(channel)}
+                                 className="py-1.5 px-3.5 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 rounded-xl transition font-bold text-xs flex items-center gap-1 shadow-md shadow-[#f9ebae]/10"
+                              >
+                                 <HiArrowsExpand size={13} />
+                                 <span>Open Focus Chat</span>
+                              </button>
                            </div>
-                        </button>
+                        </div>
                      );
-                  })
-               ) : (
-                  <div className="py-12 text-center text-xs text-zinc-500">
-                     No channels found matching "{searchQuery}".
-                  </div>
-               )}
-            </div>
-         </div>
-
-         {/* Main Chat Canvas */}
-         <div className={`${isMobileView && mobileView === "channels" ? "fixed inset-0 z-30 translate-x-full opacity-0 pointer-events-none" : "relative translate-x-0 opacity-100 pointer-events-auto"} flex-1 min-h-[28rem] rounded-2xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl p-4 flex-col shadow-2xl min-w-0 sm:p-5 transition-all duration-300 lg:static lg:flex lg:min-h-0 lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto`}>
-            {activeChannel ? (
-               <>
-                  {/* Channel Top Header Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-zinc-800/80 shrink-0">
-                     <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                           <h2 className="text-base font-bold text-zinc-100 flex items-center gap-2">
-                              {activeChannel.type === "private" ? (
-                                 <HiLockClosed className="text-amber-400" size={18} />
-                              ) : activeChannel.type === "dm" ? (
-                                 "💬"
-                              ) : (
-                                 <HiHashtag className="text-[#f9ebae]" size={18} />
-                              )}
-                              <span>{activeChannel.name}</span>
-                           </h2>
-
-                           {/* Privacy Badge */}
-                           {activeChannel.type === "private" ? (
-                              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
-                                 <HiLockClosed size={10} /> Private Group
-                              </span>
-                           ) : activeChannel.type === "public" ? (
-                              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
-                                 <HiGlobeAlt size={10} /> Public Room
-                              </span>
-                           ) : (
-                              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 text-[10px] font-bold">
-                                 Direct Message
-                              </span>
-                           )}
-                        </div>
-
-                        {activeChannel.topic && (
-                           <p className="text-xs text-zinc-400 mt-1">{activeChannel.topic}</p>
-                        )}
-                     </div>
-
-                     <div className="flex flex-wrap items-center gap-2">
-                        {isMobileView ? (
-                           <button
-                              type="button"
-                              onClick={() => setMobileView("channels")}
-                              className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:text-white lg:hidden"
-                           >
-                              <HiChatAlt2 size={14} />
-                              <span>Channels</span>
-                           </button>
-                        ) : null}
-
-                        <button
-                           type="button"
-                           onClick={() => setShowDetails((prev) => !prev)}
-                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 text-xs font-semibold text-zinc-300 hover:text-white transition"
-                        >
-                           <HiUsers size={14} />
-                           <span>{showDetails ? "Hide info" : "Channel info"}</span>
-                        </button>
-
-                        {/* Manage Members button for Channel Creator on Private Channels */}
-                        {activeChannel.type === "private" && isCreatorOfActive && (
-                           <button
-                              type="button"
-                              onClick={() => setShowManageMembersModal(true)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition"
-                           >
-                              <HiUserAdd size={14} />
-                              <span>Manage Members ({activeChannel.members?.length || 0})</span>
-                           </button>
-                        )}
-
-                        {/* Pinned Messages Badge */}
-                        {pinnedMessages.length > 0 && (
-                           <button
-                              type="button"
-                              onClick={() => setShowPinned(!showPinned)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[rgba(249,235,174,0.3)] bg-[rgba(249,235,174,0.1)] text-xs font-semibold text-[#f9ebae] hover:bg-[rgba(249,235,174,0.2)] transition"
-                           >
-                              <span>📌 {pinnedMessages.length} Pinned</span>
-                           </button>
-                        )}
-
-                        {/* Online status indicator */}
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] font-semibold text-emerald-400">
-                           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                           <span>{onlineUsers.length || 1} Online</span>
-                        </span>
-
-                        {/* Delete Channel Button (Only for Creator) */}
-                        {isCreatorOfActive && activeChannel.type !== "dm" && (
-                           <button
-                              type="button"
-                              onClick={() => handleDeleteChannel(activeChannel._id)}
-                              className="p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
-                              title="Delete channel"
-                           >
-                              <HiTrash size={14} />
-                           </button>
-                        )}
-                     </div>
-                  </div>
-
-                  {showDetails && (
-                     <div className="mt-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-3">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                           <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Channel overview</p>
-                              <p className="text-sm text-zinc-200">{activeChannel.description || activeChannel.topic || "A focused workspace room for collaboration."}</p>
-                           </div>
-                           <div className="flex items-center gap-2">
-                              <span className="rounded-full border border-zinc-700 bg-zinc-950 px-2.5 py-1 text-[10px] font-semibold text-zinc-300">
-                                 {activeChannelMembers.length} members
-                              </span>
-                              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
-                                 {onlineUsers.length || 1} online
-                              </span>
-                           </div>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                           {activeChannelMembers.slice(0, 6).map((member) => {
-                              const memberId = member?._id || member?.userId;
-                              const senderName = member?.name || member?.email || "Member";
-                              return (
-                                 <div key={memberId} className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1.5">
-                                    <img src={getAvatarSrc(member)} alt={senderName} className="h-6 w-6 rounded-full object-cover" />
-                                    <span className="text-[11px] text-zinc-300">{senderName}</span>
-                                 </div>
-                              );
-                           })}
-                        </div>
-                     </div>
-                  )}
-
-                  {/* Typing Indicator */}
-                  {typingUsers.length > 0 && (
-                     <div className="mt-2 px-3 py-1.5 rounded-lg bg-[#f9ebae]/10 text-xs text-[#f9ebae] italic flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#f9ebae] animate-ping" />
-                        <span>{typingUsers.map((u) => u.name).join(", ")} is typing…</span>
-                     </div>
-                  )}
-
-                  {/* Pinned Messages Drawer */}
-                  {showPinned && pinnedMessages.length > 0 && (
-                     <div className="mt-3 p-3.5 rounded-xl border border-[rgba(249,235,174,0.3)] bg-[rgba(249,235,174,0.05)] space-y-2">
-                        <div className="flex items-center justify-between">
-                           <span className="text-xs font-bold text-[#f9ebae]">Pinned Messages</span>
-                           <button onClick={() => setShowPinned(false)} className="text-zinc-400 hover:text-white">
-                              <HiXCircle className="h-4 w-4" />
-                           </button>
-                        </div>
-                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                           {pinnedMessages.map((msg) => (
-                              <div key={msg._id} className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950 flex items-center justify-between gap-2 text-xs">
-                                 <div>
-                                    <span className="font-bold text-zinc-200">{msg.user?.name}: </span>
-                                    <span className="text-zinc-400">{msg.text}</span>
-                                 </div>
-                                 <button onClick={() => unpinMessage(msg._id)} className="text-[10px] text-zinc-500 hover:text-[#f9ebae]">
-                                    Unpin
-                                 </button>
-                              </div>
-                           ))}
-                        </div>
-                     </div>
-                  )}
-
-                  {/* Messages Canvas */}
-                  <div className="mt-3 flex-1 min-h-[240px] overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/50 p-3 space-y-3 sm:min-h-[320px] sm:p-4 lg:min-h-0">
-                     {isLoadingMessages ? (
-                        <div className="flex h-full items-center justify-center text-sm text-zinc-500">Loading messages…</div>
-                     ) : visibleMessages.length > 0 ? (
-                        visibleMessages.map((msg) => (
-                              <div
-                                 key={msg._id}
-                                 className="group rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-3.5 transition hover:border-zinc-700 hover:bg-zinc-900/80 space-y-2"
-                              >
-                                 <div className="flex items-start justify-between gap-2">
-                                    <div className="flex items-start gap-2.5">
-                                       <img src={getAvatarSrc(msg.user || {})} alt={msg.user?.name || "Member"} className="mt-0.5 h-9 w-9 rounded-full border border-zinc-700 object-cover" />
-                                       <div>
-                                          <div className="flex flex-wrap items-center gap-2">
-                                             <span className="text-xs font-bold text-zinc-200">{msg.user?.name || "Member"}</span>
-                                             <span className="text-[10px] text-zinc-500">{formatRelativeTime(msg.createdAt)}</span>
-                                             {msg.isEdited && <span className="text-[10px] text-zinc-500">(edited)</span>}
-                                             {msg.isPinned && <span className="text-xs text-[#f9ebae]">📌</span>}
-                                          </div>
-                                          <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-2">
-                                             <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800/80 px-2 py-0.5">
-                                                <HiClock size={10} /> {formatRelativeTime(msg.createdAt)}
-                                             </span>
-                                             {msg.user?._id === user?._id && (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-400">
-                                                   {readReceipts[activeChannel?._id] ? "Seen" : "Sent"}
-                                                </span>
-                                             )}
-                                             {msg.attachments?.length > 0 && (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800/80 px-2 py-0.5">
-                                                   <HiPaperClip size={10} /> {msg.attachments.length} attachment{msg.attachments.length > 1 ? "s" : ""}
-                                                </span>
-                                             )}
-                                          </div>
-                                       </div>
-                                    </div>
-
-                                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition">
-                                       <button onClick={() => pinMessage(msg._id)} className="p-1 text-zinc-400 hover:text-[#f9ebae]" title="Pin message">
-                                          📌
-                                       </button>
-                                       <button onClick={() => setShowEmojiPicker(msg._id)} className="p-1 text-zinc-400 hover:text-[#f9ebae]" title="Reaction">
-                                          <HiEmojiHappy className="h-4 w-4" />
-                                       </button>
-                                       <button onClick={() => openThread(msg)} className="p-1 text-zinc-400 hover:text-[#f9ebae]" title="Open thread">
-                                          <HiAnnotation className="h-4 w-4" />
-                                       </button>
-                                       {msg.user?._id === user?._id && (
-                                          <>
-                                             <button onClick={() => { setEditingMessageId(msg._id); setEditingText(msg.text); }} className="p-1 text-zinc-400 hover:text-[#f9ebae]">
-                                                <HiPencil className="h-4 w-4" />
-                                             </button>
-                                             <button onClick={() => handleDeleteMsg(msg._id)} className="p-1 text-zinc-400 hover:text-red-400">
-                                                <HiTrash className="h-4 w-4" />
-                                             </button>
-                                          </>
-                                       )}
-                                    </div>
-                                 </div>
-
-                                 {/* Emoji Reaction Popup */}
-                                 {showEmojiPicker === msg._id && (
-                                    <div className="mt-1 flex gap-1 p-1.5 rounded-lg border border-zinc-800 bg-zinc-950">
-                                       {EMOJI_REACTIONS.map((emoji) => (
-                                          <button key={emoji} onClick={() => { addReaction(msg._id, emoji); setShowEmojiPicker(null); }} className="p-1 hover:bg-zinc-800 rounded text-sm">
-                                             {emoji}
-                                          </button>
-                                       ))}
-                                       <button onClick={() => setShowEmojiPicker(null)} className="p-1 text-zinc-500 hover:text-white">
-                                          <HiXCircle className="h-4 w-4" />
-                                       </button>
-                                    </div>
-                                 )}
-
-                                 {msg.attachments?.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                       {msg.attachments.map((attachment, idx) => (
-                                          <div key={`${attachment.name || attachment.url || idx}`} className="rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-[11px] text-zinc-300">
-                                             <div className="flex items-center gap-2">
-                                                <HiPaperClip className="h-3.5 w-3.5 text-[#f9ebae]" />
-                                                <span>{attachment.name || `Attachment ${idx + 1}`}</span>
-                                             </div>
-                                          </div>
-                                       ))}
-                                    </div>
-                                 )}
-
-                                 {/* Edit Mode */}
-                                 {editingMessageId === msg._id ? (
-                                    <form onSubmit={(e) => { e.preventDefault(); handleEdit(msg._id, editingText); }} className="flex gap-2 mt-2">
-                                       <input
-                                          type="text"
-                                          value={editingText}
-                                          onChange={(e) => setEditingText(e.target.value)}
-                                          className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 outline-none focus:border-[#f9ebae]"
-                                       />
-                                       <button type="submit" className="px-3 py-1.5 rounded-lg bg-[#f9ebae] text-zinc-950 text-xs font-bold">Save</button>
-                                       <button type="button" onClick={() => setEditingMessageId(null)} className="px-3 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-400">Cancel</button>
-                                    </form>
-                                 ) : (
-                                    <>
-                                       <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                                       {msg.threadReplyCount > 0 && (
-                                          <button type="button" onClick={() => openThread(msg)} className="text-[11px] font-semibold text-[#f9ebae] hover:text-[#f2d97d]">
-                                             {msg.threadReplyCount} thread reply{msg.threadReplyCount > 1 ? "ies" : "y"}
-                                          </button>
-                                       )}
-                                       {msg.reactions && msg.reactions.length > 0 && (
-                                          <div className="flex flex-wrap gap-1 mt-1.5">
-                                             {msg.reactions.map((r) => (
-                                                <button
-                                                   key={r.emoji}
-                                                   onClick={() => {
-                                                      if (r.users?.some((u) => u._id === user?._id)) {
-                                                         removeReaction(msg._id, r.emoji);
-                                                      } else {
-                                                         addReaction(msg._id, r.emoji);
-                                                      }
-                                                   }}
-                                                   className={`px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1 border transition ${
-                                                      r.users?.some((u) => u._id === user?._id)
-                                                         ? "border-[rgba(249,235,174,0.4)] bg-[rgba(249,235,174,0.15)] text-[#f9ebae] font-bold"
-                                                         : "border-zinc-800 bg-zinc-900 text-zinc-400"
-                                                   }`}
-                                                >
-                                                   {r.emoji} {r.users?.length || 0}
-                                                </button>
-                                             ))}
-                                          </div>
-                                       )}
-                                    </>
-                                 )}
-                              </div>
-                           ))
-                     ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-center py-20 text-xs text-zinc-500">
-                           No messages in this channel yet. Start the conversation!
-                        </div>
-                     )}
-                     <div ref={messagesEndRef} />
-                  </div>
-
-                  {activeThread && (
-                     <div className="mt-3 rounded-2xl border border-[#f9ebae]/20 bg-[#f9ebae]/10 p-3">
-                        <div className="flex items-center justify-between">
-                           <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#f9ebae]">Thread</p>
-                              <p className="text-sm text-zinc-200">{activeThread.text}</p>
-                           </div>
-                           <button type="button" onClick={() => { setActiveThread(null); setThreadReplies([]); }} className="text-zinc-400 hover:text-white">
-                              <HiXCircle className="h-4 w-4" />
-                           </button>
-                        </div>
-                        <div className="mt-3 space-y-2">
-                           {threadLoading ? (
-                              <div className="text-xs text-zinc-400">Loading replies…</div>
-                           ) : threadReplies.length > 0 ? (
-                              threadReplies.map((reply) => (
-                                 <div key={reply._id} className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-2.5 text-xs text-zinc-300">
-                                    <div className="flex items-center gap-2">
-                                       <img src={getAvatarSrc(reply.user || {})} alt={reply.user?.name || "Member"} className="h-6 w-6 rounded-full" />
-                                       <span className="font-semibold text-zinc-200">{reply.user?.name || "Member"}</span>
-                                    </div>
-                                    <p className="mt-2 text-zinc-300">{reply.text}</p>
-                                 </div>
-                              ))
-                           ) : (
-                              <div className="text-xs text-zinc-500">No replies yet. Start the thread.</div>
-                           )}
-                        </div>
-                        <form onSubmit={handleThreadReplySubmit} className="mt-3 flex gap-2">
-                           <input
-                              value={threadReplyText}
-                              onChange={(e) => setThreadReplyText(e.target.value)}
-                              placeholder="Reply in thread..."
-                              className="flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-[#f9ebae]"
-                           />
-                           <button type="submit" className="rounded-xl bg-[#f9ebae] px-3 py-2 text-xs font-bold text-zinc-950">
-                              Reply
-                           </button>
-                        </form>
-                     </div>
-                  )}
-
-                  {/* Message Input Box */}
-                  <form onSubmit={handleSendMessage} className="mt-3 flex flex-col gap-2 sm:flex-row">
-                     <input
-                        className="flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-zinc-100 outline-none focus:border-[#f9ebae] placeholder:text-zinc-600 transition"
-                        placeholder={`Message #${activeChannel.name}...`}
-                        value={messageText}
-                        onChange={handleInputChange}
-                     />
-                     <button
-                        type="submit"
-                        disabled={!messageText.trim()}
-                        className="px-5 py-2.5 rounded-xl bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 font-bold text-xs shadow-md shadow-[#f9ebae]/20 transition disabled:opacity-50"
-                     >
-                        Send
-                     </button>
-                  </form>
-               </>
+                  })}
+               </div>
             ) : (
-               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-                  <HiHashtag size={48} className="text-zinc-700 mx-auto" />
-                  <h3 className="text-base font-bold text-zinc-200">No Channel Selected</h3>
-                  <p className="text-xs text-zinc-400 max-w-sm">
-                     Select a channel from the left room list or create a new public or private channel to start chatting.
+               <div className="text-center py-20 rounded-2xl border border-zinc-800/80 bg-zinc-950/40 p-6 space-y-3">
+                  <HiChatAlt2 className="mx-auto text-zinc-600" size={44} />
+                  <h3 className="text-base font-bold text-zinc-200">No channels found</h3>
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                     Create a channel to start team conversations.
                   </p>
                </div>
             )}
 
-            {error && (
-               <div className="mt-2 p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-red-300">
-                  {error}
+            {/* Create Channel Modal */}
+            {showCreateModal && (
+               <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4 backdrop-blur-sm">
+                  <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-4">
+                     <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                        <h3 className="text-base font-bold text-zinc-100">Create New Channel</h3>
+                        <button onClick={() => setShowCreateModal(false)} className="text-zinc-400 hover:text-white">
+                           <HiX size={18} />
+                        </button>
+                     </div>
+                     <form onSubmit={handleCreateChannelSubmit} className="space-y-4">
+                        <div>
+                           <label className="text-xs font-semibold text-zinc-300">Channel Name</label>
+                           <input
+                              value={newChannelName}
+                              onChange={(e) => setNewChannelName(e.target.value)}
+                              placeholder="e.g. product-roadmap"
+                              required
+                              className="mt-1.5 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-sm text-zinc-100 focus:border-[#f9ebae] outline-none"
+                           />
+                        </div>
+                        <div>
+                           <label className="text-xs font-semibold text-zinc-300">Privacy</label>
+                           <div className="mt-1.5 grid grid-cols-2 gap-2">
+                              {["public", "private"].map((p) => (
+                                 <button
+                                    key={p}
+                                    type="button"
+                                    onClick={() => setNewChannelType(p)}
+                                    className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition ${
+                                       newChannelType === p
+                                          ? "border-[#f9ebae] bg-[#f9ebae]/10 text-[#f9ebae]"
+                                          : "border-zinc-800 bg-zinc-900 text-zinc-400"
+                                    }`}
+                                 >
+                                    {p === "public" ? "🌐 Public Room" : "🔒 Private Group"}
+                                 </button>
+                              ))}
+                           </div>
+                        </div>
+                        <div>
+                           <label className="text-xs font-semibold text-zinc-300">Topic / Purpose (Optional)</label>
+                           <input
+                              value={newChannelTopic}
+                              onChange={(e) => setNewChannelTopic(e.target.value)}
+                              placeholder="What is this channel about?"
+                              className="mt-1.5 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-sm text-zinc-100 focus:border-[#f9ebae] outline-none"
+                           />
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2 border-t border-zinc-800">
+                           <button
+                              type="button"
+                              onClick={() => setShowCreateModal(false)}
+                              className="px-4 py-2 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white"
+                           >
+                              Cancel
+                           </button>
+                           <button
+                              type="submit"
+                              className="px-4 py-2 rounded-xl bg-[#f9ebae] hover:bg-[#e6d695] text-xs font-extrabold text-zinc-950 shadow-md"
+                           >
+                              Create Channel
+                           </button>
+                        </div>
+                     </form>
+                  </div>
+               </div>
+            )}
+         </PageShell>
+      );
+   }
+
+   // Full-Screen Dedicated Chat View
+   return (
+      <div className="fixed inset-0 z-50 bg-[#09090b] text-zinc-100 flex flex-col overflow-hidden">
+         {/* Channel Top Header Bar */}
+         <header className="h-16 border-b border-zinc-800/80 bg-zinc-950/90 px-4 sm:px-6 flex items-center justify-between gap-4 backdrop-blur-xl shrink-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+               <button
+                  type="button"
+                  onClick={backToDirectory}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition shrink-0"
+               >
+                  <HiArrowLeft size={16} />
+                  <span className="hidden sm:inline">Back to Channels</span>
+               </button>
+
+               <div className="h-4 w-px bg-zinc-800 hidden sm:block" />
+
+               <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                     <h2 className="text-base font-extrabold text-zinc-100 flex items-center gap-1.5 truncate">
+                        {activeChannel.type === "private" ? (
+                           <HiLockClosed className="text-amber-400" size={16} />
+                        ) : (
+                           <HiHashtag className="text-[#f9ebae]" size={18} />
+                        )}
+                        <span>{activeChannel.name}</span>
+                     </h2>
+
+                     <span
+                        className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border shrink-0 ${
+                           activeChannel.type === "private"
+                              ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                        }`}
+                     >
+                        {activeChannel.type === "private" ? "Private" : "Public"}
+                     </span>
+                  </div>
+                  {activeChannel.topic && (
+                     <p className="text-xs text-zinc-400 truncate mt-0.5">{activeChannel.topic}</p>
+                  )}
+               </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex items-center gap-2 shrink-0">
+               {pinnedMessages.length > 0 && (
+                  <button
+                     type="button"
+                     onClick={() => setShowPinned(!showPinned)}
+                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-accent/40 bg-accent-soft text-accent text-xs font-bold transition hover:bg-accent/20"
+                  >
+                     <span>📌 {pinnedMessages.length} Pinned</span>
+                  </button>
+               )}
+
+               {activeChannel.type === "private" && isCreatorOfActive && (
+                  <button
+                     type="button"
+                     onClick={() => setShowManageMembersModal(true)}
+                     className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs font-bold text-amber-300 transition"
+                  >
+                     <HiUserAdd size={14} />
+                     <span className="hidden sm:inline">Manage ({activeChannel.members?.length || 0})</span>
+                  </button>
+               )}
+
+               <button
+                  type="button"
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="p-2 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white transition"
+                  title="Toggle Channel Details"
+               >
+                  <HiUsers size={16} />
+               </button>
+
+               {isCreatorOfActive && (
+                  <button
+                     type="button"
+                     onClick={() => handleDeleteChannel(activeChannel._id)}
+                     className="p-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
+                     title="Delete Channel"
+                  >
+                     <HiTrash size={16} />
+                  </button>
+               )}
+            </div>
+         </header>
+
+         {/* Pinned Messages Drawer */}
+         {showPinned && pinnedMessages.length > 0 && (
+            <div className="bg-zinc-950 border-b border-zinc-800 p-4 space-y-2 shrink-0">
+               <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#f9ebae]">📌 Pinned Channel Messages</span>
+                  <button onClick={() => setShowPinned(false)} className="text-zinc-400 hover:text-white"><HiX size={16} /></button>
+               </div>
+               <div className="max-h-36 overflow-y-auto space-y-2">
+                  {pinnedMessages.map((msg) => (
+                     <div key={msg._id} className="p-2 rounded-xl border border-zinc-800 bg-zinc-900/60 text-xs flex justify-between items-center gap-3">
+                        <span className="truncate text-zinc-300"><strong className="text-zinc-100">{msg.user?.name}:</strong> {msg.text}</span>
+                        <button onClick={() => unpinMessage(msg._id)} className="text-[10px] text-[#f9ebae] font-bold shrink-0 hover:underline">Unpin</button>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         )}
+
+         {/* Channel Info Drawer */}
+         {showDetails && (
+            <div className="bg-zinc-900/90 border-b border-zinc-800 p-4 text-xs space-y-2 shrink-0">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-zinc-200 uppercase tracking-widest text-[10px]">Channel Roster & Description</span>
+                  <button onClick={() => setShowDetails(false)} className="text-zinc-400 hover:text-white"><HiX size={16} /></button>
+               </div>
+               <p className="text-zinc-400">{activeChannel.topic || activeChannel.description || "Public workspace chat room."}</p>
+               <div className="flex flex-wrap gap-2 pt-1">
+                  {(activeChannel.members || []).map((m) => (
+                     <span key={m._id || m} className="px-2 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-300 font-semibold">
+                        {m.name || m.email || "Member"}
+                     </span>
+                  ))}
+               </div>
+            </div>
+         )}
+
+         {/* Main Messages & Thread View */}
+         <div className="flex-1 min-h-0 flex overflow-hidden saas-grid-bg">
+            {/* Messages Feed */}
+            <div className="flex-1 min-h-0 flex flex-col p-4 sm:p-6 overflow-y-auto space-y-4">
+               {visibleMessages.length > 0 ? (
+                  visibleMessages.map((msg) => {
+                     const isMe = normalizeId(msg.user?._id || msg.user) === normalizeId(user?._id);
+
+                     return (
+                        <div key={msg._id} className={`group flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                           <div className="mb-1 flex items-center gap-2 text-[10px] text-zinc-500">
+                              <span className="font-bold text-zinc-300">{isMe ? "You" : msg.user?.name || "Teammate"}</span>
+                              <span>•</span>
+                              <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                           </div>
+
+                           <div className={`relative max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs leading-relaxed shadow-xl ${
+                              isMe ? "bg-[#f9ebae] text-zinc-950 font-medium rounded-tr-xs" : "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-xs"
+                           }`}>
+                              {msg.text}
+                           </div>
+
+                           {/* Thread replies button */}
+                           <button
+                              onClick={() => openThread(msg)}
+                              className="mt-1 text-[10px] font-bold text-[#f9ebae] hover:underline flex items-center gap-1"
+                           >
+                              <HiAnnotation size={12} />
+                              <span>{msg.threadReplyCount || 0} replies</span>
+                           </button>
+                        </div>
+                     );
+                  })
+               ) : (
+                  <div className="py-20 text-center text-xs text-zinc-500">No messages yet. Start the conversation!</div>
+               )}
+               <div ref={messagesEndRef} />
+            </div>
+
+            {/* Thread Replies Panel */}
+            {activeThread && (
+               <div className="w-80 border-l border-zinc-800 bg-zinc-950 p-4 flex flex-col h-full shrink-0">
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                     <span className="text-xs font-bold text-zinc-100 flex items-center gap-1.5"><HiAnnotation className="text-[#f9ebae]" /> Thread Replies</span>
+                     <button onClick={() => setActiveThread(null)} className="text-zinc-400 hover:text-white"><HiX size={16} /></button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto my-3 space-y-3">
+                     <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-200">
+                        <strong className="text-[#f9ebae] block mb-1">{activeThread.user?.name}:</strong>
+                        {activeThread.text}
+                     </div>
+
+                     {threadReplies.map((r) => (
+                        <div key={r._id} className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/50 text-xs text-zinc-300">
+                           <strong className="text-zinc-100 block mb-0.5">{r.user?.name}:</strong>
+                           {r.text}
+                        </div>
+                     ))}
+                  </div>
+
+                  <form onSubmit={handleThreadReplySubmit} className="flex gap-2 pt-2 border-t border-zinc-800">
+                     <input
+                        value={threadReplyText}
+                        onChange={(e) => setThreadReplyText(e.target.value)}
+                        placeholder="Reply to thread..."
+                        className="flex-1 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl text-xs text-zinc-100 outline-none focus:border-[#f9ebae]"
+                     />
+                     <button type="submit" className="px-3 py-1.5 bg-[#f9ebae] text-zinc-950 text-xs font-bold rounded-xl">Send</button>
+                  </form>
                </div>
             )}
          </div>
 
-         {/* Modal: Create Channel (Public or Private) */}
-         {showCreateModal && (
-            <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4 backdrop-blur-sm">
-               <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                     <h3 className="text-base font-bold text-zinc-100">Create New Channel</h3>
-                     <button onClick={() => setShowCreateModal(false)} className="text-zinc-400 hover:text-white">
-                        <HiXCircle size={20} />
-                     </button>
-                  </div>
-
-                  <form onSubmit={handleCreateChannelSubmit} className="space-y-4">
-                     <div>
-                        <label className="text-xs font-semibold text-zinc-300">Channel Name</label>
-                        <input
-                           required
-                           value={newChannelName}
-                           onChange={(e) => setNewChannelName(e.target.value)}
-                           placeholder="e.g. engineering, announcements"
-                           className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-xs text-zinc-100 outline-none focus:border-[#f9ebae]"
-                        />
-                     </div>
-
-                     <div>
-                        <label className="text-xs font-semibold text-zinc-300">Privacy Type</label>
-                        <div className="grid grid-cols-2 gap-2 mt-1">
-                           <button
-                              type="button"
-                              onClick={() => setNewChannelType("public")}
-                              className={`p-3 rounded-xl border text-left text-xs transition ${
-                                 newChannelType === "public"
-                                    ? "border-[#f9ebae] bg-[#f9ebae]/10 text-[#f9ebae] font-bold"
-                                    : "border-zinc-800 bg-zinc-900 text-zinc-400"
-                              }`}
-                           >
-                              <div className="flex items-center gap-1.5 font-bold">
-                                 <HiGlobeAlt size={14} /> Public
-                              </div>
-                              <div className="text-[10px] text-zinc-500 mt-1">Anyone in workspace can see & message</div>
-                           </button>
-
-                           <button
-                              type="button"
-                              onClick={() => setNewChannelType("private")}
-                              className={`p-3 rounded-xl border text-left text-xs transition ${
-                                 newChannelType === "private"
-                                    ? "border-amber-400 bg-amber-400/10 text-amber-300 font-bold"
-                                    : "border-zinc-800 bg-zinc-900 text-zinc-400"
-                              }`}
-                           >
-                              <div className="flex items-center gap-1.5 font-bold">
-                                 <HiLockClosed size={14} /> Private
-                              </div>
-                              <div className="text-[10px] text-zinc-500 mt-1">Only invited members can access & message</div>
-                           </button>
-                        </div>
-                     </div>
-
-                     {/* Member selection for Private Channel */}
-                     {newChannelType === "private" && (
-                        <div>
-                           <label className="text-xs font-semibold text-zinc-300">
-                              Allow Members ({selectedMemberIds.length} selected)
-                           </label>
-                           <div className="mt-1.5 max-h-40 overflow-y-auto space-y-1 rounded-xl border border-zinc-800 bg-zinc-900/60 p-2">
-                              {workspaceMembers
-                                 .filter((m) => (m.userId || m._id) !== user?._id)
-                                 .map((m) => {
-                                    const mId = m.userId || m._id;
-                                    const isChecked = selectedMemberIds.includes(mId);
-                                    return (
-                                       <label
-                                          key={mId}
-                                          className="flex items-center justify-between p-2 rounded-lg hover:bg-zinc-800/80 cursor-pointer text-xs"
-                                       >
-                                          <div className="flex items-center gap-2">
-                                             <img src={getAvatarSrc(m)} alt={m.name} className="h-6 w-6 rounded-full" />
-                                             <span className="text-zinc-200 font-medium">{m.name || m.email}</span>
-                                          </div>
-                                          <input
-                                             type="checkbox"
-                                             checked={isChecked}
-                                             onChange={() => {
-                                                if (isChecked) {
-                                                   setSelectedMemberIds((prev) => prev.filter((id) => id !== mId));
-                                                } else {
-                                                   setSelectedMemberIds((prev) => [...prev, mId]);
-                                                }
-                                             }}
-                                             className="accent-[#f9ebae]"
-                                          />
-                                       </label>
-                                    );
-                                 })}
-                           </div>
-                        </div>
-                     )}
-
-                     <div>
-                        <label className="text-xs font-semibold text-zinc-300">Topic / Description (Optional)</label>
-                        <input
-                           value={newChannelTopic}
-                           onChange={(e) => setNewChannelTopic(e.target.value)}
-                           placeholder="What is this channel about?"
-                           className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-xs text-zinc-100 outline-none focus:border-[#f9ebae]"
-                        />
-                     </div>
-
-                     <div className="flex justify-end gap-2 pt-2">
-                        <button
-                           type="button"
-                           onClick={() => setShowCreateModal(false)}
-                           className="px-4 py-2 rounded-xl border border-zinc-800 text-xs text-zinc-400 hover:text-white"
-                        >
-                           Cancel
-                        </button>
-                        <button
-                           type="submit"
-                           className="px-5 py-2 rounded-xl bg-[#f9ebae] text-zinc-950 text-xs font-bold hover:bg-[#e6d695] transition"
-                        >
-                           Create Channel
-                        </button>
-                     </div>
-                  </form>
-               </div>
-            </div>
-         )}
-
-         {/* Modal: Manage Private Channel Members */}
-         {showManageMembersModal && activeChannel && (
-            <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4 backdrop-blur-sm">
-               <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                     <div>
-                        <h3 className="text-base font-bold text-zinc-100 flex items-center gap-1.5">
-                           <HiLockClosed className="text-amber-400" size={16} />
-                           <span>Manage Private Members</span>
-                        </h3>
-                        <p className="text-xs text-zinc-400">#{activeChannel.name}</p>
-                     </div>
-                     <button onClick={() => setShowManageMembersModal(false)} className="text-zinc-400 hover:text-white">
-                        <HiXCircle size={20} />
-                     </button>
-                  </div>
-
-                  <div className="max-h-60 overflow-y-auto space-y-1.5 p-1">
-                     {workspaceMembers
-                        .filter((m) => (m.userId || m._id) !== user?._id)
-                        .map((m) => {
-                           const targetId = m.userId || m._id;
-                           const isMember = activeChannel.members?.some(
-                              (mem) => (mem._id || mem) === targetId
-                           );
-
-                           return (
-                              <div
-                                 key={targetId}
-                                 className="flex items-center justify-between p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60"
-                              >
-                                 <div className="flex items-center gap-2.5">
-                                    <img src={getAvatarSrc(m)} alt={m.name} className="h-7 w-7 rounded-lg border border-zinc-700 object-cover" />
-                                    <div>
-                                       <h5 className="text-xs font-bold text-zinc-200">{m.name || m.email}</h5>
-                                       <p className="text-[10px] text-zinc-500">{m.email}</p>
-                                    </div>
-                                 </div>
-
-                                 <button
-                                    type="button"
-                                    onClick={() => handleToggleMember(targetId)}
-                                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                                       isMember
-                                          ? "bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20"
-                                          : "bg-amber-400 text-zinc-950 hover:bg-amber-300"
-                                    }`}
-                                 >
-                                    {isMember ? "Remove" : "Add"}
-                                 </button>
-                              </div>
-                           );
-                        })}
-                  </div>
-
-                  <div className="flex justify-end pt-2">
-                     <button
-                        type="button"
-                        onClick={() => setShowManageMembersModal(false)}
-                        className="px-5 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-200 hover:bg-zinc-700"
-                     >
-                        Done
-                     </button>
-                  </div>
-               </div>
-            </div>
-         )}
+         {/* Message Input Footer Bar */}
+         <footer className="p-4 border-t border-zinc-800/80 bg-zinc-950/90 shrink-0">
+            <form onSubmit={handleSendMessage} className="flex gap-2 max-w-5xl mx-auto">
+               <input
+                  value={messageText}
+                  onChange={handleInputChange}
+                  placeholder={`Message #${activeChannel.name}...`}
+                  className="flex-1 bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-2xl text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] shadow-inner transition"
+               />
+               <button
+                  type="submit"
+                  disabled={!messageText.trim()}
+                  className="px-5 py-3 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-extrabold rounded-2xl shadow-md shadow-[#f9ebae]/20 transition disabled:opacity-50"
+               >
+                  Send
+               </button>
+            </form>
+         </footer>
       </div>
    );
 }
