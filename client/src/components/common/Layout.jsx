@@ -142,8 +142,8 @@ export default function Layout() {
       try {
          const response = await createChannel({
             name: channelName.trim(),
-            privacy: channelPrivacy,
-            invitees: invitees.split(",").map((s) => s.trim()).filter(Boolean),
+            type: channelPrivacy,
+            members: [user?._id].filter(Boolean),
          });
          const channel = response.data.channel;
          if (channel) {
@@ -154,8 +154,8 @@ export default function Layout() {
          setChannelName("");
          setInvitees("");
          setChannelPrivacy("public");
-      } catch {
-         window.alert("Unable to create the channel right now.");
+      } catch (err) {
+         window.alert(err.response?.data?.message || "Unable to create the channel right now.");
       }
    };
 

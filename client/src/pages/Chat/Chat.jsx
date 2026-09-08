@@ -9,6 +9,7 @@ import {
    HiUserAdd,
    HiSearch,
    HiChatAlt2,
+   HiGlobeAlt,
    HiAnnotation,
    HiArrowLeft,
    HiArrowsExpand,
@@ -72,10 +73,15 @@ export default function Chat() {
    const activeThreadRef = useRef(activeThread);
    const typingTimeoutRef = useRef(null);
    const messagesEndRef = useRef(null);
+   const threadEndRef = useRef(null);
 
    useEffect(() => {
       activeThreadRef.current = activeThread;
    }, [activeThread]);
+
+   useEffect(() => {
+      threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
+   }, [threadReplies]);
 
    const normalizeId = (val) => (val?._id || val)?.toString();
 
@@ -213,6 +219,7 @@ export default function Chat() {
 
       socket.on("messageDeleted", ({ messageId }) => {
          setMessages((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(messageId)));
+         setThreadReplies((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(messageId)));
       });
 
       socket.on("typing", ({ channelId, isTyping, user: typingUser }) => {
@@ -237,10 +244,38 @@ export default function Chat() {
 
       socket.on("channelCreated", (newChannel) => {
          if (newChannel.type === "dm") return;
+         if (newChannel.type === "private") {
+            const myId = normalizeId(userRef.current?._id);
+            const isMember = newChannel.members?.some((m) => normalizeId(m._id || m) === myId);
+            const isCreator = normalizeId(newChannel.createdBy?._id || newChannel.createdBy) === myId;
+            if (!isMember && !isCreator) return;
+         }
          setChannels((curr) => {
             if (curr.some((c) => normalizeId(c._id) === normalizeId(newChannel._id))) return curr;
             return [newChannel, ...curr];
          });
+      });
+
+      socket.on("channelUpdated", (updatedChannel) => {
+         if (updatedChannel.type === "dm") return;
+         if (updatedChannel.type === "private") {
+            const myId = normalizeId(userRef.current?._id);
+            const isMember = updatedChannel.members?.some((m) => normalizeId(m._id || m) === myId);
+            const isCreator = normalizeId(updatedChannel.createdBy?._id || updatedChannel.createdBy) === myId;
+            if (!isMember && !isCreator) {
+               setChannels((curr) => curr.filter((c) => normalizeId(c._id) !== normalizeId(updatedChannel._id)));
+               if (normalizeId(activeChannelRef.current?._id) === normalizeId(updatedChannel._id)) {
+                  backToDirectory();
+               }
+               return;
+            }
+         }
+         setChannels((curr) =>
+            curr.map((c) => (normalizeId(c._id) === normalizeId(updatedChannel._id) ? updatedChannel : c))
+         );
+         if (normalizeId(activeChannelRef.current?._id) === normalizeId(updatedChannel._id)) {
+            setActiveChannel(updatedChannel);
+         }
       });
 
       socket.on("channelDeleted", ({ channelId }) => {
@@ -257,6 +292,7 @@ export default function Chat() {
          socket.off("typing");
          socket.off("presenceUpdate");
          socket.off("channelCreated");
+         socket.off("channelUpdated");
          socket.off("channelDeleted");
       };
    }, [socket]);
@@ -422,6 +458,11 @@ export default function Chat() {
    };
 
    const handleDeleteMsg = async (msgId) => {
+      if (!msgId) return;
+      // Optimistic local state removal
+      setMessages((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(msgId)));
+      setThreadReplies((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(msgId)));
+
       try {
          await deleteMessage(msgId);
          if (socketRef.current && activeChannelRef.current) {
@@ -432,19 +473,15 @@ export default function Chat() {
          }
       } catch {
          setError("Failed to delete message");
+         if (activeChannelRef.current) {
+            refreshMessages(activeChannelRef.current._id);
+         }
       }
    };
 
    const handleDeleteLatestMessage = async () => {
-      if (!activeChannelRef.current) return;
-      try {
-         await deleteLatestMessage(activeChannelRef.current._id);
-         if (socketRef.current) {
-            socketRef.current.emit("deleteLatestMessage", { channelId: activeChannelRef.current._id });
-         }
-      } catch {
-         setError("Failed to delete latest message");
-      }
+      if (!latestMyMessageId) return;
+      await handleDeleteMsg(latestMyMessageId);
    };
 
    const filteredChannels = useMemo(() => {
@@ -645,6 +682,37 @@ export default function Chat() {
                               ))}
                            </div>
                         </div>
+                        {newChannelType === "private" && (
+                           <div>
+                              <label className="text-xs font-medium text-zinc-300 mb-1.5 block">Select Initial Members</label>
+                              <div className="max-h-36 overflow-y-auto space-y-1.5 p-2 rounded-lg border border-zinc-800 bg-zinc-950">
+                                 {workspaceMembers
+                                    .filter((m) => normalizeId(m.userId || m._id) !== normalizeId(user?._id))
+                                    .map((m) => {
+                                       const id = normalizeId(m.userId || m._id);
+                                       const isChecked = selectedMemberIds.includes(id);
+                                       return (
+                                          <label key={id} className="flex items-center gap-2 p-1.5 rounded hover:bg-zinc-900/60 cursor-pointer text-xs text-zinc-300">
+                                             <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={() => {
+                                                   setSelectedMemberIds((curr) =>
+                                                      isChecked ? curr.filter((i) => i !== id) : [...curr, id]
+                                                   );
+                                                }}
+                                                className="rounded border-zinc-700 bg-zinc-900 text-zinc-100"
+                                             />
+                                             <span>{m.name || m.email}</span>
+                                          </label>
+                                       );
+                                    })}
+                                 {workspaceMembers.length <= 1 && (
+                                    <div className="text-[11px] text-zinc-500 p-1">No other teammates in workspace yet.</div>
+                                 )}
+                              </div>
+                           </div>
+                        )}
                         <div>
                            <label className="text-xs font-medium text-zinc-300">Topic (Optional)</label>
                            <input
@@ -768,6 +836,15 @@ export default function Chat() {
             </div>
          </header>
 
+         {error && (
+            <div className="bg-red-500/10 border-b border-red-500/30 px-4 py-2 text-xs text-red-300 flex items-center justify-between shrink-0">
+               <span>{error}</span>
+               <button onClick={() => setError(null)} className="text-red-400 hover:text-red-200">
+                  <HiX size={14} />
+               </button>
+            </div>
+         )}
+
          {/* Channel Info Drawer */}
          {showDetails && (
             <div className="bg-zinc-900 border-b border-zinc-800 p-4 text-xs space-y-2 shrink-0">
@@ -874,6 +951,7 @@ export default function Chat() {
                            {r.text}
                         </div>
                      ))}
+                     <div ref={threadEndRef} />
                   </div>
 
                   <form onSubmit={handleThreadReplySubmit} className="flex gap-2 pt-2 border-t border-zinc-800">
@@ -914,6 +992,70 @@ export default function Chat() {
                </button>
             </form>
          </footer>
+
+         {/* Manage Members Modal */}
+         {showManageMembersModal && activeChannel && (
+            <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 backdrop-blur-sm">
+               <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                     <div>
+                        <h3 className="text-sm font-medium text-zinc-100">Manage Members</h3>
+                        <p className="text-xs text-zinc-400">Add or remove teammates from #{activeChannel.name}</p>
+                     </div>
+                     <button onClick={() => setShowManageMembersModal(false)} className="text-zinc-400 hover:text-white">
+                        <HiX size={16} />
+                     </button>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                     {workspaceMembers.map((member) => {
+                        const memberId = normalizeId(member.userId || member._id || member);
+                        const isCurrentMember = activeChannel.members?.some(
+                           (m) => normalizeId(m._id || m) === memberId
+                        );
+                        const isCreator = normalizeId(activeChannel.createdBy?._id || activeChannel.createdBy) === memberId;
+
+                        return (
+                           <div key={memberId} className="flex items-center justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800/80 text-xs">
+                              <div className="flex items-center gap-2">
+                                 <div className="w-6 h-6 rounded-full bg-zinc-800 text-zinc-300 font-medium grid place-items-center text-[10px]">
+                                    {(member.name || member.email || "U").charAt(0).toUpperCase()}
+                                 </div>
+                                 <div>
+                                    <span className="text-zinc-200 font-medium block">{member.name || member.email}</span>
+                                    <span className="text-[10px] text-zinc-500">{member.email}</span>
+                                 </div>
+                              </div>
+                              {isCreator ? (
+                                 <span className="text-[10px] text-zinc-500 px-2 py-1 rounded bg-zinc-900 border border-zinc-800">Creator</span>
+                              ) : (
+                                 <button
+                                    type="button"
+                                    onClick={() => handleToggleMember(memberId)}
+                                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
+                                       isCurrentMember
+                                          ? "border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                                          : "bg-zinc-100 hover:bg-white text-zinc-950"
+                                    }`}
+                                 >
+                                    {isCurrentMember ? "Remove" : "Add"}
+                                 </button>
+                              )}
+                           </div>
+                        );
+                     })}
+                  </div>
+                  <div className="flex justify-end pt-2 border-t border-zinc-800">
+                     <button
+                        type="button"
+                        onClick={() => setShowManageMembersModal(false)}
+                        className="px-4 py-2 rounded-lg bg-zinc-800 text-xs font-medium text-zinc-200 hover:bg-zinc-700 transition"
+                     >
+                        Done
+                     </button>
+                  </div>
+               </div>
+            </div>
+         )}
       </div>
    );
 }

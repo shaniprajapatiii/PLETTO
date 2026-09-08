@@ -117,7 +117,10 @@ export default function DM() {
          if (!isSameChannel(activeChannelRef.current?._id, newMsg.channel)) return;
          setMessages((curr) => {
             if (curr.some((m) => normalizeId(m._id) === normalizeId(newMsg._id))) return curr;
-            return [...curr, newMsg];
+            const withoutTemp = curr.filter(
+               (m) => !(m._id?.toString().startsWith("temp-") && m.text === newMsg.text)
+            );
+            return [...withoutTemp, newMsg];
          });
       };
 
@@ -129,6 +132,31 @@ export default function DM() {
 
       const handleMessageDeleted = ({ messageId }) => {
          setMessages((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(messageId)));
+      };
+
+      const handleTyping = ({ channelId, isTyping, user: typingUser }) => {
+         if (!isSameChannel(activeChannelRef.current?._id, channelId)) return;
+         if (normalizeId(typingUser?.id || typingUser?._id) === normalizeId(user?._id)) return;
+
+         setTypingUsers((curr) => {
+            const typingId = normalizeId(typingUser?.id || typingUser?._id);
+            if (!isTyping) return curr.filter((u) => normalizeId(u.id || u._id) !== typingId);
+            if (curr.some((u) => normalizeId(u.id || u._id) === typingId)) return curr;
+            return [...curr, typingUser];
+         });
+      };
+
+      const handlePresenceUpdate = ({ userId, status }) => {
+         if (!userId) return;
+         setOnlineUserIds((curr) => {
+            const next = new Set(curr);
+            if (status === "online") {
+               next.add(userId.toString());
+            } else {
+               next.delete(userId.toString());
+            }
+            return next;
+         });
       };
 
       socket.on("newMessage", handleNewMessage);
@@ -249,7 +277,6 @@ export default function DM() {
             name: user?.name || "You",
             avatar: user?.avatar,
          },
-         reactions: [],
       };
 
       setMessages((curr) => [...curr, draft]);
@@ -262,6 +289,10 @@ export default function DM() {
    };
 
    const handleDeleteMsg = async (msgId) => {
+      if (!msgId) return;
+      // Optimistic local state removal
+      setMessages((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(msgId)));
+
       try {
          await deleteMessage(msgId);
          if (socket && activeChannel) {
@@ -272,19 +303,15 @@ export default function DM() {
          }
       } catch {
          setError("Failed to delete message");
+         if (activeChannel) {
+            loadMessages(activeChannel._id);
+         }
       }
    };
 
    const handleDeleteLatestMessage = async () => {
-      if (!activeChannelRef.current) return;
-      try {
-         await deleteLatestMessage(activeChannelRef.current._id);
-         if (socket) {
-            socket.emit("deleteLatestMessage", { channelId: activeChannelRef.current._id });
-         }
-      } catch {
-         setError("Failed to delete latest message");
-      }
+      if (!latestMyMessageId) return;
+      await handleDeleteMsg(latestMyMessageId);
    };
 
    const latestMyMessageId = useMemo(() => {
@@ -509,6 +536,15 @@ export default function DM() {
                </button>
             </div>
          </header>
+
+         {error && (
+            <div className="bg-red-500/10 border-b border-red-500/30 px-4 py-2 text-xs text-red-300 flex items-center justify-between shrink-0">
+               <span>{error}</span>
+               <button onClick={() => setError(null)} className="text-red-400 hover:text-red-200">
+                  <HiX size={14} />
+               </button>
+            </div>
+         )}
 
          {/* Typing Indicator Bar */}
          {typingUsers.length > 0 && (

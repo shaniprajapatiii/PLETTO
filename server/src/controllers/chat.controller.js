@@ -103,15 +103,28 @@ exports.createChannel = async (req, res) => {
          return res.status(400).json({ success: false, message: "Channel name is required" });
       }
 
+      const channelType = (req.body.type || req.body.privacy || "public") === "private" ? "private" : "public";
+      const formattedName = name.trim().toLowerCase().replace(/\s+/g, "-");
+
+      const existing = await Channel.findOne({
+         workspace: workspaceId,
+         name: formattedName,
+         type: channelType,
+      });
+      if (existing) {
+         return res.status(400).json({
+            success: false,
+            message: `A ${channelType} channel named "#${formattedName}" already exists in this workspace`,
+         });
+      }
+
       const memberIds = Array.isArray(members) ? [...new Set(members.map(String))] : [];
       if (!memberIds.includes(req.user.id.toString())) {
          memberIds.push(req.user.id.toString());
       }
 
-      const channelType = type === "private" ? "private" : "public";
-
       const channel = await Channel.create({
-         name: name.trim().toLowerCase().replace(/\s+/g, "-"),
+         name: formattedName,
          type: channelType,
          members: memberIds,
          topic,
@@ -123,10 +136,16 @@ exports.createChannel = async (req, res) => {
       await channel.populate("members", "name email avatar color");
       await channel.populate("createdBy", "name email avatar");
 
-      // Broadcast channel creation to all workspace members
+      // Broadcast channel creation (scoped to members for private channels, workspace for public)
       const io = getIo();
       if (io) {
-         io.to(workspaceId.toString()).emit("channelCreated", channel);
+         if (channelType === "private") {
+            memberIds.forEach((mId) => {
+               io.to(`user:${mId.toString()}`).emit("channelCreated", channel);
+            });
+         } else {
+            io.to(workspaceId.toString()).emit("channelCreated", channel);
+         }
       }
 
       res.status(201).json({ success: true, channel });
