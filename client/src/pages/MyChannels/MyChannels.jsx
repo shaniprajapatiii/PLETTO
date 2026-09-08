@@ -3,14 +3,11 @@ import { useNavigate } from "react-router-dom";
 import {
    HiPlus,
    HiTrash,
-   HiUsers,
    HiDocumentText,
    HiExclamationCircle,
-   HiHashtag,
    HiLockClosed,
    HiGlobeAlt,
    HiArrowsExpand,
-   HiExternalLink,
    HiSearch,
    HiShieldCheck,
 } from "react-icons/hi";
@@ -53,7 +50,6 @@ export default function MyChannels() {
       loadAllData();
    }, []);
 
-   // Asset deletion handlers
    const handleDeleteChannelItem = async (channelId) => {
       if (!window.confirm("Are you sure you want to delete this channel? All messages will be removed.")) return;
       try {
@@ -74,7 +70,6 @@ export default function MyChannels() {
       }
    };
 
-   // Format date helper
    const formatDate = (dateString) => {
       if (!dateString) return "N/A";
       return new Date(dateString).toLocaleDateString("en-US", {
@@ -84,14 +79,13 @@ export default function MyChannels() {
       });
    };
 
-   // Unified items list
    const unifiedAssets = useMemo(() => {
       const channelItems = channels.filter((c) => c.type !== "dm").map((c) => ({
          id: c._id,
          type: "channel",
-         subType: c.type, // 'public', 'private'
+         subType: c.type,
          title: c.name,
-         description: c.topic || (c.type === "private" ? "Private Workspace Room" : "Public Workspace Channel"),
+         description: c.topic || (c.type === "private" ? "Private channel" : "Public channel"),
          updatedAt: c.updatedAt || c.createdAt,
          meta: `${c.members?.length || 0} members`,
          openUrl: `/chat?channel=${c._id}`,
@@ -103,7 +97,7 @@ export default function MyChannels() {
          type: "doc",
          subType: d.type || "text",
          title: d.title || "Untitled Document",
-         description: d.content ? d.content.substring(0, 80) + "..." : "Empty document note.",
+         description: d.content ? d.content.substring(0, 80) + "..." : "Empty document.",
          updatedAt: d.updatedAt || d.createdAt,
          meta: `${d.content ? d.content.trim().split(/\s+/).length : 0} words`,
          openUrl: `/docs?doc=${d._id}&fullscreen=true`,
@@ -135,88 +129,85 @@ export default function MyChannels() {
    if (loading) {
       return (
          <div className="flex items-center justify-center py-20 text-xs text-zinc-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#f9ebae] border-t-transparent mr-3" />
-            Loading Workspace Admin Panel...
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-zinc-400 border-t-transparent mr-2.5" />
+            Loading directory...
          </div>
       );
    }
 
    return (
       <PageShell
-         title="Workspace Control Center"
-         subtitle="Manage, monitor, and launch all public/private channels and documents in focus mode."
+         title="Directory"
+         subtitle="Manage and browse workspace channels and documents."
          actions={
             <div className="flex gap-2">
                <button
                   onClick={() => navigate("/chat")}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold rounded-lg shadow-md transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold rounded-lg transition"
                >
                   <HiPlus size={14} />
                   <span>New Channel</span>
                </button>
                <button
                   onClick={() => navigate("/docs")}
-                  className="flex items-center gap-1.5 px-3 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-lg transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-medium rounded-lg transition"
                >
                   <HiPlus size={14} />
-                  <span>New Doc</span>
+                  <span>New Document</span>
                </button>
             </div>
          }
       >
          {error && (
-            <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3 text-xs text-red-300">
-               <HiExclamationCircle className="text-red-400 shrink-0" size={18} />
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2.5 text-xs text-red-300">
+               <HiExclamationCircle className="text-red-400 shrink-0" size={16} />
                <p>{error}</p>
             </div>
          )}
 
-         {/* Workspace Metrics Overview Cards */}
-         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-1">
-               <div className="flex items-center justify-between text-emerald-400">
-                  <HiGlobeAlt size={20} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Public Rooms</span>
+         {/* Metrics Overview Cards */}
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
+               <div className="flex items-center justify-between text-zinc-400">
+                  <span className="text-[11px] font-medium text-zinc-400">Public Channels</span>
+                  <HiGlobeAlt size={16} className="text-zinc-500" />
                </div>
-               <div className="text-2xl font-extrabold text-white">{stats.publicChannels}</div>
-               <p className="text-[10px] text-zinc-400">Open to workspace</p>
+               <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.publicChannels}</div>
             </div>
 
-            <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-1">
-               <div className="flex items-center justify-between text-amber-400">
-                  <HiLockClosed size={20} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Private Groups</span>
+            <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
+               <div className="flex items-center justify-between text-zinc-400">
+                  <span className="text-[11px] font-medium text-zinc-400">Private Channels</span>
+                  <HiLockClosed size={16} className="text-zinc-500" />
                </div>
-               <div className="text-2xl font-extrabold text-white">{stats.privateChannels}</div>
-               <p className="text-[10px] text-zinc-400">Allowed members only</p>
+               <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.privateChannels}</div>
             </div>
 
-            <div className="p-4 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 space-y-1">
-               <div className="flex items-center justify-between text-indigo-400">
-                  <HiDocumentText size={20} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Documents</span>
+            <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
+               <div className="flex items-center justify-between text-zinc-400">
+                  <span className="text-[11px] font-medium text-zinc-400">Documents</span>
+                  <HiDocumentText size={16} className="text-zinc-500" />
                </div>
-               <div className="text-2xl font-extrabold text-white">{stats.docsCount}</div>
-               <p className="text-[10px] text-zinc-400">Notes & specs</p>
+               <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.docsCount}</div>
             </div>
          </div>
 
-         {/* Filter Tabs & Search Control */}
-         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-full sm:w-auto overflow-x-auto text-xs font-bold">
+         {/* Filter Tabs & Search */}
+         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+            <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 w-full sm:w-auto overflow-x-auto text-xs font-medium">
                {[
-                  { key: "all", label: `All Assets (${channels.length + docs.length})` },
+                  { key: "all", label: `All (${channels.length + docs.length})` },
                   { key: "channels", label: `Channels (${channels.length})` },
-                  { key: "docs", label: `Docs (${docs.length})` },
+                  { key: "docs", label: `Documents (${docs.length})` },
                ].map((tab) => (
                   <button
                      key={tab.key}
                      type="button"
                      onClick={() => setActiveTab(tab.key)}
-                     className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
+                     className={`px-3 py-1 rounded-md transition whitespace-nowrap ${
                         activeTab === tab.key
-                           ? "bg-[#f9ebae] text-zinc-950 font-extrabold shadow"
-                           : "text-zinc-400 hover:text-white"
+                           ? "bg-zinc-800 text-white font-medium shadow-sm"
+                           : "text-zinc-400 hover:text-zinc-200"
                      }`}
                   >
                      {tab.label}
@@ -224,92 +215,70 @@ export default function MyChannels() {
                ))}
             </div>
 
-            <div className="relative w-full sm:w-72">
-               <HiSearch className="absolute left-3.5 top-2.5 text-zinc-500" size={14} />
+            <div className="relative w-full sm:w-64">
+               <HiSearch className="absolute left-3 top-2.5 text-zinc-500" size={14} />
                <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search workspace assets..."
-                  className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-zinc-800 bg-zinc-950 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] transition"
+                  placeholder="Search assets..."
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-zinc-600 transition"
                />
             </div>
          </div>
 
          {/* Unified Asset Cards Grid */}
          {unifiedAssets.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                {unifiedAssets.map((item) => (
                   <div
                      key={`${item.type}-${item.id}`}
-                     className="p-5 rounded-2xl border border-zinc-800/80 bg-zinc-950/70 hover:border-zinc-700 hover:bg-zinc-900/60 transition flex flex-col justify-between space-y-4 shadow-xl"
+                     className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900/90 transition flex flex-col justify-between space-y-3.5 backdrop-blur-sm"
                   >
                      <div>
                         {/* Header Badge */}
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                           <div className="flex items-center gap-2">
-                              <div
-                                 className={`h-9 w-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${
-                                    item.type === "channel"
-                                       ? item.subType === "private"
-                                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                                          : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                                       : "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
-                                 }`}
-                              >
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                           <div className="flex items-center gap-2 min-w-0">
+                              <div className="h-7 w-7 rounded-md flex items-center justify-center text-xs bg-zinc-800 border border-zinc-700/60 text-zinc-300 shrink-0">
                                  {item.type === "channel" ? (
-                                    item.subType === "private" ? <HiLockClosed size={16} /> : <HiGlobeAlt size={16} />
+                                    item.subType === "private" ? <HiLockClosed size={13} /> : <HiGlobeAlt size={13} />
                                  ) : (
-                                    <HiDocumentText size={16} />
+                                    <HiDocumentText size={13} />
                                  )}
                               </div>
 
-                              <div>
-                                 <span
-                                    className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${
-                                       item.type === "channel"
-                                          ? item.subType === "private"
-                                             ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-                                             : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                                          : "bg-indigo-500/10 text-indigo-300 border-indigo-500/30"
-                                    }`}
-                                 >
-                                    {item.type === "channel"
-                                       ? item.subType === "private"
-                                          ? "Private Group"
-                                          : "Public Room"
-                                       : "Document"}
-                                 </span>
-                                 <p className="text-[10px] text-zinc-500 mt-0.5">Updated {formatDate(item.updatedAt)}</p>
-                              </div>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-zinc-800/80 border border-zinc-700/50 text-zinc-300">
+                                 {item.type === "channel" ? (item.subType === "private" ? "Private" : "Public") : "Doc"}
+                              </span>
                            </div>
 
-                           <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-900 px-2 py-1 rounded-lg border border-zinc-800">
+                           <span className="text-[11px] text-zinc-500">
                               {item.meta}
                            </span>
                         </div>
 
                         {/* Title & Description */}
-                        <h3 className="font-bold text-sm text-zinc-100 truncate">{item.title}</h3>
-                        <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                        <h3 className="font-semibold text-xs text-zinc-200 truncate">{item.title}</h3>
+                        <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
                            {item.description}
                         </p>
+                        <p className="text-[10px] text-zinc-500 mt-2">Updated {formatDate(item.updatedAt)}</p>
                      </div>
 
                      {/* Action Bar */}
-                     <div className="flex gap-2 pt-3 border-t border-zinc-800/80">
+                     <div className="flex gap-2 pt-2.5 border-t border-zinc-800/80">
                         <button
                            type="button"
                            onClick={() => navigate(item.openUrl)}
-                           className="flex-1 py-2 px-3 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 rounded-xl transition text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-[#f9ebae]/10"
+                           className="flex-1 py-1.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg transition text-xs font-medium flex items-center justify-center gap-1.5 border border-zinc-700/60"
                         >
-                           <HiArrowsExpand size={14} />
-                           <span>Open Focus View</span>
+                           <HiArrowsExpand size={13} />
+                           <span>Open</span>
                         </button>
 
                         <button
                            type="button"
                            onClick={item.onDelete}
-                           className="p-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 rounded-xl transition"
+                           className="p-1.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 rounded-lg transition"
                            title="Delete asset"
                         >
                            <HiTrash size={14} />
@@ -319,11 +288,11 @@ export default function MyChannels() {
                ))}
             </div>
          ) : (
-            <div className="text-center py-16 rounded-2xl border border-zinc-800/80 bg-zinc-950/40 p-6 space-y-3">
-               <HiShieldCheck className="mx-auto text-zinc-600" size={44} />
-               <h3 className="text-base font-bold text-zinc-200">No assets found</h3>
+            <div className="text-center py-16 rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 space-y-2">
+               <HiShieldCheck className="mx-auto text-zinc-600" size={36} />
+               <h3 className="text-sm font-semibold text-zinc-200">No assets found</h3>
                <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                  Create public or private channels or knowledge documents to populate your workspace control panel.
+                  Create channels or documents to populate your workspace directory.
                </p>
             </div>
          )}

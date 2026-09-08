@@ -364,50 +364,50 @@ export default function DM() {
       return (
          <PageShell
             title="Direct Messages"
-            subtitle="Connect 1-on-1 with teammates across your workspace. Click any teammate to launch full-screen chat."
+            subtitle="Send direct messages to teammates across your workspace."
             actions={
-               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>{Array.from(onlineUserIds).length} Teammates Online</span>
+               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-xs font-medium text-zinc-300">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span>{Array.from(onlineUserIds).length} Online</span>
                </div>
             }
          >
             {error && (
-               <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+               <div className="p-3 mb-4 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-300">
                   {error}
                </div>
             )}
 
             {/* Filter and Search Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-               <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-full sm:w-auto">
+               <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800 w-full sm:w-auto">
                   <button
                      type="button"
                      onClick={() => setContactFilter("all")}
-                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                        contactFilter === "all" ? "bg-[#f9ebae] text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+                        contactFilter === "all" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"
                      }`}
                   >
-                     All Teammates ({members.length - 1})
+                     All ({members.length - 1})
                   </button>
                   <button
                      type="button"
                      onClick={() => setContactFilter("online")}
-                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                        contactFilter === "online" ? "bg-emerald-500 text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+                        contactFilter === "online" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"
                      }`}
                   >
-                     🟢 Online Now ({Array.from(onlineUserIds).length})
+                     Online ({Array.from(onlineUserIds).length})
                   </button>
                </div>
 
                <div className="relative w-full sm:w-80">
-                  <HiSearch className="absolute left-3.5 top-2.5 text-zinc-500" size={14} />
+                  <HiSearch className="absolute left-3 top-2.5 text-zinc-500" size={14} />
                   <input
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     placeholder="Search teammates by name, email..."
-                     className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-zinc-800 bg-zinc-950 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] transition"
+                     placeholder="Search teammates..."
+                     className="w-full pl-9 pr-4 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-zinc-500 transition"
                   />
                </div>
             </div>
@@ -415,8 +415,8 @@ export default function DM() {
             {/* Teammates Cards Grid */}
             {loading ? (
                <div className="py-20 text-center text-xs text-zinc-500 flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#f9ebae] border-t-transparent" />
-                  <span>Loading workspace directory…</span>
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent" />
+                  <span>Loading directory...</span>
                </div>
             ) : filteredMembers.length > 0 ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -428,7 +428,7 @@ export default function DM() {
                      return (
                         <div
                            key={memberId}
-                           className="group p-5 rounded-2xl border border-zinc-800/80 bg-zinc-950/70 hover:border-[#f9ebae]/40 hover:bg-zinc-900/60 transition flex flex-col justify-between space-y-4 shadow-xl"
+                           className="group p-5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70 transition flex flex-col justify-between space-y-4"
                         >
                            <div className="flex items-start justify-between gap-3">
                               <div className="flex items-center gap-3.5 min-w-0">
@@ -436,17 +436,17 @@ export default function DM() {
                                     <img
                                        src={avatarSrc}
                                        alt={member.name || member.email}
-                                       className="h-12 w-12 rounded-2xl border border-zinc-800 object-cover shadow-md"
+                                       className="h-10 w-10 rounded-lg border border-zinc-800 object-cover"
                                     />
                                     <span
-                                       className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-zinc-950 ${
-                                          isOnline ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"
+                                       className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-zinc-950 ${
+                                          isOnline ? "bg-emerald-500" : "bg-zinc-600"
                                        }`}
                                     />
                                  </div>
 
                                  <div className="min-w-0">
-                                    <h3 className="font-bold text-sm text-zinc-100 group-hover:text-[#f9ebae] transition truncate">
+                                    <h3 className="font-medium text-sm text-zinc-100 group-hover:text-white transition truncate">
                                        {member.name || member.email}
                                     </h3>
                                     <p className="text-xs text-zinc-400 truncate mt-0.5">{member.email}</p>
@@ -454,26 +454,26 @@ export default function DM() {
                               </div>
 
                               <span
-                                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border shrink-0 ${
-                                    isOnline ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-zinc-900 text-zinc-500 border-zinc-800"
+                                 className={`px-2 py-0.5 rounded text-[9px] font-medium uppercase tracking-wider border shrink-0 ${
+                                    isOnline ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-800 text-zinc-400 border-zinc-700"
                                  }`}
                               >
-                                 {isOnline ? "Online" : "Away"}
+                                 {isOnline ? "Online" : "Offline"}
                               </span>
                            </div>
 
                            <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80 text-xs">
-                              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+                              <span className="text-[11px] text-zinc-500 capitalize">
                                  {member.role || "Member"}
                               </span>
 
                               <button
                                  type="button"
                                  onClick={() => startDmWithUser(member)}
-                                 className="py-1.5 px-3.5 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 rounded-xl transition font-bold text-xs flex items-center gap-1 shadow-md shadow-[#f9ebae]/10"
+                                 className="py-1.5 px-3 bg-zinc-100 hover:bg-white text-zinc-950 rounded-lg transition font-medium text-xs flex items-center gap-1"
                               >
                                  <HiArrowsExpand size={13} />
-                                 <span>Focus Chat</span>
+                                 <span>Message</span>
                               </button>
                            </div>
                         </div>
@@ -481,11 +481,11 @@ export default function DM() {
                   })}
                </div>
             ) : (
-               <div className="text-center py-20 rounded-2xl border border-zinc-800/80 bg-zinc-950/40 p-6 space-y-3">
-                  <HiUser className="mx-auto text-zinc-600" size={44} />
-                  <h3 className="text-base font-bold text-zinc-200">No teammates found</h3>
-                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                     Invite colleagues to your workspace to start direct 1-on-1 messaging.
+               <div className="text-center py-20 rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-6 space-y-2">
+                  <HiUsers className="mx-auto text-zinc-600" size={36} />
+                  <h3 className="text-sm font-medium text-zinc-200">No teammates found</h3>
+                  <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                     Invite coworkers to start messaging.
                   </p>
                </div>
             )}
@@ -495,17 +495,17 @@ export default function DM() {
 
    // Full-Screen Dedicated DM View
    return (
-      <div className="fixed inset-0 z-50 bg-[#09090b] text-zinc-100 flex flex-col overflow-hidden">
+      <div className="fixed inset-0 z-50 bg-[#0b0c10] text-zinc-100 flex flex-col overflow-hidden">
          {/* Top Header Bar */}
-         <header className="h-16 border-b border-zinc-800/80 bg-zinc-950/90 px-4 sm:px-6 flex items-center justify-between gap-4 backdrop-blur-xl shrink-0">
+         <header className="h-14 border-b border-zinc-800/80 bg-zinc-900/90 px-4 sm:px-6 flex items-center justify-between gap-4 backdrop-blur-xl shrink-0">
             <div className="flex items-center gap-3 min-w-0 flex-1">
                <button
                   type="button"
                   onClick={backToDirectory}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 transition shrink-0"
                >
-                  <HiArrowLeft size={16} />
-                  <span className="hidden sm:inline">Back to Direct Messages</span>
+                  <HiArrowLeft size={14} />
+                  <span className="hidden sm:inline">Back</span>
                </button>
 
                <div className="h-4 w-px bg-zinc-800 hidden sm:block" />
@@ -515,23 +515,23 @@ export default function DM() {
                      <img
                         src={getAvatarSrc(activeRecipient)}
                         alt={activeRecipient.name}
-                        className="h-10 w-10 rounded-xl border border-zinc-800 object-cover"
+                        className="h-8 w-8 rounded-lg border border-zinc-800 object-cover"
                      />
                      <span
-                        className={`absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-zinc-950 ${
+                        className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-zinc-950 ${
                            onlineUserIds.has(normalizeId(activeRecipient.userId || activeRecipient._id))
-                              ? "bg-emerald-500 animate-pulse"
+                              ? "bg-emerald-500"
                               : "bg-zinc-600"
                         }`}
                      />
                   </div>
 
                   <div className="min-w-0">
-                     <h3 className="truncate text-sm font-bold text-zinc-100">
+                     <h3 className="truncate text-sm font-medium text-zinc-100">
                         {activeRecipient.name || activeRecipient.email}
                      </h3>
-                     <p className="text-xs text-emerald-400 font-medium truncate">
-                        {onlineUserIds.has(normalizeId(activeRecipient.userId || activeRecipient._id)) ? "🟢 Online now" : "Away"}
+                     <p className="text-xs text-zinc-400 truncate">
+                        {onlineUserIds.has(normalizeId(activeRecipient.userId || activeRecipient._id)) ? "Online" : "Offline"}
                      </p>
                   </div>
                </div>
@@ -543,16 +543,16 @@ export default function DM() {
                   <button
                      type="button"
                      onClick={() => setShowPinned(!showPinned)}
-                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-accent/40 bg-accent-soft text-accent text-xs font-bold transition hover:bg-accent/20"
+                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-xs font-medium transition hover:bg-zinc-700"
                   >
-                     <span>📌 {pinnedMessages.length} Pinned</span>
+                     <span>{pinnedMessages.length} Pinned</span>
                   </button>
                )}
 
                <button
                   type="button"
                   onClick={() => navigate("/people")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white transition text-xs font-semibold"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white transition text-xs font-medium"
                >
                   <HiUser size={14} />
                   <span className="hidden sm:inline">Profile</span>
@@ -562,16 +562,16 @@ export default function DM() {
 
          {/* Pinned Messages Drawer */}
          {showPinned && pinnedMessages.length > 0 && (
-            <div className="bg-zinc-950 border-b border-zinc-800 p-4 space-y-2 shrink-0">
+            <div className="bg-zinc-900 border-b border-zinc-800 p-4 space-y-2 shrink-0">
                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#f9ebae]">📌 Pinned Direct Messages</span>
+                  <span className="text-xs font-medium text-zinc-200">Pinned Messages</span>
                   <button onClick={() => setShowPinned(false)} className="text-zinc-400 hover:text-white"><HiX size={16} /></button>
                </div>
                <div className="max-h-36 overflow-y-auto space-y-2">
                   {pinnedMessages.map((msg) => (
-                     <div key={msg._id} className="p-2 rounded-xl border border-zinc-800 bg-zinc-900/60 text-xs flex justify-between items-center gap-3">
-                        <span className="truncate text-zinc-300"><strong className="text-zinc-100">{msg.user?.name}:</strong> {msg.text}</span>
-                        <button onClick={() => unpinMessage(msg._id)} className="text-[10px] text-[#f9ebae] font-bold shrink-0 hover:underline">Unpin</button>
+                     <div key={msg._id} className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950/60 text-xs flex justify-between items-center gap-3">
+                        <span className="truncate text-zinc-300"><strong className="text-zinc-100 font-medium">{msg.user?.name}:</strong> {msg.text}</span>
+                        <button onClick={() => unpinMessage(msg._id)} className="text-[11px] text-zinc-400 hover:text-white shrink-0 hover:underline">Unpin</button>
                      </div>
                   ))}
                </div>
@@ -580,13 +580,13 @@ export default function DM() {
 
          {/* Typing Indicator Bar */}
          {typingUsers.length > 0 && (
-            <div className="bg-[#f9ebae]/10 border-b border-[#f9ebae]/20 px-5 py-2 text-xs text-[#f9ebae] font-semibold animate-pulse shrink-0">
-               <span>⚡ {activeRecipient.name || "Teammate"} is typing a reply…</span>
+            <div className="bg-zinc-900 border-b border-zinc-800 px-5 py-2 text-xs text-zinc-400 shrink-0">
+               <span>{activeRecipient.name || "Teammate"} is typing...</span>
             </div>
          )}
 
          {/* Main DM Messages Body */}
-         <div ref={messageListRef} className="flex-1 min-h-0 p-4 sm:p-6 overflow-y-auto space-y-4 saas-grid-bg">
+         <div ref={messageListRef} className="flex-1 min-h-0 p-4 sm:p-6 overflow-y-auto space-y-4 app-grid-bg">
             {messages.length > 0 ? (
                messages.filter((m) => !m.isDeleted).map((msg) => {
                   const isMe = normalizeId(msg.user?._id || msg.user) === normalizeId(user?._id);
@@ -594,13 +594,13 @@ export default function DM() {
                   return (
                      <div key={msg._id} className={`group flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                         <div className="mb-1 flex items-center gap-2 text-[10px] text-zinc-500">
-                           <span className="font-bold text-zinc-300">{isMe ? "You" : msg.user?.name || activeRecipient.name}</span>
+                           <span className="font-medium text-zinc-400">{isMe ? "You" : msg.user?.name || activeRecipient.name}</span>
                            <span>•</span>
                            <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
 
-                        <div className={`relative max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs leading-relaxed shadow-xl ${
-                           isMe ? "bg-[#f9ebae] text-zinc-950 font-medium rounded-tr-xs" : "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-xs"
+                        <div className={`relative max-w-[85%] sm:max-w-[70%] p-3 rounded-xl text-xs leading-relaxed ${
+                           isMe ? "bg-zinc-100 text-zinc-950 font-normal rounded-tr-xs" : "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-xs"
                         }`}>
                            {msg.text}
                         </div>
@@ -608,24 +608,24 @@ export default function DM() {
                   );
                })
             ) : (
-               <div className="py-20 text-center text-xs text-zinc-500">No messages yet. Send a direct message below!</div>
+               <div className="py-20 text-center text-xs text-zinc-500">No messages yet. Send a direct message below.</div>
             )}
             <div ref={messagesEndRef} />
          </div>
 
          {/* DM Input Footer Bar */}
-         <footer className="p-4 border-t border-zinc-800/80 bg-zinc-950/90 shrink-0">
+         <footer className="p-4 border-t border-zinc-800/80 bg-zinc-900/90 shrink-0">
             <form onSubmit={handleSendMessage} className="flex gap-2 max-w-5xl mx-auto">
                <input
                   value={messageText}
                   onChange={handleInputChange}
                   placeholder={`Message ${activeRecipient.name || activeRecipient.email}...`}
-                  className="flex-1 bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-2xl text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] shadow-inner transition"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 px-4 py-2.5 rounded-lg text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-zinc-500 transition"
                />
                <button
                   type="submit"
                   disabled={!messageText.trim()}
-                  className="px-5 py-3 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-extrabold rounded-2xl shadow-md shadow-[#f9ebae]/20 transition disabled:opacity-50"
+                  className="px-4 py-2.5 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium rounded-lg transition disabled:opacity-50"
                >
                   Send
                </button>

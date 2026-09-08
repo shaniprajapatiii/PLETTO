@@ -98,8 +98,8 @@ export function PresenceStack() {
             ))}
          </div>
 
-         <div className="flex items-center gap-1.5 text-xs font-bold text-[#f9ebae]">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+         <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-300">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <span>{activeOnlineMembers.length} active</span>
          </div>
       </div>

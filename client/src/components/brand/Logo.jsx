@@ -1,16 +1,24 @@
 export function Logo({ className = "", iconClassName = "", withText = true }) {
    return (
       <div className={`flex items-center gap-2.5 ${className}`}>
-         <div className={`relative shrink-0 ${iconClassName || "h-8 w-8"}`}>
-            <div className="absolute inset-0 rounded-[14px] border border-gold/40 bg-[radial-gradient(circle_at_top_left,rgba(249,235,174,0.4),transparent_55%),rgba(255,255,255,0.04)] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_12px_32px_rgba(0,0,0,0.28)]" />
-            <div className="absolute inset-[2px] rounded-[12px] border border-white/10 bg-[linear-gradient(135deg,rgba(249,235,174,0.24),transparent)]" />
-            <div className="absolute inset-0 flex items-center justify-center">
-               <span className="font-display text-[12px] font-semibold tracking-[0.18em] text-gold">P</span>
-            </div>
+         <div className={`relative shrink-0 flex items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900 text-zinc-100 shadow-sm ${iconClassName || "h-7 w-7"}`}>
+            <svg
+               className="h-4 w-4 text-white"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               strokeWidth="2.5"
+               strokeLinecap="round"
+               strokeLinejoin="round"
+            >
+               <polygon points="12 2 2 7 12 12 22 7 12 2" />
+               <polyline points="2 17 12 22 22 17" />
+               <polyline points="2 12 12 17 22 12" />
+            </svg>
          </div>
          {withText && (
-            <span className="font-display text-[15px] font-semibold tracking-[0.24em] text-white">
-               PLETTO<span className="ml-0.5 text-gold">.</span>
+            <span className="text-sm font-bold tracking-wider text-zinc-100 uppercase">
+               PLETTO
             </span>
          )}
       </div>

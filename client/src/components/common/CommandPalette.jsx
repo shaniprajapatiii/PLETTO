@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
    HiSearch,
-   HiSparkles,
    HiDocumentText,
    HiChatAlt2,
    HiViewGrid,
@@ -11,33 +10,30 @@ import {
    HiUsers,
    HiHashtag,
    HiArrowRight,
-   HiLightningBolt,
-   HiX,
 } from "react-icons/hi";
 
 const CATEGORIZED_ACTIONS = [
    {
-      category: "NAVIGATION",
+      category: "Navigation",
       items: [
-         { id: "dashboard", title: "Mission Control Dashboard", description: "Overview stats & workspace activity", href: "/dashboard", icon: HiViewGrid },
-         { id: "docs", title: "Knowledge Documents", description: "Full-screen markdown & spec editor", href: "/docs", icon: HiDocumentText },
-         { id: "chat", title: "Team Channels", description: "Public & private discussion rooms", href: "/chat", icon: HiChatAlt2 },
-         { id: "dm", title: "Direct Messages", description: "1-on-1 teammate conversations", href: "/dm", icon: HiUsers },
+         { id: "dashboard", title: "Dashboard", description: "Workspace overview and recent activity", href: "/dashboard", icon: HiViewGrid },
+         { id: "channels", title: "Channels", description: "Team discussions and public rooms", href: "/chat", icon: HiChatAlt2 },
+         { id: "dm", title: "Direct Messages", description: "1-on-1 conversations", href: "/dm", icon: HiUsers },
+         { id: "docs", title: "Documents", description: "Markdown notes and specs", href: "/docs", icon: HiDocumentText },
       ],
    },
    {
-      category: "WORKSPACES",
+      category: "Organization",
       items: [
-         { id: "my-channels", title: "My Channel Directory", description: "Manage workspace assets & privacy", href: "/my-channels", icon: HiHashtag },
-         { id: "people", title: "Team Directory & Presence", description: "View workspace members & online status", href: "/people", icon: HiUsers },
+         { id: "my-channels", title: "Directory", description: "Workspace channels and documents", href: "/my-channels", icon: HiHashtag },
+         { id: "people", title: "Team", description: "Team members and online status", href: "/people", icon: HiUsers },
       ],
    },
    {
-      category: "ACCOUNT & AI",
+      category: "Account",
       items: [
-         { id: "profile", title: "Profile & Avatar Settings", description: "Update personal details & bio", href: "/profile", icon: HiUserCircle },
-         { id: "settings", title: "Workspace Invites & Roles", description: "Manage members & workspace settings", href: "/settings", icon: HiCog },
-         { id: "ai", title: "Ask PLETTO AI Assistant", description: "Summarize notes & workspace updates", href: "/dashboard", icon: HiSparkles },
+         { id: "profile", title: "Profile", description: "Personal details and avatar", href: "/profile", icon: HiUserCircle },
+         { id: "settings", title: "Settings", description: "Workspace settings and roles", href: "/settings", icon: HiCog },
       ],
    },
 ];
@@ -97,16 +93,16 @@ export function CommandPalette({ open, onOpenChange }) {
 
    return (
       <div
-         className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 px-4 py-16 backdrop-blur-md"
+         className="fixed inset-0 z-50 flex items-start justify-center bg-black/75 px-4 py-16 backdrop-blur-sm"
          onClick={() => onOpenChange(false)}
       >
          <div
-            className="w-full max-w-2xl rounded-3xl border border-zinc-800/90 bg-zinc-950/95 p-4 sm:p-5 shadow-2xl space-y-4 shadow-black/80"
+            className="w-full max-w-xl rounded-xl border border-zinc-800 bg-[#12141a] p-3 shadow-2xl space-y-3"
             onClick={(event) => event.stopPropagation()}
          >
             {/* Search Input Bar */}
-            <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/80 px-4 py-3 shadow-inner">
-               <HiSearch className="h-5 w-5 text-[#f9ebae] shrink-0" />
+            <div className="flex items-center gap-2.5 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2">
+               <HiSearch className="h-4 w-4 text-zinc-400 shrink-0" />
                <input
                   autoFocus
                   value={query}
@@ -114,22 +110,18 @@ export function CommandPalette({ open, onOpenChange }) {
                      setQuery(event.target.value);
                      setSelectedIndex(0);
                   }}
-                  placeholder="Search pages, channels, documents, or AI commands (⌘K)..."
-                  className="w-full bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 outline-none"
+                  placeholder="Search pages, channels, or documents..."
+                  className="w-full bg-transparent text-xs text-zinc-100 placeholder:text-zinc-500 outline-none"
                />
-               <button
-                  type="button"
-                  onClick={() => onOpenChange(false)}
-                  className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-950 text-[10px] font-mono font-bold text-zinc-400 hover:text-white transition"
-               >
+               <kbd className="px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[10px] font-mono text-zinc-400">
                   ESC
-               </button>
+               </kbd>
             </div>
 
-            {/* Categorized Search Results */}
-            <div className="max-h-[55vh] overflow-y-auto space-y-2 pr-1">
+            {/* Search Results */}
+            <div className="max-h-[50vh] overflow-y-auto space-y-1 pr-1">
                {flatActions.length === 0 ? (
-                  <div className="py-12 text-center text-xs text-zinc-500 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/30 p-6">
+                  <div className="py-8 text-center text-xs text-zinc-500">
                      No commands match "{query}".
                   </div>
                ) : (
@@ -146,48 +138,38 @@ export function CommandPalette({ open, onOpenChange }) {
                               onOpenChange(false);
                            }}
                            onMouseEnter={() => setSelectedIndex(index)}
-                           className={`group flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
+                           className={`group flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition ${
                               isSelected
-                                 ? "border-[#f9ebae]/40 bg-[#f9ebae]/10 shadow-lg shadow-[#f9ebae]/5"
-                                 : "border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-900/80"
+                                 ? "bg-zinc-800 text-white"
+                                 : "text-zinc-300 hover:bg-zinc-800/50"
                            }`}
                         >
-                           <div className="flex items-center gap-3.5 min-w-0">
-                              <div
-                                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
-                                    isSelected
-                                       ? "bg-[#f9ebae] text-zinc-950"
-                                       : "bg-zinc-900 border border-zinc-800 text-[#f9ebae]"
-                                 }`}
-                              >
-                                 <Icon className="h-5 w-5" />
+                           <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300">
+                                 <Icon className="h-3.5 w-3.5" />
                               </div>
                               <div className="min-w-0">
-                                 <div className="text-xs font-extrabold text-zinc-100 group-hover:text-[#f9ebae] transition truncate">
+                                 <div className="text-xs font-medium truncate">
                                     {action.title}
                                  </div>
-                                 <div className="text-[11px] text-zinc-400 truncate mt-0.5">{action.description}</div>
+                                 <div className="text-[11px] text-zinc-400 truncate">{action.description}</div>
                               </div>
                            </div>
 
-                           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-zinc-800 bg-zinc-950 text-[10px] font-bold text-zinc-400 group-hover:text-[#f9ebae] group-hover:border-[#f9ebae]/30 transition shrink-0">
-                              <HiLightningBolt size={12} />
-                              <span>Jump</span>
-                           </div>
+                           <HiArrowRight className={`h-3.5 w-3.5 shrink-0 transition ${isSelected ? "text-zinc-200" : "text-zinc-600"}`} />
                         </button>
                      );
                   })
                )}
             </div>
 
-            {/* Footer Navigation Hints */}
-            <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80 text-[10px] text-zinc-500 font-mono">
+            {/* Footer Hints */}
+            <div className="flex items-center justify-between pt-2 border-t border-zinc-800/80 text-[10px] text-zinc-500 font-mono">
                <div className="flex items-center gap-3">
                   <span>↑↓ Navigate</span>
                   <span>↵ Select</span>
-                  <span>Esc Close</span>
                </div>
-               <span className="text-[#f9ebae] font-bold">PLETTO Command Palette</span>
+               <span>Command Palette</span>
             </div>
          </div>
       </div>

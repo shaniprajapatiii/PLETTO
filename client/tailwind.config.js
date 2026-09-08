@@ -7,7 +7,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        gold: "rgb(249, 235, 174)",
+        dark: {
+          950: "#07080a",
+          900: "#0b0c10",
+          850: "#101217",
+          800: "#15171e",
+          750: "#1b1e27",
+          700: "#222531",
+        },
       },
       animation: {
         slideIn: "slideIn 180ms ease-out",
@@ -37,4 +44,3 @@ export default {
   },
   plugins: [],
 }
-

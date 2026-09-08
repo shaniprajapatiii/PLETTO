@@ -107,15 +107,15 @@ export default function Profile() {
 
    return (
       <PageShell
-         title="Account Profile"
-         subtitle="Manage your personal workspace identity, avatar, and notification bio."
+         title="Profile"
+         subtitle="Personal details and account settings."
          actions={
             <div className="flex items-center gap-2">
                {!isEditing ? (
                   <button
                      type="button"
                      onClick={handleStartEdit}
-                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold shadow-md transition"
+                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium transition"
                   >
                      <HiPencil size={14} />
                      <span>Edit Profile</span>
@@ -124,7 +124,7 @@ export default function Profile() {
                <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-semibold text-red-300 transition"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 transition"
                >
                   <HiLogout size={14} />
                   <span>Sign Out</span>
@@ -135,52 +135,52 @@ export default function Profile() {
          {!isEditing ? (
             <div className="space-y-6">
                {/* User Banner Card */}
-               <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-950/60 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-6">
+               <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/40 flex flex-col sm:flex-row items-center justify-between gap-6">
                   <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
                      <div className="relative">
-                        <img src={avatarSrc} alt={profile.name || profile.email} className="h-20 w-20 rounded-xl border border-zinc-800 object-cover shadow-lg" />
-                        <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-zinc-950" />
+                        <img src={avatarSrc} alt={profile.name || profile.email} className="h-16 w-16 rounded-xl border border-zinc-800 object-cover" />
+                        <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-zinc-950" />
                      </div>
                      <div>
-                        <h2 className="text-xl font-bold text-zinc-100">{profile.name || "Workspace Member"}</h2>
+                        <h2 className="text-lg font-medium text-zinc-100">{profile.name || "Workspace Member"}</h2>
                         <p className="text-xs text-zinc-400 mt-0.5">{profile.email}</p>
-                        <p className="text-xs text-[#f9ebae] mt-2 font-medium">{profile.bio || "No bio added yet."}</p>
+                        <p className="text-xs text-zinc-300 mt-2">{profile.bio || "No bio added yet."}</p>
                      </div>
                   </div>
                </div>
 
                {/* Profile Info Grid */}
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
-                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Full Name</span>
-                     <p className="text-sm font-semibold text-zinc-100 mt-1">{profile.name || "—"}</p>
+                  <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
+                     <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">Full Name</span>
+                     <p className="text-sm font-medium text-zinc-100 mt-1">{profile.name || "—"}</p>
                   </div>
-                  <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
-                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Email Address</span>
-                     <p className="text-sm font-semibold text-zinc-100 mt-1">{profile.email || "—"}</p>
+                  <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
+                     <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">Email Address</span>
+                     <p className="text-sm font-medium text-zinc-100 mt-1">{profile.email || "—"}</p>
                   </div>
                </div>
 
-               <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">About Bio</span>
+               <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
+                  <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">Bio</span>
                   <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">{profile.bio || "Share a quick summary of your focus area or role with your teammates."}</p>
                </div>
 
-               {message ? <div className="text-xs text-emerald-400 font-semibold">{message}</div> : null}
+               {message ? <div className="text-xs text-emerald-400 font-medium">{message}</div> : null}
             </div>
          ) : (
             <form onSubmit={handleSave} className="space-y-6">
                {/* Avatar Editor */}
-               <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+               <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/40 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                     <img src={getAvatarSrc(editProfile)} alt="Avatar Preview" className="h-16 w-16 rounded-xl border border-zinc-800 object-cover" />
+                     <img src={getAvatarSrc(editProfile)} alt="Avatar Preview" className="h-14 w-14 rounded-xl border border-zinc-800 object-cover" />
                      <div>
-                        <h3 className="text-sm font-bold text-zinc-100">Avatar Image</h3>
-                        <p className="text-xs text-zinc-400">Upload a fresh profile picture.</p>
+                        <h3 className="text-sm font-medium text-zinc-100">Avatar Image</h3>
+                        <p className="text-xs text-zinc-400">Upload a profile picture.</p>
                      </div>
                   </div>
-                  <label className="cursor-pointer px-3.5 py-2 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 transition flex items-center gap-2">
-                     <HiPhotograph className="h-4 w-4 text-[#f9ebae]" />
+                  <label className="cursor-pointer px-3.5 py-2 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-200 transition flex items-center gap-2">
+                     <HiPhotograph className="h-4 w-4 text-zinc-400" />
                      <span>{uploading ? "Uploading..." : "Upload Image"}</span>
                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />
                   </label>
@@ -188,15 +188,15 @@ export default function Profile() {
 
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                     <label className="block text-xs font-semibold text-zinc-300">Display Name</label>
+                     <label className="block text-xs font-medium text-zinc-300">Display Name</label>
                      <input
-                        className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-sm text-zinc-100 outline-none focus:border-[#f9ebae]"
+                        className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
                         value={editProfile.name}
                         onChange={(e) => setEditProfile({ ...editProfile, name: e.target.value })}
                      />
                   </div>
                   <div>
-                     <label className="block text-xs font-semibold text-zinc-300">Email Address (Read-only)</label>
+                     <label className="block text-xs font-medium text-zinc-300">Email Address</label>
                      <input
                         className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 px-3.5 py-2 text-sm text-zinc-400 outline-none cursor-not-allowed"
                         value={editProfile.email}
@@ -206,9 +206,9 @@ export default function Profile() {
                </div>
 
                <div>
-                  <label className="block text-xs font-semibold text-zinc-300">Personal Bio</label>
+                  <label className="block text-xs font-medium text-zinc-300">Bio</label>
                   <textarea
-                     className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3.5 text-sm text-zinc-100 outline-none focus:border-[#f9ebae]"
+                     className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3.5 text-sm text-zinc-100 outline-none focus:border-zinc-500"
                      rows={4}
                      value={editProfile.bio}
                      onChange={(e) => setEditProfile({ ...editProfile, bio: e.target.value })}
@@ -217,7 +217,7 @@ export default function Profile() {
 
                <div className="flex items-center justify-between pt-2">
                   <div className="flex gap-2">
-                     <button type="submit" className="px-4 py-2 rounded-lg bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold shadow-md transition">
+                     <button type="submit" className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium transition">
                         Save Changes
                      </button>
                      <button type="button" onClick={handleCancelEdit} className="px-4 py-2 rounded-lg border border-zinc-800 text-xs text-zinc-400 hover:text-white">

@@ -384,38 +384,38 @@ export default function Docs() {
    if (!active) {
       return (
          <PageShell
-            title="Knowledge Documents"
-            subtitle="Browse team specs, technical guides, and collaborative notes. Click any document to edit in focus mode."
+            title="Docs"
+            subtitle="Technical specs, architecture guides, and collaborative notes."
             actions={
                <div className="flex gap-2">
                   <button
                      onClick={() => handleCreate("markdown")}
-                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold shadow-md transition"
+                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium transition"
                   >
-                     <HiSparkles size={14} />
-                     <span>New Markdown Doc</span>
+                     <HiPlus size={14} />
+                     <span>New Doc</span>
                   </button>
                   <button
                      onClick={() => handleCreate("text")}
-                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold transition"
+                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-850 text-zinc-200 text-xs font-medium transition"
                   >
-                     <HiPlus size={14} />
-                     <span>New Plain Text</span>
+                     <HiDocumentText size={14} />
+                     <span>Plain Text</span>
                   </button>
                </div>
             }
          >
             {error && (
-               <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+               <div className="p-3 mb-4 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-300">
                   {error}
                </div>
             )}
 
             {/* Filter and Search Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-               <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-full sm:w-auto">
+               <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800 w-full sm:w-auto">
                   {[
-                     { key: "all", label: `All Docs (${docs.length})` },
+                     { key: "all", label: `All (${docs.length})` },
                      { key: "markdown", label: `Markdown (${docs.filter((d) => d.type === "markdown").length})` },
                      { key: "text", label: `Plain Text (${docs.filter((d) => d.type !== "markdown").length})` },
                   ].map((tab) => (
@@ -423,10 +423,10 @@ export default function Docs() {
                         key={tab.key}
                         type="button"
                         onClick={() => setFilterType(tab.key)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
                            filterType === tab.key
-                              ? "bg-[#f9ebae] text-zinc-950 shadow"
-                              : "text-zinc-400 hover:text-white"
+                              ? "bg-zinc-800 text-zinc-100 shadow-sm"
+                              : "text-zinc-400 hover:text-zinc-200"
                         }`}
                      >
                         {tab.label}
@@ -435,12 +435,12 @@ export default function Docs() {
                </div>
 
                <div className="relative w-full sm:w-80">
-                  <HiSearch className="absolute left-3.5 top-2.5 text-zinc-500" size={14} />
+                  <HiSearch className="absolute left-3 top-2.5 text-zinc-500" size={14} />
                   <input
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     placeholder="Search documents by title or text..."
-                     className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-zinc-800 bg-zinc-950 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] transition"
+                     placeholder="Search documents..."
+                     className="w-full pl-9 pr-4 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-zinc-500 transition"
                   />
                </div>
             </div>
@@ -448,8 +448,8 @@ export default function Docs() {
             {/* Document Cards Grid */}
             {loading ? (
                <div className="py-20 text-center text-xs text-zinc-500 flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#f9ebae] border-t-transparent" />
-                  <span>Loading team docs…</span>
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent" />
+                  <span>Loading documents...</span>
                </div>
             ) : filteredDocs.length > 0 ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -460,18 +460,18 @@ export default function Docs() {
                      return (
                         <div
                            key={doc._id}
-                           className="group p-5 rounded-2xl border border-zinc-800/80 bg-zinc-950/70 hover:border-[#f9ebae]/40 hover:bg-zinc-900/60 transition flex flex-col justify-between space-y-4 shadow-xl"
+                           className="group p-5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70 transition flex flex-col justify-between space-y-4"
                         >
                            <div>
                               <div className="flex items-center justify-between gap-2 mb-3">
                                  <span
-                                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                                    className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
                                        isMd
-                                          ? "bg-amber-400/10 text-amber-300 border-amber-400/30"
-                                          : "bg-indigo-500/10 text-indigo-300 border-indigo-500/30"
+                                          ? "bg-zinc-800 text-zinc-300 border-zinc-700"
+                                          : "bg-zinc-850 text-zinc-400 border-zinc-800"
                                     }`}
                                  >
-                                    {isMd ? "✨ Markdown" : "📄 Plain Text"}
+                                    {isMd ? "Markdown" : "Plain Text"}
                                  </span>
 
                                  <span className="text-[10px] text-zinc-500 flex items-center gap-1">
@@ -480,31 +480,31 @@ export default function Docs() {
                                  </span>
                               </div>
 
-                              <h3 className="font-bold text-sm text-zinc-100 group-hover:text-[#f9ebae] transition truncate">
+                              <h3 className="font-medium text-sm text-zinc-100 group-hover:text-white transition truncate">
                                  {doc.title || "Untitled Document"}
                               </h3>
 
-                              <p className="text-xs text-zinc-400 mt-2 line-clamp-3 leading-relaxed font-mono text-[11px] bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-800/40">
+                              <p className="text-xs text-zinc-400 mt-2 line-clamp-3 leading-relaxed font-mono text-[11px] bg-zinc-950/60 p-2.5 rounded-lg border border-zinc-800/60">
                                  {doc.content ? doc.content.substring(0, 140) : "Empty document."}
                               </p>
                            </div>
 
                            <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80 text-xs">
-                              <span className="text-[11px] font-semibold text-zinc-500">{words} words</span>
+                              <span className="text-[11px] text-zinc-500">{words} words</span>
 
                               <div className="flex gap-2">
                                  <button
                                     type="button"
                                     onClick={() => selectDoc(doc)}
-                                    className="py-1.5 px-3 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 rounded-xl transition font-bold text-xs flex items-center gap-1 shadow-md shadow-[#f9ebae]/10"
+                                    className="py-1.5 px-3 bg-zinc-100 hover:bg-white text-zinc-950 rounded-lg transition font-medium text-xs flex items-center gap-1"
                                  >
                                     <HiArrowsExpand size={13} />
-                                    <span>Open Focus View</span>
+                                    <span>Open</span>
                                  </button>
                                  <button
                                     type="button"
                                     onClick={() => handleDelete(doc._id)}
-                                    className="p-1.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl hover:bg-red-500/20 transition"
+                                    className="p-1.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg hover:bg-red-500/20 transition"
                                     title="Delete document"
                                  >
                                     <HiTrash size={14} />
@@ -516,11 +516,11 @@ export default function Docs() {
                   })}
                </div>
             ) : (
-               <div className="text-center py-20 rounded-2xl border border-zinc-800/80 bg-zinc-950/40 p-6 space-y-3">
-                  <HiDocumentText className="mx-auto text-zinc-600" size={44} />
-                  <h3 className="text-base font-bold text-zinc-200">No documents found</h3>
-                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                     Create a markdown note or plain text document to start co-authoring knowledge specs.
+               <div className="text-center py-20 rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-6 space-y-2">
+                  <HiDocumentText className="mx-auto text-zinc-600" size={36} />
+                  <h3 className="text-sm font-medium text-zinc-200">No documents found</h3>
+                  <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                     Create a document to start writing technical specs.
                   </p>
                </div>
             )}
@@ -530,33 +530,33 @@ export default function Docs() {
 
    // Full-Screen Dedicated Document Editor View
    return (
-      <div className="fixed inset-0 z-50 bg-[#09090b] text-zinc-100 flex flex-col overflow-hidden">
+      <div className="fixed inset-0 z-50 bg-[#0b0c10] text-zinc-100 flex flex-col overflow-hidden">
          {/* Top Header Bar */}
-         <header className="h-14 border-b border-zinc-800/80 bg-zinc-950/90 px-4 sm:px-6 flex items-center justify-between gap-4 backdrop-blur-xl shrink-0">
+         <header className="h-14 border-b border-zinc-800/80 bg-zinc-900/90 px-4 sm:px-6 flex items-center justify-between gap-4 backdrop-blur-xl shrink-0">
             <div className="flex items-center gap-3 min-w-0 flex-1">
                <button
                   type="button"
                   onClick={backToDirectory}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 transition shrink-0"
                >
-                  <HiArrowLeft size={16} />
-                  <span className="hidden sm:inline">Back to Documents</span>
+                  <HiArrowLeft size={14} />
+                  <span className="hidden sm:inline">Back</span>
                </button>
 
                <div className="h-4 w-px bg-zinc-800 hidden sm:block" />
 
                <input
-                  className="text-sm sm:text-base font-bold text-zinc-100 bg-transparent border-b border-transparent focus:border-[#f9ebae] outline-none truncate w-full max-w-md"
+                  className="text-sm sm:text-base font-semibold text-zinc-100 bg-transparent border-b border-transparent focus:border-zinc-500 outline-none truncate w-full max-w-md"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Document title..."
                />
 
                <span
-                  className={`hidden sm:inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border shrink-0 ${
+                  className={`hidden sm:inline-block px-2 py-0.5 rounded text-[9px] font-medium uppercase tracking-wider border shrink-0 ${
                      docType === "markdown"
-                        ? "bg-amber-400/10 text-amber-300 border-amber-400/30"
-                        : "bg-indigo-500/10 text-indigo-300 border-indigo-500/30"
+                        ? "bg-zinc-800 text-zinc-300 border-zinc-700"
+                        : "bg-zinc-850 text-zinc-400 border-zinc-800"
                   }`}
                >
                   {docType === "markdown" ? "Markdown" : "Plain Text"}
@@ -573,7 +573,7 @@ export default function Docs() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-extrabold shadow-md shadow-[#f9ebae]/20 transition disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium transition disabled:opacity-50"
                >
                   <HiCheck size={16} />
                   <span>{saving ? "Saving..." : "Save"}</span>
@@ -582,7 +582,7 @@ export default function Docs() {
                <button
                   type="button"
                   onClick={() => handleDelete(active._id)}
-                  className="p-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
+                  className="p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
                   title="Delete Document"
                >
                   <HiTrash size={16} />
@@ -591,14 +591,14 @@ export default function Docs() {
          </header>
 
          {/* Mode Switcher & Rich Markdown Toolbar Bar */}
-         <div className="bg-zinc-950/80 border-b border-zinc-800/80 px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0">
+         <div className="bg-zinc-900 border-b border-zinc-800 px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0">
             {/* View Mode Tabs */}
-            <div className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800 text-xs font-bold">
+            <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs font-medium">
                <button
                   type="button"
                   onClick={() => setViewMode("edit")}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition ${
-                     viewMode === "edit" ? "bg-[#f9ebae] text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition ${
+                     viewMode === "edit" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"
                   }`}
                >
                   <HiPencil size={13} />
@@ -609,20 +609,20 @@ export default function Docs() {
                   <button
                      type="button"
                      onClick={() => setViewMode("split")}
-                     className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition ${
-                        viewMode === "split" ? "bg-[#f9ebae] text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                     className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition ${
+                        viewMode === "split" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"
                      }`}
                   >
                      <HiViewGrid size={13} />
-                     <span>Split View</span>
+                     <span>Split</span>
                   </button>
                )}
 
                <button
                   type="button"
                   onClick={() => setViewMode("preview")}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition ${
-                     viewMode === "preview" ? "bg-[#f9ebae] text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition ${
+                     viewMode === "preview" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"
                   }`}
                >
                   <HiEye size={13} />
@@ -633,60 +633,60 @@ export default function Docs() {
             {/* Markdown Feature Snippets Toolbar */}
             {docType === "markdown" && (viewMode === "edit" || viewMode === "split") && (
                <div className="flex flex-wrap items-center gap-1 text-[11px] font-mono">
-                  <button type="button" onClick={() => insertSnippet("# ", "", "Heading 1")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Heading 1">H1</button>
-                  <button type="button" onClick={() => insertSnippet("## ", "", "Heading 2")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Heading 2">H2</button>
-                  <button type="button" onClick={() => insertSnippet("### ", "", "Heading 3")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Heading 3">H3</button>
+                  <button type="button" onClick={() => insertSnippet("# ", "", "Heading 1")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Heading 1">H1</button>
+                  <button type="button" onClick={() => insertSnippet("## ", "", "Heading 2")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Heading 2">H2</button>
+                  <button type="button" onClick={() => insertSnippet("### ", "", "Heading 3")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Heading 3">H3</button>
                   <div className="h-4 w-px bg-zinc-800 mx-0.5" />
-                  <button type="button" onClick={() => insertSnippet("**", "**", "bold text")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] font-bold transition" title="Bold">B</button>
-                  <button type="button" onClick={() => insertSnippet("*", "*", "italic text")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] italic transition" title="Italic">I</button>
-                  <button type="button" onClick={() => insertSnippet("~~", "~~", "strikethrough")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] line-through transition" title="Strikethrough">S</button>
+                  <button type="button" onClick={() => insertSnippet("**", "**", "bold text")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white font-bold transition" title="Bold">B</button>
+                  <button type="button" onClick={() => insertSnippet("*", "*", "italic text")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white italic transition" title="Italic">I</button>
+                  <button type="button" onClick={() => insertSnippet("~~", "~~", "strikethrough")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white line-through transition" title="Strikethrough">S</button>
                   <div className="h-4 w-px bg-zinc-800 mx-0.5" />
-                  <button type="button" onClick={() => insertSnippet("`", "`", "code")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Inline Code">&lt;&gt;</button>
-                  <button type="button" onClick={() => insertSnippet("```javascript\n", "\n```", "// code block")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Code Block">```</button>
-                  <button type="button" onClick={() => insertSnippet("> ", "", "Quote text")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Quote">&quot;</button>
+                  <button type="button" onClick={() => insertSnippet("`", "`", "code")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Inline Code">&lt;&gt;</button>
+                  <button type="button" onClick={() => insertSnippet("```javascript\n", "\n```", "// code block")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Code Block">```</button>
+                  <button type="button" onClick={() => insertSnippet("> ", "", "Quote text")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Quote">&quot;</button>
                   <div className="h-4 w-px bg-zinc-800 mx-0.5" />
-                  <button type="button" onClick={() => insertSnippet("- ", "", "List item")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Unordered List">• List</button>
-                  <button type="button" onClick={() => insertSnippet("1. ", "", "Ordered item")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Ordered List">1. List</button>
-                  <button type="button" onClick={() => insertSnippet("- [ ] ", "", "Task description")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Task List">☑ Task</button>
+                  <button type="button" onClick={() => insertSnippet("- ", "", "List item")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Unordered List">• List</button>
+                  <button type="button" onClick={() => insertSnippet("1. ", "", "Ordered item")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Ordered List">1. List</button>
+                  <button type="button" onClick={() => insertSnippet("- [ ] ", "", "Task description")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Task List">☑ Task</button>
                   <div className="h-4 w-px bg-zinc-800 mx-0.5" />
-                  <button type="button" onClick={() => insertSnippet("[", "](https://example.com)", "Link title")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Insert Link">🔗 Link</button>
-                  <button type="button" onClick={() => insertSnippet("\n| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | Cell 2 |\n", "", "")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Insert Table">📊 Table</button>
-                  <button type="button" onClick={() => insertSnippet("\n---\n", "", "")} className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-[#f9ebae] hover:text-[#f9ebae] transition" title="Horizontal Divider">― Divider</button>
+                  <button type="button" onClick={() => insertSnippet("[", "](https://example.com)", "Link title")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Insert Link">Link</button>
+                  <button type="button" onClick={() => insertSnippet("\n| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | Cell 2 |\n", "", "")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Insert Table">Table</button>
+                  <button type="button" onClick={() => insertSnippet("\n---\n", "", "")} className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:text-white transition" title="Horizontal Divider">Divider</button>
                </div>
             )}
          </div>
 
          {/* Sync Banner Status */}
          {collabMessage && (
-            <div className="bg-[#f9ebae]/10 border-b border-[#f9ebae]/20 px-4 py-1.5 text-xs text-[#f9ebae] font-semibold flex items-center justify-between shrink-0">
-               <span>⚡ {collabMessage}</span>
+            <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-1.5 text-xs text-zinc-300 font-medium flex items-center justify-between shrink-0">
+               <span>{collabMessage}</span>
                <button onClick={() => setCollabMessage(null)} className="text-zinc-400 hover:text-white">✕</button>
             </div>
          )}
 
          {/* Main Editor Canvas Body */}
-         <div className="flex-1 min-h-0 p-4 sm:p-6 overflow-hidden">
+         <div className="flex-1 min-h-0 p-4 sm:p-6 overflow-hidden app-grid-bg">
             {viewMode === "split" ? (
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
                   <textarea
                      ref={textareaRef}
-                     className="w-full h-full resize-none rounded-2xl border border-zinc-800 bg-zinc-950 p-5 font-mono text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-[#f9ebae] leading-relaxed shadow-2xl"
+                     className="w-full h-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/90 p-5 font-mono text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-zinc-500 leading-relaxed shadow-lg"
                      value={content}
                      onChange={(e) => setContent(e.target.value)}
                      placeholder="Type markdown content here..."
                   />
-                  <div className="w-full h-full overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 leading-relaxed shadow-2xl saas-grid-bg">
+                  <div className="w-full h-full overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950/80 p-5 leading-relaxed shadow-lg">
                      <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(content) }} />
                   </div>
                </div>
             ) : viewMode === "preview" ? (
-               <div className="w-full h-full overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950/90 p-6 leading-relaxed max-w-4xl mx-auto shadow-2xl saas-grid-bg">
+               <div className="w-full h-full overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950/90 p-6 leading-relaxed max-w-4xl mx-auto shadow-lg">
                   <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(content) }} />
                </div>
             ) : (
                <textarea
                   ref={textareaRef}
-                  className="w-full h-full resize-none rounded-2xl border border-zinc-800 bg-zinc-950 p-6 font-mono text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-[#f9ebae] leading-relaxed shadow-2xl max-w-5xl mx-auto"
+                  className="w-full h-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/90 p-6 font-mono text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-zinc-500 leading-relaxed shadow-lg max-w-5xl mx-auto"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Type your document content here..."

@@ -515,13 +515,13 @@ export default function Chat() {
    if (!activeChannel) {
       return (
          <PageShell
-            title="Channels & Rooms"
-            subtitle="Browse workspace channels, join discussion groups, or create a new public or private room."
+            title="Channels"
+            subtitle="Browse workspace channels, join discussions, or create a new room."
             actions={
                <button
                   type="button"
                   onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-bold shadow-md transition"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium transition"
                >
                   <HiPlus size={14} />
                   <span>Create Channel</span>
@@ -529,27 +529,27 @@ export default function Chat() {
             }
          >
             {error && (
-               <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+               <div className="p-3 mb-4 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-300">
                   {error}
                </div>
             )}
 
             {/* Filter and Search Control */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-               <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-full sm:w-auto">
+               <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800 w-full sm:w-auto">
                   {[
-                     { key: "all", label: `All Rooms (${channels.length})` },
-                     { key: "public", label: `# Public (${channels.filter((c) => c.type === "public").length})` },
-                     { key: "private", label: `🔒 Private (${channels.filter((c) => c.type === "private").length})` },
+                     { key: "all", label: `All (${channels.length})` },
+                     { key: "public", label: `Public (${channels.filter((c) => c.type === "public").length})` },
+                     { key: "private", label: `Private (${channels.filter((c) => c.type === "private").length})` },
                   ].map((tab) => (
                      <button
                         key={tab.key}
                         type="button"
                         onClick={() => setFilterTab(tab.key)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
                            filterTab === tab.key
-                              ? "bg-[#f9ebae] text-zinc-950 shadow"
-                              : "text-zinc-400 hover:text-white"
+                              ? "bg-zinc-800 text-zinc-100 shadow-sm"
+                              : "text-zinc-400 hover:text-zinc-200"
                         }`}
                      >
                         {tab.label}
@@ -558,12 +558,12 @@ export default function Chat() {
                </div>
 
                <div className="relative w-full sm:w-80">
-                  <HiSearch className="absolute left-3.5 top-2.5 text-zinc-500" size={14} />
+                  <HiSearch className="absolute left-3 top-2.5 text-zinc-500" size={14} />
                   <input
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     placeholder="Search rooms by name or topic..."
-                     className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-zinc-800 bg-zinc-950 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] transition"
+                     placeholder="Search channels..."
+                     className="w-full pl-9 pr-4 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-zinc-500 transition"
                   />
                </div>
             </div>
@@ -571,8 +571,8 @@ export default function Chat() {
             {/* Channels Cards Grid */}
             {isLoadingChannels ? (
                <div className="py-20 text-center text-xs text-zinc-500 flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#f9ebae] border-t-transparent" />
-                  <span>Loading channels…</span>
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent" />
+                  <span>Loading channels...</span>
                </div>
             ) : filteredChannels.length > 0 ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -583,42 +583,42 @@ export default function Chat() {
                      return (
                         <div
                            key={channel._id}
-                           className="group p-5 rounded-2xl border border-zinc-800/80 bg-zinc-950/70 hover:border-[#f9ebae]/40 hover:bg-zinc-900/60 transition flex flex-col justify-between space-y-4 shadow-xl"
+                           className="group p-5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70 transition flex flex-col justify-between space-y-4"
                         >
                            <div>
                               <div className="flex items-center justify-between gap-2 mb-3">
                                  <span
-                                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 ${
+                                    className={`px-2 py-0.5 rounded text-[10px] font-medium border flex items-center gap-1 ${
                                        isPrivate
-                                          ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-                                          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                          ? "bg-amber-500/10 text-amber-300 border-amber-500/20"
+                                          : "bg-zinc-800 text-zinc-300 border-zinc-700"
                                     }`}
                                  >
                                     {isPrivate ? <HiLockClosed size={10} /> : <HiGlobeAlt size={10} />}
-                                    <span>{isPrivate ? "Private Group" : "Public Room"}</span>
+                                    <span>{isPrivate ? "Private" : "Public"}</span>
                                  </span>
 
                                  {unreadValue > 0 && (
-                                    <span className="rounded-full bg-[#f9ebae] px-2 py-0.5 text-[10px] font-black text-zinc-950">
+                                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-950">
                                        {unreadValue} unread
                                     </span>
                                  )}
                               </div>
 
                               <div className="flex items-center gap-2">
-                                 <HiHashtag className="text-[#f9ebae] shrink-0" size={18} />
-                                 <h3 className="font-bold text-sm text-zinc-100 group-hover:text-[#f9ebae] transition truncate">
+                                 <HiHashtag className="text-zinc-400 shrink-0" size={16} />
+                                 <h3 className="font-medium text-sm text-zinc-100 group-hover:text-white transition truncate">
                                     {channel.name}
                                  </h3>
                               </div>
 
                               <p className="text-xs text-zinc-400 mt-2 line-clamp-2 leading-relaxed">
-                                 {channel.topic || channel.description || (isPrivate ? "Private team group for restricted members." : "Public channel for open team discussion.")}
+                                 {channel.topic || channel.description || (isPrivate ? "Private channel for restricted members." : "Public channel for open team discussion.")}
                               </p>
                            </div>
 
                            <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80 text-xs">
-                              <span className="text-[11px] font-semibold text-zinc-500 flex items-center gap-1">
+                              <span className="text-[11px] text-zinc-500 flex items-center gap-1">
                                  <HiUsers size={12} />
                                  {channel.members?.length || 0} members
                               </span>
@@ -626,10 +626,10 @@ export default function Chat() {
                               <button
                                  type="button"
                                  onClick={() => handleSelectChannel(channel)}
-                                 className="py-1.5 px-3.5 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 rounded-xl transition font-bold text-xs flex items-center gap-1 shadow-md shadow-[#f9ebae]/10"
+                                 className="py-1.5 px-3 bg-zinc-100 hover:bg-white text-zinc-950 rounded-lg transition font-medium text-xs flex items-center gap-1"
                               >
                                  <HiArrowsExpand size={13} />
-                                 <span>Open Focus Chat</span>
+                                 <span>Open Channel</span>
                               </button>
                            </div>
                         </div>
@@ -637,10 +637,10 @@ export default function Chat() {
                   })}
                </div>
             ) : (
-               <div className="text-center py-20 rounded-2xl border border-zinc-800/80 bg-zinc-950/40 p-6 space-y-3">
-                  <HiChatAlt2 className="mx-auto text-zinc-600" size={44} />
-                  <h3 className="text-base font-bold text-zinc-200">No channels found</h3>
-                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+               <div className="text-center py-20 rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-6 space-y-2">
+                  <HiChatAlt2 className="mx-auto text-zinc-600" size={36} />
+                  <h3 className="text-sm font-medium text-zinc-200">No channels found</h3>
+                  <p className="text-xs text-zinc-500 max-w-sm mx-auto">
                      Create a channel to start team conversations.
                   </p>
                </div>
@@ -648,64 +648,64 @@ export default function Chat() {
 
             {/* Create Channel Modal */}
             {showCreateModal && (
-               <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4 backdrop-blur-sm">
-                  <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-4">
+               <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 backdrop-blur-sm">
+                  <div className="w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl space-y-4">
                      <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-                        <h3 className="text-base font-bold text-zinc-100">Create New Channel</h3>
+                        <h3 className="text-sm font-medium text-zinc-100">Create New Channel</h3>
                         <button onClick={() => setShowCreateModal(false)} className="text-zinc-400 hover:text-white">
-                           <HiX size={18} />
+                           <HiX size={16} />
                         </button>
                      </div>
                      <form onSubmit={handleCreateChannelSubmit} className="space-y-4">
                         <div>
-                           <label className="text-xs font-semibold text-zinc-300">Channel Name</label>
+                           <label className="text-xs font-medium text-zinc-300">Channel Name</label>
                            <input
                               value={newChannelName}
                               onChange={(e) => setNewChannelName(e.target.value)}
-                              placeholder="e.g. product-roadmap"
+                              placeholder="e.g. general"
                               required
-                              className="mt-1.5 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-sm text-zinc-100 focus:border-[#f9ebae] outline-none"
+                              className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-sm text-zinc-100 focus:border-zinc-500 outline-none"
                            />
                         </div>
                         <div>
-                           <label className="text-xs font-semibold text-zinc-300">Privacy</label>
+                           <label className="text-xs font-medium text-zinc-300">Privacy</label>
                            <div className="mt-1.5 grid grid-cols-2 gap-2">
                               {["public", "private"].map((p) => (
                                  <button
                                     key={p}
                                     type="button"
                                     onClick={() => setNewChannelType(p)}
-                                    className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition ${
+                                    className={`py-2 px-3 rounded-lg border text-xs font-medium capitalize transition ${
                                        newChannelType === p
-                                          ? "border-[#f9ebae] bg-[#f9ebae]/10 text-[#f9ebae]"
-                                          : "border-zinc-800 bg-zinc-900 text-zinc-400"
+                                          ? "border-zinc-600 bg-zinc-800 text-zinc-100"
+                                          : "border-zinc-800 bg-zinc-950 text-zinc-400"
                                     }`}
                                  >
-                                    {p === "public" ? "🌐 Public Room" : "🔒 Private Group"}
+                                    {p === "public" ? "Public" : "Private"}
                                  </button>
                               ))}
                            </div>
                         </div>
                         <div>
-                           <label className="text-xs font-semibold text-zinc-300">Topic / Purpose (Optional)</label>
+                           <label className="text-xs font-medium text-zinc-300">Topic (Optional)</label>
                            <input
                               value={newChannelTopic}
                               onChange={(e) => setNewChannelTopic(e.target.value)}
                               placeholder="What is this channel about?"
-                              className="mt-1.5 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-sm text-zinc-100 focus:border-[#f9ebae] outline-none"
+                              className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-sm text-zinc-100 focus:border-zinc-500 outline-none"
                            />
                         </div>
                         <div className="flex justify-end gap-2 pt-2 border-t border-zinc-800">
                            <button
                               type="button"
                               onClick={() => setShowCreateModal(false)}
-                              className="px-4 py-2 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white"
+                              className="px-4 py-2 rounded-lg border border-zinc-800 text-xs font-medium text-zinc-400 hover:text-white"
                            >
                               Cancel
                            </button>
                            <button
                               type="submit"
-                              className="px-4 py-2 rounded-xl bg-[#f9ebae] hover:bg-[#e6d695] text-xs font-extrabold text-zinc-950 shadow-md"
+                              className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-xs font-medium text-zinc-950"
                            >
                               Create Channel
                            </button>
@@ -720,37 +720,37 @@ export default function Chat() {
 
    // Full-Screen Dedicated Chat View
    return (
-      <div className="fixed inset-0 z-50 bg-[#09090b] text-zinc-100 flex flex-col overflow-hidden">
+      <div className="fixed inset-0 z-50 bg-[#0b0c10] text-zinc-100 flex flex-col overflow-hidden">
          {/* Channel Top Header Bar */}
-         <header className="h-16 border-b border-zinc-800/80 bg-zinc-950/90 px-4 sm:px-6 flex items-center justify-between gap-4 backdrop-blur-xl shrink-0">
+         <header className="h-14 border-b border-zinc-800/80 bg-zinc-900/90 px-4 sm:px-6 flex items-center justify-between gap-4 backdrop-blur-xl shrink-0">
             <div className="flex items-center gap-3 min-w-0 flex-1">
                <button
                   type="button"
                   onClick={backToDirectory}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 transition shrink-0"
                >
-                  <HiArrowLeft size={16} />
-                  <span className="hidden sm:inline">Back to Channels</span>
+                  <HiArrowLeft size={14} />
+                  <span className="hidden sm:inline">Back</span>
                </button>
 
                <div className="h-4 w-px bg-zinc-800 hidden sm:block" />
 
                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                     <h2 className="text-base font-extrabold text-zinc-100 flex items-center gap-1.5 truncate">
+                     <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5 truncate">
                         {activeChannel.type === "private" ? (
-                           <HiLockClosed className="text-amber-400" size={16} />
+                           <HiLockClosed className="text-amber-400" size={14} />
                         ) : (
-                           <HiHashtag className="text-[#f9ebae]" size={18} />
+                           <HiHashtag className="text-zinc-400" size={16} />
                         )}
                         <span>{activeChannel.name}</span>
                      </h2>
 
                      <span
-                        className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border shrink-0 ${
+                        className={`px-2 py-0.5 rounded text-[9px] font-medium uppercase tracking-wider border shrink-0 ${
                            activeChannel.type === "private"
-                              ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-                              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                              ? "bg-amber-500/10 text-amber-300 border-amber-500/20"
+                              : "bg-zinc-800 text-zinc-300 border-zinc-700"
                         }`}
                      >
                         {activeChannel.type === "private" ? "Private" : "Public"}
@@ -768,9 +768,9 @@ export default function Chat() {
                   <button
                      type="button"
                      onClick={() => setShowPinned(!showPinned)}
-                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-accent/40 bg-accent-soft text-accent text-xs font-bold transition hover:bg-accent/20"
+                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-xs font-medium transition hover:bg-zinc-700"
                   >
-                     <span>📌 {pinnedMessages.length} Pinned</span>
+                     <span>{pinnedMessages.length} Pinned</span>
                   </button>
                )}
 
@@ -778,7 +778,7 @@ export default function Chat() {
                   <button
                      type="button"
                      onClick={() => setShowManageMembersModal(true)}
-                     className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs font-bold text-amber-300 transition"
+                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-xs font-medium text-zinc-200 transition"
                   >
                      <HiUserAdd size={14} />
                      <span className="hidden sm:inline">Manage ({activeChannel.members?.length || 0})</span>
@@ -788,7 +788,7 @@ export default function Chat() {
                <button
                   type="button"
                   onClick={() => setShowDetails(!showDetails)}
-                  className="p-2 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white transition"
+                  className="p-2 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition"
                   title="Toggle Channel Details"
                >
                   <HiUsers size={16} />
@@ -798,7 +798,7 @@ export default function Chat() {
                   <button
                      type="button"
                      onClick={() => handleDeleteChannel(activeChannel._id)}
-                     className="p-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
+                     className="p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
                      title="Delete Channel"
                   >
                      <HiTrash size={16} />
@@ -809,16 +809,16 @@ export default function Chat() {
 
          {/* Pinned Messages Drawer */}
          {showPinned && pinnedMessages.length > 0 && (
-            <div className="bg-zinc-950 border-b border-zinc-800 p-4 space-y-2 shrink-0">
+            <div className="bg-zinc-900 border-b border-zinc-800 p-4 space-y-2 shrink-0">
                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#f9ebae]">📌 Pinned Channel Messages</span>
+                  <span className="text-xs font-medium text-zinc-200">Pinned Messages</span>
                   <button onClick={() => setShowPinned(false)} className="text-zinc-400 hover:text-white"><HiX size={16} /></button>
                </div>
                <div className="max-h-36 overflow-y-auto space-y-2">
                   {pinnedMessages.map((msg) => (
-                     <div key={msg._id} className="p-2 rounded-xl border border-zinc-800 bg-zinc-900/60 text-xs flex justify-between items-center gap-3">
-                        <span className="truncate text-zinc-300"><strong className="text-zinc-100">{msg.user?.name}:</strong> {msg.text}</span>
-                        <button onClick={() => unpinMessage(msg._id)} className="text-[10px] text-[#f9ebae] font-bold shrink-0 hover:underline">Unpin</button>
+                     <div key={msg._id} className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950/60 text-xs flex justify-between items-center gap-3">
+                        <span className="truncate text-zinc-300"><strong className="text-zinc-100 font-medium">{msg.user?.name}:</strong> {msg.text}</span>
+                        <button onClick={() => unpinMessage(msg._id)} className="text-[11px] text-zinc-400 hover:text-white shrink-0 hover:underline">Unpin</button>
                      </div>
                   ))}
                </div>
@@ -827,15 +827,15 @@ export default function Chat() {
 
          {/* Channel Info Drawer */}
          {showDetails && (
-            <div className="bg-zinc-900/90 border-b border-zinc-800 p-4 text-xs space-y-2 shrink-0">
+            <div className="bg-zinc-900 border-b border-zinc-800 p-4 text-xs space-y-2 shrink-0">
                <div className="flex justify-between items-center">
-                  <span className="font-bold text-zinc-200 uppercase tracking-widest text-[10px]">Channel Roster & Description</span>
+                  <span className="font-medium text-zinc-400 text-xs">Members & Details</span>
                   <button onClick={() => setShowDetails(false)} className="text-zinc-400 hover:text-white"><HiX size={16} /></button>
                </div>
-               <p className="text-zinc-400">{activeChannel.topic || activeChannel.description || "Public workspace chat room."}</p>
-               <div className="flex flex-wrap gap-2 pt-1">
+               <p className="text-zinc-400">{activeChannel.topic || activeChannel.description || "Public workspace channel."}</p>
+               <div className="flex flex-wrap gap-1.5 pt-1">
                   {(activeChannel.members || []).map((m) => (
-                     <span key={m._id || m} className="px-2 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-300 font-semibold">
+                     <span key={m._id || m} className="px-2 py-1 rounded-md bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-300">
                         {m.name || m.email || "Member"}
                      </span>
                   ))}
@@ -844,7 +844,7 @@ export default function Chat() {
          )}
 
          {/* Main Messages & Thread View */}
-         <div className="flex-1 min-h-0 flex overflow-hidden saas-grid-bg">
+         <div className="flex-1 min-h-0 flex overflow-hidden app-grid-bg">
             {/* Messages Feed */}
             <div className="flex-1 min-h-0 flex flex-col p-4 sm:p-6 overflow-y-auto space-y-4">
                {visibleMessages.length > 0 ? (
@@ -854,13 +854,13 @@ export default function Chat() {
                      return (
                         <div key={msg._id} className={`group flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                            <div className="mb-1 flex items-center gap-2 text-[10px] text-zinc-500">
-                              <span className="font-bold text-zinc-300">{isMe ? "You" : msg.user?.name || "Teammate"}</span>
+                              <span className="font-medium text-zinc-400">{isMe ? "You" : msg.user?.name || "Teammate"}</span>
                               <span>•</span>
                               <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                            </div>
 
-                           <div className={`relative max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs leading-relaxed shadow-xl ${
-                              isMe ? "bg-[#f9ebae] text-zinc-950 font-medium rounded-tr-xs" : "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-xs"
+                           <div className={`relative max-w-[85%] sm:max-w-[70%] p-3 rounded-xl text-xs leading-relaxed ${
+                              isMe ? "bg-zinc-100 text-zinc-950 font-normal rounded-tr-xs" : "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-xs"
                            }`}>
                               {msg.text}
                            </div>
@@ -868,7 +868,7 @@ export default function Chat() {
                            {/* Thread replies button */}
                            <button
                               onClick={() => openThread(msg)}
-                              className="mt-1 text-[10px] font-bold text-[#f9ebae] hover:underline flex items-center gap-1"
+                              className="mt-1 text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition"
                            >
                               <HiAnnotation size={12} />
                               <span>{msg.threadReplyCount || 0} replies</span>
@@ -877,28 +877,28 @@ export default function Chat() {
                      );
                   })
                ) : (
-                  <div className="py-20 text-center text-xs text-zinc-500">No messages yet. Start the conversation!</div>
+                  <div className="py-20 text-center text-xs text-zinc-500">No messages yet. Start the conversation.</div>
                )}
                <div ref={messagesEndRef} />
             </div>
 
             {/* Thread Replies Panel */}
             {activeThread && (
-               <div className="w-80 border-l border-zinc-800 bg-zinc-950 p-4 flex flex-col h-full shrink-0">
+               <div className="w-80 border-l border-zinc-800 bg-zinc-900/90 p-4 flex flex-col h-full shrink-0">
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                     <span className="text-xs font-bold text-zinc-100 flex items-center gap-1.5"><HiAnnotation className="text-[#f9ebae]" /> Thread Replies</span>
+                     <span className="text-xs font-medium text-zinc-200 flex items-center gap-1.5"><HiAnnotation className="text-zinc-400" /> Thread Replies</span>
                      <button onClick={() => setActiveThread(null)} className="text-zinc-400 hover:text-white"><HiX size={16} /></button>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto my-3 space-y-3">
-                     <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-200">
-                        <strong className="text-[#f9ebae] block mb-1">{activeThread.user?.name}:</strong>
+                  <div className="flex-1 overflow-y-auto my-3 space-y-2">
+                     <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-xs text-zinc-200">
+                        <strong className="text-zinc-100 block mb-1 font-medium">{activeThread.user?.name}:</strong>
                         {activeThread.text}
                      </div>
 
                      {threadReplies.map((r) => (
-                        <div key={r._id} className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/50 text-xs text-zinc-300">
-                           <strong className="text-zinc-100 block mb-0.5">{r.user?.name}:</strong>
+                        <div key={r._id} className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950/50 text-xs text-zinc-300">
+                           <strong className="text-zinc-100 block mb-0.5 font-medium">{r.user?.name}:</strong>
                            {r.text}
                         </div>
                      ))}
@@ -909,27 +909,27 @@ export default function Chat() {
                         value={threadReplyText}
                         onChange={(e) => setThreadReplyText(e.target.value)}
                         placeholder="Reply to thread..."
-                        className="flex-1 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl text-xs text-zinc-100 outline-none focus:border-[#f9ebae]"
+                        className="flex-1 bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-lg text-xs text-zinc-100 outline-none focus:border-zinc-500"
                      />
-                     <button type="submit" className="px-3 py-1.5 bg-[#f9ebae] text-zinc-950 text-xs font-bold rounded-xl">Send</button>
+                     <button type="submit" className="px-3 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium rounded-lg">Send</button>
                   </form>
                </div>
             )}
          </div>
 
          {/* Message Input Footer Bar */}
-         <footer className="p-4 border-t border-zinc-800/80 bg-zinc-950/90 shrink-0">
+         <footer className="p-4 border-t border-zinc-800/80 bg-zinc-900/90 shrink-0">
             <form onSubmit={handleSendMessage} className="flex gap-2 max-w-5xl mx-auto">
                <input
                   value={messageText}
                   onChange={handleInputChange}
                   placeholder={`Message #${activeChannel.name}...`}
-                  className="flex-1 bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-2xl text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-[#f9ebae] shadow-inner transition"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 px-4 py-2.5 rounded-lg text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-zinc-500 transition"
                />
                <button
                   type="submit"
                   disabled={!messageText.trim()}
-                  className="px-5 py-3 bg-[#f9ebae] hover:bg-[#e6d695] text-zinc-950 text-xs font-extrabold rounded-2xl shadow-md shadow-[#f9ebae]/20 transition disabled:opacity-50"
+                  className="px-4 py-2.5 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium rounded-lg transition disabled:opacity-50"
                >
                   Send
                </button>
