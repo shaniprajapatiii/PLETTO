@@ -11,7 +11,6 @@ const Dashboard = lazy(() => import("../pages/Dashboard/Dashboard"));
 const Chat = lazy(() => import("../pages/Chat/Chat"));
 const Docs = lazy(() => import("../pages/Docs/Docs"));
 const People = lazy(() => import("../pages/People/People"));
-const Whiteboard = lazy(() => import("../pages/Whiteboard/Whiteboard"));
 const Profile = lazy(() => import("../pages/Profile/Profile"));
 const Settings = lazy(() => import("../pages/Settings/Settings"));
 const MyChannels = lazy(() => import("../pages/MyChannels/MyChannels"));
@@ -39,7 +38,6 @@ export default function AppRoutes() {
                   <Route path="/dm" element={<DM />} />
                   <Route path="/my-channels" element={<MyChannels />} />
                   <Route path="/people" element={<People />} />
-                  <Route path="/whiteboard" element={<Whiteboard />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/settings" element={<Settings />} />
                </Route>

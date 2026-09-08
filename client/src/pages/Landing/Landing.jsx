@@ -4,7 +4,6 @@ import {
    HiArrowRight,
    HiDocumentText,
    HiChatAlt2,
-   HiViewBoards,
    HiWifi,
    HiShieldCheck,
    HiCollection,
@@ -17,7 +16,6 @@ import {
    HiLockClosed,
    HiPencil,
    HiEye,
-   HiOutlinePresentationChartBar,
    HiChevronDown,
 } from "react-icons/hi";
 import { Logo } from "../../components/brand/Logo";
@@ -31,7 +29,7 @@ const sections = [
 
 export default function Landing() {
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-   const [activeTab, setActiveTab] = useState("docs"); // 'docs', 'chat', 'dm', 'whiteboard'
+   const [activeTab, setActiveTab] = useState("docs"); // 'docs', 'chat', 'dm'
    const [openFaq, setOpenFaq] = useState(0);
 
    return (
@@ -150,7 +148,7 @@ export default function Landing() {
                   </h1>
 
                   <p className="mx-auto max-w-2xl text-sm sm:text-base leading-relaxed text-zinc-400">
-                     PLETTO merges real-time knowledge docs, channel chat rooms, direct 1-on-1 messaging, and interactive whiteboards into one hyper-efficient operating system.
+                     PLETTO merges real-time knowledge docs, channel chat rooms, and direct 1-on-1 messaging into one hyper-efficient operating system.
                   </p>
 
                   {/* Action Buttons */}
@@ -205,7 +203,6 @@ export default function Landing() {
                         { id: "docs", label: "📄 Knowledge Docs", icon: <HiDocumentText size={16} /> },
                         { id: "chat", label: "💬 Team Channels", icon: <HiChatAlt2 size={16} /> },
                         { id: "dm", label: "✉️ Direct Messages", icon: <HiUsers size={16} /> },
-                        { id: "whiteboard", label: "🎨 Visual Whiteboard", icon: <HiViewBoards size={16} /> },
                      ].map((tab) => (
                         <button
                            key={tab.id}
@@ -274,7 +271,7 @@ export default function Landing() {
                            </div>
                            <div className="space-y-3">
                               {[
-                                 { user: "Alex Rivers", text: "Just finalized the full-screen whiteboard layout updates!", time: "10:42 AM" },
+                                 { user: "Alex Rivers", text: "Just finalized the new documentation layout updates!", time: "10:42 AM" },
                                  { user: "Sarah Chen", text: "Awesome! The live markdown preview editor works cleanly too.", time: "10:44 AM" },
                               ].map((m) => (
                                  <div key={m.user} className="p-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 text-xs space-y-1">
@@ -306,27 +303,6 @@ export default function Landing() {
                            </div>
                         </div>
                      )}
-
-                     {activeTab === "whiteboard" && (
-                        <div className="space-y-4">
-                           <div className="flex items-center justify-between">
-                              <h3 className="font-bold text-base text-white">Visual Architecture Whiteboard</h3>
-                              <div className="flex gap-2">
-                                 <span className="px-2 py-1 rounded bg-amber-400/20 text-amber-300 text-[10px] font-bold">Sticky Notes</span>
-                                 <span className="px-2 py-1 rounded bg-sky-400/20 text-sky-300 text-[10px] font-bold">Flowchart Boxes</span>
-                              </div>
-                           </div>
-                           <div className="h-48 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 flex items-center justify-around">
-                              <div className="p-4 rounded-2xl bg-[#fef08a] text-zinc-950 text-xs font-bold w-36 shadow-xl rotate-[-2deg]">
-                                 📌 Frontend Client (Vite React)
-                              </div>
-                              <span className="text-amber-400 font-bold text-lg">➔</span>
-                              <div className="p-4 rounded-2xl bg-[#bae6fd] text-zinc-950 text-xs font-bold w-36 shadow-xl rotate-[2deg]">
-                                 ⚡ Socket.IO Event Engine
-                              </div>
-                           </div>
-                        </div>
-                     )}
                   </div>
                </div>
             </section>
@@ -341,7 +317,7 @@ export default function Landing() {
                   </p>
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
                      {
                         icon: <HiDocumentText className="text-[#f9ebae]" size={28} />,
@@ -357,11 +333,6 @@ export default function Landing() {
                         icon: <HiUsers className="text-[#f9ebae]" size={28} />,
                         title: "Direct Messages",
                         desc: "1-on-1 team messaging with presence indicators, typing status, and teammate directory search.",
-                     },
-                     {
-                        icon: <HiViewBoards className="text-[#f9ebae]" size={28} />,
-                        title: "Visual Whiteboard",
-                        desc: "Interactive canvas with freehand drawing, highlighter, sticky notes, flowchart boxes, and PNG export.",
                      },
                   ].map((card) => (
                      <div
@@ -395,10 +366,9 @@ export default function Landing() {
                         </thead>
                         <tbody className="divide-y divide-zinc-800/60 text-zinc-300 font-medium">
                            {[
-                              { feature: "Unified Single Window Workspace", pletto: "Yes — Docs, Chat, DM & Canvas", legacy: "No — 4 separate browser apps" },
+                              { feature: "Unified Single Window Workspace", pletto: "Yes — Docs, Chat & DM Channels", legacy: "No — 3 separate browser apps" },
                               { feature: "Directory Catalog -> Dedicated Focus View", pletto: "Yes — Dedicated focus canvas", legacy: "Cluttered split panes" },
                               { feature: "Live Markdown Split Preview", pletto: "Yes — Realtime side-by-side", legacy: "Basic plain text only" },
-                              { feature: "Visual Whiteboard PNG Export", pletto: "Yes — High-res 1-click download", legacy: "Requires paid add-ons" },
                               { feature: "Sub-40ms Socket Sync Engine", pletto: "Yes — Realtime WebSockets", legacy: "Polling delay" },
                            ].map((row, idx) => (
                               <tr key={row.feature} className="hover:bg-zinc-900/40 transition">
@@ -424,15 +394,11 @@ export default function Landing() {
                   {[
                      {
                         q: "What is PLETTO?",
-                        a: "PLETTO is a real-time team collaboration operating system combining Knowledge Documents, Channel Chat, 1-on-1 Direct Messages, and Interactive Whiteboards into one high-performance web platform.",
+                        a: "PLETTO is a real-time team collaboration operating system combining Knowledge Documents, Channel Chat, and 1-on-1 Direct Messages into one high-performance web platform.",
                      },
                      {
                         q: "Can I use Markdown for writing documentation?",
                         a: "Yes! PLETTO includes full Markdown support with toolbar snippets (H1-H3, code blocks, tables, task checkboxes) and live side-by-side split rendering.",
-                     },
-                     {
-                        q: "How does the Whiteboard canvas work?",
-                        a: "Our whiteboard provides pen tools, marker highlighters, sticky notes, flowchart boxes, arrows, text labels, undo/redo history, and 1-click PNG image export.",
                      },
                      {
                         q: "Is PLETTO free to use?",

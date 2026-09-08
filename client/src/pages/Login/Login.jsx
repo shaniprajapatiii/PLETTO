@@ -39,7 +39,7 @@ export default function Login() {
                      Streamline your collaborative workspace.
                   </h2>
                   <p className="mt-4 text-sm text-zinc-400 leading-relaxed">
-                     Connect team chats, knowledge documents, and real-time whiteboards into one unified platform.
+                     Connect team chats, knowledge documents, and direct messaging into one unified platform.
                   </p>
                </div>
 

@@ -5,7 +5,6 @@ import {
    HiSparkles,
    HiDocumentText,
    HiChatAlt2,
-   HiViewBoards,
    HiViewGrid,
    HiUserCircle,
    HiCog,
@@ -24,7 +23,6 @@ const CATEGORIZED_ACTIONS = [
          { id: "docs", title: "Knowledge Documents", description: "Full-screen markdown & spec editor", href: "/docs", icon: HiDocumentText },
          { id: "chat", title: "Team Channels", description: "Public & private discussion rooms", href: "/chat", icon: HiChatAlt2 },
          { id: "dm", title: "Direct Messages", description: "1-on-1 teammate conversations", href: "/dm", icon: HiUsers },
-         { id: "board", title: "Visual Whiteboards", description: "Flowcharting & sticky note canvas", href: "/whiteboard", icon: HiViewBoards },
       ],
    },
    {

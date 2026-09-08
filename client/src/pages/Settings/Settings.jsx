@@ -74,7 +74,7 @@ export default function Settings() {
          <div className="space-y-6">
             <div className="p-4 rounded-xl border border-[rgba(249,235,174,0.3)] bg-[rgba(249,235,174,0.05)] flex items-center gap-3 text-xs text-[#f9ebae]">
                <HiShieldCheck className="h-5 w-5 text-[#f9ebae] shrink-0" />
-               <span>Enterprise security enabled. Member roles determine permissions across channels, docs, and whiteboards.</span>
+               <span>Enterprise security enabled. Member roles determine permissions across channels and docs.</span>
             </div>
 
             {message ? <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-xs text-emerald-300">{message}</div> : null}

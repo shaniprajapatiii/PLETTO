@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { HiArrowRight, HiChatAlt2, HiClock, HiDocumentText, HiLightningBolt, HiSparkles, HiUsers, HiViewBoards, HiViewGrid, HiTrendingUp } from "react-icons/hi";
+import { HiArrowRight, HiChatAlt2, HiClock, HiDocumentText, HiLightningBolt, HiSparkles, HiUsers, HiViewGrid, HiTrendingUp } from "react-icons/hi";
 import { getChannels } from "../../services/chatService";
 import { getDocs } from "../../services/docsService";
-import { getBoards } from "../../services/whiteboardService";
 import { getWorkspaceMembers } from "../../services/workspaceService";
 import { PageShell } from "../../components/common/PageShell";
 
@@ -11,31 +10,28 @@ const tabs = [
    { id: "overview", label: "Overview", icon: HiViewGrid },
    { id: "channels", label: "Channels", icon: HiChatAlt2 },
    { id: "documents", label: "Documents", icon: HiDocumentText },
-   { id: "whiteboards", label: "Whiteboards", icon: HiViewBoards },
 ];
 
 export default function Dashboard() {
-   const [stats, setStats] = useState({ channels: 0, documents: 0, boards: 0 });
-   const [preview, setPreview] = useState({ channels: [], documents: [], boards: [] });
+   const [stats, setStats] = useState({ channels: 0, documents: 0 });
+   const [preview, setPreview] = useState({ channels: [], documents: [] });
    const [members, setMembers] = useState([]);
    const [activeTab, setActiveTab] = useState("overview");
 
    useEffect(() => {
       const load = async () => {
-         const [channelsRes, docsRes, boardsRes, membersRes] = await Promise.allSettled([
+         const [channelsRes, docsRes, membersRes] = await Promise.allSettled([
             getChannels(),
             getDocs(),
-            getBoards(),
             getWorkspaceMembers(),
          ]);
 
          const channels = channelsRes.status === "fulfilled" ? channelsRes.value.data.channels : [];
          const documents = docsRes.status === "fulfilled" ? docsRes.value.data.documents : [];
-         const boards = boardsRes.status === "fulfilled" ? boardsRes.value.data.whiteboards : [];
          const workspaceMembers = membersRes.status === "fulfilled" ? membersRes.value.data.members || [] : [];
 
-         setStats({ channels: channels.length, documents: documents.length, boards: boards.length });
-         setPreview({ channels: channels.slice(0, 4), documents: documents.slice(0, 4), boards: boards.slice(0, 4) });
+         setStats({ channels: channels.length, documents: documents.length });
+         setPreview({ channels: channels.slice(0, 4), documents: documents.slice(0, 4) });
          setMembers(workspaceMembers);
       };
       load();
@@ -45,7 +41,6 @@ export default function Dashboard() {
       return [
          ...preview.channels.map((item) => ({ title: item.name, subtitle: "Active channel", icon: HiChatAlt2, link: `/chat?channel=${item._id}` })),
          ...preview.documents.map((item) => ({ title: item.title, subtitle: "Knowledge document", icon: HiDocumentText, link: "/docs" })),
-         ...preview.boards.map((item) => ({ title: item.name, subtitle: "Collaborative whiteboard", icon: HiViewBoards, link: "/whiteboard" })),
       ].slice(0, 6);
    }, [preview]);
 
@@ -62,10 +57,9 @@ export default function Dashboard() {
             }
          >
             {/* Stat Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                <StatCard title="Active Channels" value={stats.channels} trend="+12%" icon={<HiChatAlt2 className="h-5 w-5 text-[#f9ebae]" />} />
                <StatCard title="Shared Documents" value={stats.documents} trend="+8%" icon={<HiDocumentText className="h-5 w-5 text-[#f9ebae]" />} />
-               <StatCard title="Whiteboards" value={stats.boards} trend="+15%" icon={<HiViewBoards className="h-5 w-5 text-[#f9ebae]" />} />
                <StatCard title="Team Members" value={members.length} trend="+4%" icon={<HiUsers className="h-5 w-5 text-[#f9ebae]" />} />
             </div>
 
@@ -97,7 +91,7 @@ export default function Dashboard() {
                      <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80">
                         <div>
                            <h2 className="text-base font-bold text-zinc-100">Recent Workspace Activity</h2>
-                           <p className="text-xs text-zinc-400">Stream of updates across channels, docs, and whiteboards.</p>
+                           <p className="text-xs text-zinc-400">Stream of updates across channels and documents.</p>
                         </div>
                         <span className="text-[10px] font-bold text-[#f9ebae] uppercase tracking-widest bg-[rgba(249,235,174,0.1)] px-2 py-1 rounded border border-[rgba(249,235,174,0.2)]">
                            Live
@@ -141,7 +135,7 @@ export default function Dashboard() {
                      <div className="space-y-2">
                         <QuickLink to="/chat" title="Channel Chat" desc="Real-time messaging with channels" />
                         <QuickLink to="/docs" title="Knowledge Docs" desc="Co-author documents & notes" />
-                        <QuickLink to="/whiteboard" title="Visual Canvas" desc="Interactive diagram board" />
+                        <QuickLink to="/dm" title="Direct Messages" desc="1-on-1 teammate messaging" />
                         <QuickLink to="/people" title="Team Directory" desc="Find colleagues & status" />
                      </div>
                   </div>

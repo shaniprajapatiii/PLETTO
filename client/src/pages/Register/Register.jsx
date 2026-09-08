@@ -44,7 +44,7 @@ export default function Register() {
                </div>
 
                <div className="p-4 rounded-xl border border-[rgba(249,235,174,0.3)] bg-[rgba(249,235,174,0.05)] text-xs text-[#f9ebae]">
-                  ✨ Instant setup · Role permissions · Infinite whiteboards
+                  ✨ Instant setup · Role permissions · Real-time sync
                </div>
             </div>
 

@@ -9,7 +9,6 @@ import {
    HiHashtag,
    HiLockClosed,
    HiGlobeAlt,
-   HiOutlinePresentationChartBar,
    HiArrowsExpand,
    HiExternalLink,
    HiSearch,
@@ -17,7 +16,6 @@ import {
 } from "react-icons/hi";
 import { getChannels, deleteChannel } from "../../services/chatService";
 import { getDocs, deleteDoc } from "../../services/docsService";
-import { getBoards, deleteBoard } from "../../services/whiteboardService";
 import { useAuth } from "../../context/AuthContext";
 import { PageShell } from "../../components/common/PageShell";
 
@@ -27,25 +25,22 @@ export default function MyChannels() {
 
    const [channels, setChannels] = useState([]);
    const [docs, setDocs] = useState([]);
-   const [whiteboards, setWhiteboards] = useState([]);
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
 
-   const [activeTab, setActiveTab] = useState("all"); // 'all', 'channels', 'docs', 'whiteboards'
+   const [activeTab, setActiveTab] = useState("all"); // 'all', 'channels', 'docs'
    const [searchQuery, setSearchQuery] = useState("");
 
    const loadAllData = async () => {
       try {
          setLoading(true);
-         const [channelsRes, docsRes, boardsRes] = await Promise.all([
+         const [channelsRes, docsRes] = await Promise.all([
             getChannels({ type: "channel" }),
             getDocs(),
-            getBoards(),
          ]);
 
          setChannels((channelsRes.data.channels || []).filter((c) => c.type !== "dm"));
          setDocs(docsRes.data.documents || []);
-         setWhiteboards(boardsRes.data.whiteboards || []);
          setError(null);
       } catch (err) {
          setError(err.response?.data?.message || "Failed to load workspace resources");
@@ -76,16 +71,6 @@ export default function MyChannels() {
          setDocs((prev) => prev.filter((d) => d._id !== docId));
       } catch (err) {
          setError(err.response?.data?.message || "Failed to delete document.");
-      }
-   };
-
-   const handleDeleteBoardItem = async (boardId) => {
-      if (!window.confirm("Are you sure you want to delete this whiteboard?")) return;
-      try {
-         await deleteBoard(boardId);
-         setWhiteboards((prev) => prev.filter((b) => b._id !== boardId));
-      } catch (err) {
-         setError(err.response?.data?.message || "Failed to delete whiteboard.");
       }
    };
 
@@ -125,30 +110,17 @@ export default function MyChannels() {
          onDelete: () => handleDeleteDocItem(d._id),
       }));
 
-      const boardItems = whiteboards.map((b) => ({
-         id: b._id,
-         type: "whiteboard",
-         subType: "canvas",
-         title: b.name || "Untitled Whiteboard",
-         description: "Interactive visual collaboration canvas.",
-         updatedAt: b.updatedAt || b.createdAt,
-         meta: `${b.data?.strokes?.length || 0} strokes`,
-         openUrl: `/whiteboard?board=${b._id}&fullscreen=true`,
-         onDelete: () => handleDeleteBoardItem(b._id),
-      }));
-
       let combined = [];
-      if (activeTab === "all") combined = [...channelItems, ...docItems, ...boardItems];
+      if (activeTab === "all") combined = [...channelItems, ...docItems];
       else if (activeTab === "channels") combined = channelItems;
       else if (activeTab === "docs") combined = docItems;
-      else if (activeTab === "whiteboards") combined = boardItems;
 
       if (!searchQuery.trim()) return combined;
       const q = searchQuery.toLowerCase();
       return combined.filter(
          (item) => item.title?.toLowerCase().includes(q) || item.description?.toLowerCase().includes(q)
       );
-   }, [channels, docs, whiteboards, activeTab, searchQuery]);
+   }, [channels, docs, activeTab, searchQuery]);
 
    const stats = useMemo(() => {
       const publicCount = channels.filter((c) => c.type === "public").length;
@@ -157,9 +129,8 @@ export default function MyChannels() {
          publicChannels: publicCount,
          privateChannels: privateCount,
          docsCount: docs.length,
-         boardsCount: whiteboards.length,
       };
-   }, [channels, docs, whiteboards]);
+   }, [channels, docs]);
 
    if (loading) {
       return (
@@ -173,7 +144,7 @@ export default function MyChannels() {
    return (
       <PageShell
          title="Workspace Control Center"
-         subtitle="Manage, monitor, and launch all public/private channels, documents, and whiteboards in focus mode."
+         subtitle="Manage, monitor, and launch all public/private channels and documents in focus mode."
          actions={
             <div className="flex gap-2">
                <button
@@ -190,13 +161,6 @@ export default function MyChannels() {
                   <HiPlus size={14} />
                   <span>New Doc</span>
                </button>
-               <button
-                  onClick={() => navigate("/whiteboard")}
-                  className="flex items-center gap-1.5 px-3 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-lg transition"
-               >
-                  <HiPlus size={14} />
-                  <span>New Board</span>
-               </button>
             </div>
          }
       >
@@ -208,7 +172,7 @@ export default function MyChannels() {
          )}
 
          {/* Workspace Metrics Overview Cards */}
-         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-1">
                <div className="flex items-center justify-between text-emerald-400">
                   <HiGlobeAlt size={20} />
@@ -235,25 +199,15 @@ export default function MyChannels() {
                <div className="text-2xl font-extrabold text-white">{stats.docsCount}</div>
                <p className="text-[10px] text-zinc-400">Notes & specs</p>
             </div>
-
-            <div className="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5 space-y-1">
-               <div className="flex items-center justify-between text-purple-400">
-                  <HiOutlinePresentationChartBar size={20} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Whiteboards</span>
-               </div>
-               <div className="text-2xl font-extrabold text-white">{stats.boardsCount}</div>
-               <p className="text-[10px] text-zinc-400">Visual canvases</p>
-            </div>
          </div>
 
          {/* Filter Tabs & Search Control */}
          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-full sm:w-auto overflow-x-auto text-xs font-bold">
                {[
-                  { key: "all", label: `All Assets (${channels.length + docs.length + whiteboards.length})` },
+                  { key: "all", label: `All Assets (${channels.length + docs.length})` },
                   { key: "channels", label: `Channels (${channels.length})` },
                   { key: "docs", label: `Docs (${docs.length})` },
-                  { key: "whiteboards", label: `Whiteboards (${whiteboards.length})` },
                ].map((tab) => (
                   <button
                      key={tab.key}
@@ -299,17 +253,13 @@ export default function MyChannels() {
                                        ? item.subType === "private"
                                           ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                                           : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                                       : item.type === "doc"
-                                       ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
-                                       : "bg-purple-500/10 text-purple-400 border border-purple-500/30"
+                                       : "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
                                  }`}
                               >
                                  {item.type === "channel" ? (
                                     item.subType === "private" ? <HiLockClosed size={16} /> : <HiGlobeAlt size={16} />
-                                 ) : item.type === "doc" ? (
-                                    <HiDocumentText size={16} />
                                  ) : (
-                                    <HiOutlinePresentationChartBar size={16} />
+                                    <HiDocumentText size={16} />
                                  )}
                               </div>
 
@@ -320,18 +270,14 @@ export default function MyChannels() {
                                           ? item.subType === "private"
                                              ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
                                              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                                          : item.type === "doc"
-                                          ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/30"
-                                          : "bg-purple-500/10 text-purple-300 border-purple-500/30"
+                                          : "bg-indigo-500/10 text-indigo-300 border-indigo-500/30"
                                     }`}
                                  >
                                     {item.type === "channel"
                                        ? item.subType === "private"
                                           ? "Private Group"
                                           : "Public Room"
-                                       : item.type === "doc"
-                                       ? "Document"
-                                       : "Whiteboard"}
+                                       : "Document"}
                                  </span>
                                  <p className="text-[10px] text-zinc-500 mt-0.5">Updated {formatDate(item.updatedAt)}</p>
                               </div>
@@ -377,7 +323,7 @@ export default function MyChannels() {
                <HiShieldCheck className="mx-auto text-zinc-600" size={44} />
                <h3 className="text-base font-bold text-zinc-200">No assets found</h3>
                <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                  Create public or private channels, knowledge documents, or whiteboards to populate your workspace control panel.
+                  Create public or private channels or knowledge documents to populate your workspace control panel.
                </p>
             </div>
          )}

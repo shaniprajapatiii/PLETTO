@@ -4,7 +4,6 @@ import {
    HiViewGrid as DashboardIcon,
    HiDocumentText as DocsIcon,
    HiChatAlt2 as ChatIcon,
-   HiViewBoards as WhiteboardIcon,
    HiUsers as PeopleIcon,
    HiUserCircle as ProfileIcon,
    HiCog as SettingsIcon,
@@ -21,7 +20,6 @@ import {
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
-import { createBoard } from "../../services/whiteboardService";
 import { createDoc } from "../../services/docsService";
 import { createChannel, getChannels } from "../../services/chatService";
 import { Logo } from "../brand/Logo";
@@ -36,7 +34,6 @@ const navGroups = [
          { label: "Documents", to: "/docs", icon: DocsIcon, badge: null },
          { label: "Channels", to: "/chat", icon: ChatIcon, badge: "live" },
          { label: "Direct Messages", to: "/dm", icon: ChatIcon, badge: null },
-         { label: "Whiteboard", to: "/whiteboard", icon: WhiteboardIcon, badge: null },
       ]
    },
    {
@@ -57,7 +54,7 @@ const navGroups = [
 
 const starterNotifications = [
    { id: "1", title: "Launch plan updated", body: "Mira added your rollout notes.", link: "/docs", read: false, createdAt: new Date().toISOString() },
-   { id: "2", title: "New whiteboard shared", body: "A fresh roadmap board is ready.", link: "/whiteboard", read: false, createdAt: new Date().toISOString() },
+   { id: "2", title: "Channel discussion active", body: "Check the latest team updates.", link: "/chat", read: false, createdAt: new Date().toISOString() },
    { id: "3", title: "Workspace invite accepted", body: "Your teammate joined the workspace.", link: "/settings", read: true, createdAt: new Date().toISOString() },
 ];
 

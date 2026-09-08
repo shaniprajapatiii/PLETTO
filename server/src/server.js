@@ -10,7 +10,6 @@ const WorkspaceMember = require("./models/WorkspaceMember");
 const Channel = require("./models/Channel");
 const Message = require("./models/Message");
 const Document = require("./models/Document");
-const Whiteboard = require("./models/Whiteboard");
 const User = require("./models/User");
 const Presence = require("./models/Presence");
 const { ensureUserWorkspaceMembership, ensureAllUsersInPrimaryWorkspace } = require("./utils/workspaceHelper");
@@ -496,58 +495,6 @@ io.on("connection", (socket) => {
       if (!docId || !cursor) return;
       socket.to(`doc:${docId}`).emit("docCursor", {
          docId,
-         cursor,
-         user: {
-            id: socket.user.id,
-            name: socket.user.name,
-            avatar: socket.user.avatar,
-            color: socket.user.color,
-         },
-      });
-   });
-
-   // ============ WHITEBOARDS ============
-   socket.on("joinBoard", async (boardId) => {
-      try {
-         const board = await Whiteboard.findOne({ _id: boardId, workspace: socket.user.workspaceId });
-         if (!board) return;
-
-         socket.join(`board:${boardId}`);
-         socket.emit("joinedBoard", boardId);
-      } catch (error) {
-         console.error("joinBoard error:", error.message);
-      }
-   });
-
-   socket.on("boardUpdate", async ({ boardId, data }) => {
-      try {
-         if (!boardId || data === undefined) return;
-
-         const board = await Whiteboard.findOneAndUpdate(
-            { _id: boardId, workspace: socket.user.workspaceId },
-            { data },
-            { new: true },
-         );
-         if (!board) return;
-
-         io.to(`board:${boardId}`).emit("boardUpdate", {
-            board,
-            user: {
-               id: socket.user.id,
-               name: socket.user.name,
-               avatar: socket.user.avatar,
-               color: socket.user.color,
-            },
-         });
-      } catch (error) {
-         console.error("boardUpdate error:", error.message);
-      }
-   });
-
-   socket.on("boardCursor", ({ boardId, cursor }) => {
-      if (!boardId || !cursor) return;
-      socket.to(`board:${boardId}`).emit("boardCursor", {
-         boardId,
          cursor,
          user: {
             id: socket.user.id,
