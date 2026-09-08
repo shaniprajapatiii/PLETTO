@@ -1,6 +1,5 @@
 const Channel = require("../models/Channel");
 const Message = require("../models/Message");
-const Reaction = require("../models/Reaction");
 const WorkspaceMember = require("../models/WorkspaceMember");
 const { getIo } = require("../utils/socket");
 const { ensureUserWorkspaceMembership } = require("../utils/workspaceHelper");
@@ -24,9 +23,8 @@ exports.getMessages = async (req, res) => {
       }
 
       const messages = await Message.find({ channel: channelId, workspace: workspaceId, isDeleted: false })
-         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
+         .select("channel workspace user text attachments isThreadReply threadParent threadReplyCount isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
-         .populate("reactions.users", "name avatar")
          .sort({ createdAt: -1 })
          .skip(parseInt(offset))
          .limit(parseInt(limit));
@@ -89,9 +87,8 @@ exports.sendMessage = async (req, res) => {
       await Channel.findByIdAndUpdate(channelId, { lastActivityAt: new Date() });
 
       const populatedMessage = await Message.findById(message._id)
-         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
-         .populate("user", "name avatar color")
-         .populate("reactions.users", "name avatar");
+         .select("channel workspace user text attachments isThreadReply threadParent threadReplyCount isEdited editedAt isDeleted createdAt updatedAt")
+         .populate("user", "name avatar color");
 
       const io = getIo();
       if (io) {
@@ -127,7 +124,6 @@ exports.editMessage = async (req, res) => {
          return res.status(404).json({ success: false, message: "Message not found" });
       }
 
-      // Save edit history
       message.editHistory.push({
          text: message.text,
          editedAt: message.editedAt || message.createdAt,
@@ -139,9 +135,13 @@ exports.editMessage = async (req, res) => {
       await message.save();
 
       const populatedMessage = await Message.findById(messageId)
-         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
-         .populate("user", "name avatar color")
-         .populate("reactions.users", "name avatar");
+         .select("channel workspace user text attachments isThreadReply threadParent threadReplyCount isEdited editedAt isDeleted createdAt updatedAt")
+         .populate("user", "name avatar color");
+
+      const io = getIo();
+      if (io) {
+         io.to(message.channel.toString()).emit("messageEdited", populatedMessage);
+      }
 
       res.json({ success: true, message: populatedMessage });
    } catch (error) {
@@ -163,155 +163,49 @@ exports.deleteMessage = async (req, res) => {
       message.deletedAt = new Date();
       await message.save();
 
-      res.json({ success: true, message: "Message deleted" });
+      const io = getIo();
+      if (io) {
+         io.to(message.channel.toString()).emit("messageDeleted", {
+            messageId,
+            channelId: message.channel,
+         });
+      }
+
+      res.json({ success: true, message: "Message deleted", messageId });
    } catch (error) {
       res.status(500).json({ success: false, message: error.message });
    }
 };
 
-exports.pinMessage = async (req, res) => {
-   try {
-      const { messageId } = req.params;
-      const workspaceId = await getWorkspaceId(req.user.id);
-
-      const message = await Message.findOne({ _id: messageId, workspace: workspaceId });
-      if (!message) {
-         return res.status(404).json({ success: false, message: "Message not found" });
-      }
-
-      message.isPinned = true;
-      message.pinnedBy = req.user.id;
-      message.pinnedAt = new Date();
-      await message.save();
-
-      const populatedMessage = await Message.findById(messageId)
-         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
-         .populate("user", "name avatar color")
-         .populate("pinnedBy", "name avatar");
-
-      res.json({ success: true, message: populatedMessage });
-   } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-   }
-};
-
-exports.unpinMessage = async (req, res) => {
-   try {
-      const { messageId } = req.params;
-      const workspaceId = await getWorkspaceId(req.user.id);
-
-      const message = await Message.findOne({ _id: messageId, workspace: workspaceId });
-      if (!message) {
-         return res.status(404).json({ success: false, message: "Message not found" });
-      }
-
-      message.isPinned = false;
-      message.pinnedBy = null;
-      message.pinnedAt = null;
-      await message.save();
-
-      res.json({ success: true, message: "Message unpinned" });
-   } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-   }
-};
-
-exports.addReaction = async (req, res) => {
-   try {
-      const { messageId } = req.params;
-      const { emoji } = req.body;
-      const workspaceId = await getWorkspaceId(req.user.id);
-
-      if (!emoji) {
-         return res.status(400).json({ success: false, message: "Emoji is required" });
-      }
-
-      const message = await Message.findOne({ _id: messageId, workspace: workspaceId });
-      if (!message) {
-         return res.status(404).json({ success: false, message: "Message not found" });
-      }
-
-      // Check if user already reacted with this emoji
-      const reaction = message.reactions.find((r) => r.emoji === emoji);
-      if (reaction) {
-         if (!reaction.users.includes(req.user.id)) {
-            reaction.users.push(req.user.id);
-         }
-      } else {
-         message.reactions.push({ emoji, users: [req.user.id] });
-      }
-
-      await message.save();
-
-      const populatedMessage = await Message.findById(messageId)
-         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
-         .populate("user", "name avatar color")
-         .populate("reactions.users", "name avatar");
-
-      res.json({ success: true, message: populatedMessage });
-   } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-   }
-};
-
-exports.removeReaction = async (req, res) => {
-   try {
-      const { messageId } = req.params;
-      const { emoji } = req.body;
-      const workspaceId = await getWorkspaceId(req.user.id);
-
-      if (!emoji) {
-         return res.status(400).json({ success: false, message: "Emoji is required" });
-      }
-
-      const message = await Message.findOne({ _id: messageId, workspace: workspaceId });
-      if (!message) {
-         return res.status(404).json({ success: false, message: "Message not found" });
-      }
-
-      const reaction = message.reactions.find((r) => r.emoji === emoji);
-      if (reaction) {
-         reaction.users = reaction.users.filter((id) => id.toString() !== req.user.id.toString());
-         if (reaction.users.length === 0) {
-            message.reactions = message.reactions.filter((r) => r.emoji !== emoji);
-         }
-      }
-
-      await message.save();
-
-      const populatedMessage = await Message.findById(messageId)
-         .select("channel workspace user text attachments reactions isThreadReply threadParent isPinned pinnedBy pinnedAt isEdited editedAt isDeleted createdAt updatedAt")
-         .populate("user", "name avatar color")
-         .populate("reactions.users", "name avatar");
-
-      res.json({ success: true, message: populatedMessage });
-   } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-   }
-};
-
-exports.getPinnedMessages = async (req, res) => {
+exports.deleteLatestMessage = async (req, res) => {
    try {
       const { channelId } = req.params;
       const workspaceId = await getWorkspaceId(req.user.id);
 
-      const channel = await Channel.findOne({ _id: channelId, workspace: workspaceId });
-      if (!channel) {
-         return res.status(404).json({ success: false, message: "Channel not found" });
+      const latestMessage = await Message.findOne({
+         channel: channelId,
+         user: req.user.id,
+         workspace: workspaceId,
+         isDeleted: false,
+      }).sort({ createdAt: -1 });
+
+      if (!latestMessage) {
+         return res.status(404).json({ success: false, message: "No message found to delete" });
       }
 
-      const pinnedMessages = await Message.find({
-         channel: channelId,
-         workspace: workspaceId,
-         isPinned: true,
-         isDeleted: false,
-      })
-         .populate("user", "name avatar color")
-         .populate("pinnedBy", "name avatar")
-         .populate("reactions.users", "name avatar")
-         .sort({ pinnedAt: -1 });
+      latestMessage.isDeleted = true;
+      latestMessage.deletedAt = new Date();
+      await latestMessage.save();
 
-      res.json({ success: true, pinnedMessages });
+      const io = getIo();
+      if (io) {
+         io.to(channelId).emit("messageDeleted", {
+            messageId: latestMessage._id,
+            channelId,
+         });
+      }
+
+      res.json({ success: true, message: "Latest message deleted", messageId: latestMessage._id });
    } catch (error) {
       res.status(500).json({ success: false, message: error.message });
    }
@@ -328,8 +222,8 @@ exports.getThreadReplies = async (req, res) => {
       }
 
       const threadReplies = await Message.find({ threadParent: messageId, isDeleted: false })
+         .select("channel workspace user text attachments isThreadReply threadParent threadReplyCount isEdited editedAt isDeleted createdAt updatedAt")
          .populate("user", "name avatar color")
-         .populate("reactions.users", "name avatar")
          .sort({ createdAt: 1 });
 
       res.json({ success: true, threadReplies });

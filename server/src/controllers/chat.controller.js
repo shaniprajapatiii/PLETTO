@@ -58,7 +58,10 @@ exports.createChannel = async (req, res) => {
       }
 
       if (type === "dm") {
-         const memberIds = Array.isArray(members) ? [...new Set(members.map(String))] : [];
+         let memberIds = Array.isArray(members) ? [...new Set(members.map(String))] : [];
+         if (req.body.recipientId && !memberIds.includes(String(req.body.recipientId))) {
+            memberIds.push(String(req.body.recipientId));
+         }
          if (!memberIds.includes(req.user.id.toString())) {
             memberIds.push(req.user.id.toString());
          }

@@ -5,21 +5,13 @@ import {
    HiLockClosed,
    HiPlus,
    HiTrash,
-   HiPencil,
-   HiEmojiHappy,
-   HiXCircle,
    HiUsers,
    HiUserAdd,
    HiSearch,
    HiChatAlt2,
-   HiGlobeAlt,
-   HiPaperClip,
    HiAnnotation,
-   HiClock,
    HiArrowLeft,
    HiArrowsExpand,
-   HiSparkles,
-   HiCheck,
    HiX,
 } from "react-icons/hi";
 import {
@@ -29,13 +21,8 @@ import {
    addMember,
    removeMember,
    getMessages,
-   editMessage,
    deleteMessage,
-   pinMessage,
-   unpinMessage,
-   getPinnedMessages,
-   addReaction,
-   removeReaction,
+   deleteLatestMessage,
    getThreadReplies,
    sendThreadReply,
 } from "../../services/chatService";
@@ -43,8 +30,6 @@ import { getWorkspaceMembers } from "../../services/workspaceService";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { PageShell } from "../../components/common/PageShell";
-
-const EMOJI_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "🎉", "✨"];
 
 export default function Chat() {
    const { user } = useAuth();
@@ -55,7 +40,6 @@ export default function Chat() {
    const [channels, setChannels] = useState([]);
    const [activeChannel, setActiveChannel] = useState(null);
    const [messages, setMessages] = useState([]);
-   const [pinnedMessages, setPinnedMessages] = useState([]);
    const [workspaceMembers, setWorkspaceMembers] = useState([]);
    const [messageText, setMessageText] = useState("");
    const [error, setError] = useState(null);
@@ -74,10 +58,6 @@ export default function Chat() {
    const [threadLoading, setThreadLoading] = useState(false);
    const isMountedRef = useRef(true);
 
-   const [editingMessageId, setEditingMessageId] = useState(null);
-   const [editingText, setEditingText] = useState("");
-   const [showPinned, setShowPinned] = useState(false);
-
    // Modal States
    const [showCreateModal, setShowCreateModal] = useState(false);
    const [newChannelName, setNewChannelName] = useState("");
@@ -89,8 +69,13 @@ export default function Chat() {
    const socketRef = useRef(socket);
    const activeChannelRef = useRef(null);
    const userRef = useRef(user);
+   const activeThreadRef = useRef(activeThread);
    const typingTimeoutRef = useRef(null);
    const messagesEndRef = useRef(null);
+
+   useEffect(() => {
+      activeThreadRef.current = activeThread;
+   }, [activeThread]);
 
    const normalizeId = (val) => (val?._id || val)?.toString();
 
@@ -145,17 +130,6 @@ export default function Chat() {
       }
    };
 
-   const loadPinnedMessages = async (channelId) => {
-      try {
-         const res = await getPinnedMessages(channelId);
-         if (isMountedRef.current) {
-            setPinnedMessages(res.data.pinnedMessages || []);
-         }
-      } catch {
-         // ignore
-      }
-   };
-
    useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
    }, [messages]);
@@ -203,10 +177,26 @@ export default function Chat() {
          const currentId = normalizeId(activeChannelRef.current?._id);
          const targetId = normalizeId(newMessage.channel);
          if (currentId && targetId && currentId === targetId) {
-            setMessages((curr) => {
-               if (curr.some((m) => normalizeId(m._id) === normalizeId(newMessage._id))) return curr;
-               return [...curr, newMessage];
-            });
+            if (newMessage.isThreadReply) {
+               if (activeThreadRef.current && normalizeId(activeThreadRef.current._id) === normalizeId(newMessage.threadParent)) {
+                  setThreadReplies((curr) => {
+                     if (curr.some((r) => normalizeId(r._id) === normalizeId(newMessage._id))) return curr;
+                     return [...curr, newMessage];
+                  });
+               }
+               setMessages((curr) =>
+                  curr.map((m) =>
+                     normalizeId(m._id) === normalizeId(newMessage.threadParent)
+                        ? { ...m, threadReplyCount: (m.threadReplyCount || 0) + 1 }
+                        : m
+                  )
+               );
+            } else {
+               setMessages((curr) => {
+                  if (curr.some((m) => normalizeId(m._id) === normalizeId(newMessage._id))) return curr;
+                  return [...curr, newMessage];
+               });
+            }
          } else if (targetId) {
             setUnreadCounts((curr) => ({
                ...curr,
@@ -223,30 +213,6 @@ export default function Chat() {
 
       socket.on("messageDeleted", ({ messageId }) => {
          setMessages((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(messageId)));
-      });
-
-      socket.on("reactionAdded", (message) => {
-         if (normalizeId(activeChannelRef.current?._id) === normalizeId(message.channel)) {
-            setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(message._id) ? message : m)));
-         }
-      });
-
-      socket.on("reactionRemoved", (message) => {
-         if (normalizeId(activeChannelRef.current?._id) === normalizeId(message.channel)) {
-            setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(message._id) ? message : m)));
-         }
-      });
-
-      socket.on("messagePinned", (message) => {
-         if (normalizeId(activeChannelRef.current?._id) === normalizeId(message.channel)) {
-            setPinnedMessages((curr) => [...curr.filter((p) => normalizeId(p._id) !== normalizeId(message._id)), message]);
-            setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(message._id) ? message : m)));
-         }
-      });
-
-      socket.on("messageUnpinned", ({ messageId }) => {
-         setPinnedMessages((curr) => curr.filter((m) => normalizeId(m._id) !== normalizeId(messageId)));
-         setMessages((curr) => curr.map((m) => (normalizeId(m._id) === normalizeId(messageId) ? { ...m, isPinned: false } : m)));
       });
 
       socket.on("typing", ({ channelId, isTyping, user: typingUser }) => {
@@ -288,10 +254,6 @@ export default function Chat() {
          socket.off("newMessage");
          socket.off("messageEdited");
          socket.off("messageDeleted");
-         socket.off("reactionAdded");
-         socket.off("reactionRemoved");
-         socket.off("messagePinned");
-         socket.off("messageUnpinned");
          socket.off("typing");
          socket.off("presenceUpdate");
          socket.off("channelCreated");
@@ -303,14 +265,11 @@ export default function Chat() {
       if (!activeChannel || !socketRef.current) return;
       socketRef.current.emit("joinChannel", activeChannel._id);
       refreshMessages(activeChannel._id);
-      loadPinnedMessages(activeChannel._id);
       setUnreadCounts((curr) => ({ ...curr, [activeChannel._id]: 0 }));
    }, [activeChannel]);
 
    const handleSelectChannel = (channel) => {
       setActiveChannel(channel);
-      setShowPinned(false);
-      setEditingMessageId(null);
       setError(null);
       setActiveThread(null);
       setThreadReplies([]);
@@ -462,23 +421,6 @@ export default function Chat() {
       }
    };
 
-   const handleEdit = async (msgId, text) => {
-      try {
-         await editMessage(msgId, text);
-         if (socketRef.current && activeChannelRef.current) {
-            socketRef.current.emit("editMessage", {
-               messageId: msgId,
-               channelId: activeChannelRef.current._id,
-               text,
-            });
-         }
-         setEditingMessageId(null);
-         setEditingText("");
-      } catch {
-         setError("Failed to edit message");
-      }
-   };
-
    const handleDeleteMsg = async (msgId) => {
       try {
          await deleteMessage(msgId);
@@ -493,6 +435,18 @@ export default function Chat() {
       }
    };
 
+   const handleDeleteLatestMessage = async () => {
+      if (!activeChannelRef.current) return;
+      try {
+         await deleteLatestMessage(activeChannelRef.current._id);
+         if (socketRef.current) {
+            socketRef.current.emit("deleteLatestMessage", { channelId: activeChannelRef.current._id });
+         }
+      } catch {
+         setError("Failed to delete latest message");
+      }
+   };
+
    const filteredChannels = useMemo(() => {
       let list = channels.filter((c) => c.type !== "dm");
       if (filterTab === "public") list = list.filter((c) => c.type === "public");
@@ -504,6 +458,11 @@ export default function Chat() {
    }, [channels, filterTab, searchQuery]);
 
    const visibleMessages = useMemo(() => messages.filter((msg) => !msg.isDeleted), [messages]);
+
+   const latestMyMessageId = useMemo(() => {
+      const myMsgs = visibleMessages.filter((m) => normalizeId(m.user?._id || m.user) === normalizeId(user?._id));
+      return myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
+   }, [visibleMessages, user]);
 
    const isCreatorOfActive = useMemo(() => {
       if (!activeChannel || !user) return false;
@@ -764,13 +723,15 @@ export default function Chat() {
 
             {/* Action Bar */}
             <div className="flex items-center gap-2 shrink-0">
-               {pinnedMessages.length > 0 && (
+               {latestMyMessageId && (
                   <button
                      type="button"
-                     onClick={() => setShowPinned(!showPinned)}
-                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-xs font-medium transition hover:bg-zinc-700"
+                     onClick={handleDeleteLatestMessage}
+                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 text-xs font-medium transition"
+                     title="Delete your latest message in this channel"
                   >
-                     <span>{pinnedMessages.length} Pinned</span>
+                     <HiTrash size={13} />
+                     <span className="hidden sm:inline">Delete last</span>
                   </button>
                )}
 
@@ -807,24 +768,6 @@ export default function Chat() {
             </div>
          </header>
 
-         {/* Pinned Messages Drawer */}
-         {showPinned && pinnedMessages.length > 0 && (
-            <div className="bg-zinc-900 border-b border-zinc-800 p-4 space-y-2 shrink-0">
-               <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-zinc-200">Pinned Messages</span>
-                  <button onClick={() => setShowPinned(false)} className="text-zinc-400 hover:text-white"><HiX size={16} /></button>
-               </div>
-               <div className="max-h-36 overflow-y-auto space-y-2">
-                  {pinnedMessages.map((msg) => (
-                     <div key={msg._id} className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950/60 text-xs flex justify-between items-center gap-3">
-                        <span className="truncate text-zinc-300"><strong className="text-zinc-100 font-medium">{msg.user?.name}:</strong> {msg.text}</span>
-                        <button onClick={() => unpinMessage(msg._id)} className="text-[11px] text-zinc-400 hover:text-white shrink-0 hover:underline">Unpin</button>
-                     </div>
-                  ))}
-               </div>
-            </div>
-         )}
-
          {/* Channel Info Drawer */}
          {showDetails && (
             <div className="bg-zinc-900 border-b border-zinc-800 p-4 text-xs space-y-2 shrink-0">
@@ -850,6 +793,7 @@ export default function Chat() {
                {visibleMessages.length > 0 ? (
                   visibleMessages.map((msg) => {
                      const isMe = normalizeId(msg.user?._id || msg.user) === normalizeId(user?._id);
+                     const isLatestMyMessage = msg._id === latestMyMessageId;
 
                      return (
                         <div key={msg._id} className={`group flex flex-col ${isMe ? "items-end" : "items-start"}`}>
@@ -859,20 +803,48 @@ export default function Chat() {
                               <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                            </div>
 
-                           <div className={`relative max-w-[85%] sm:max-w-[70%] p-3 rounded-xl text-xs leading-relaxed ${
-                              isMe ? "bg-zinc-100 text-zinc-950 font-normal rounded-tr-xs" : "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-xs"
-                           }`}>
-                              {msg.text}
+                           <div className="relative group/bubble max-w-[85%] sm:max-w-[70%]">
+                              <div className={`p-3 rounded-xl text-xs leading-relaxed ${
+                                 isMe ? "bg-zinc-100 text-zinc-950 font-normal rounded-tr-xs" : "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-xs"
+                              }`}>
+                                 {msg.text}
+                              </div>
+
+                              {/* Hover Action Bar: Reply & Delete (for latest message) */}
+                              <div className={`absolute -top-7 ${isMe ? "right-0" : "left-0"} hidden group-hover:flex items-center gap-1 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded-lg shadow-lg z-10 text-xs`}>
+                                 <button
+                                    type="button"
+                                    onClick={() => openThread(msg)}
+                                    className="p-1 text-zinc-400 hover:text-zinc-100 flex items-center gap-1 text-[11px] font-medium"
+                                    title="Reply to message"
+                                 >
+                                    <HiAnnotation size={13} />
+                                    <span>Reply</span>
+                                 </button>
+                                 {isLatestMyMessage && (
+                                    <button
+                                       type="button"
+                                       onClick={() => handleDeleteMsg(msg._id)}
+                                       className="p-1 text-zinc-400 hover:text-red-400 flex items-center gap-1 text-[11px] font-medium"
+                                       title="Delete latest message"
+                                    >
+                                       <HiTrash size={13} />
+                                       <span>Delete</span>
+                                    </button>
+                                 )}
+                              </div>
                            </div>
 
                            {/* Thread replies button */}
-                           <button
-                              onClick={() => openThread(msg)}
-                              className="mt-1 text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition"
-                           >
-                              <HiAnnotation size={12} />
-                              <span>{msg.threadReplyCount || 0} replies</span>
-                           </button>
+                           {(msg.threadReplyCount || 0) > 0 && (
+                              <button
+                                 onClick={() => openThread(msg)}
+                                 className="mt-1 text-[11px] text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5 transition font-medium"
+                              >
+                                 <HiAnnotation size={12} />
+                                 <span>{msg.threadReplyCount} {msg.threadReplyCount === 1 ? "reply" : "replies"}</span>
+                              </button>
+                           )}
                         </div>
                      );
                   })
@@ -916,6 +888,13 @@ export default function Chat() {
                </div>
             )}
          </div>
+
+         {/* Typing Indicator Bar */}
+         {typingUsers.length > 0 && (
+            <div className="bg-zinc-900 border-b border-zinc-800 px-5 py-2 text-xs text-zinc-400 shrink-0">
+               <span>{typingUsers.map((u) => u.name).join(", ")} {typingUsers.length > 1 ? "are" : "is"} typing...</span>
+            </div>
+         )}
 
          {/* Message Input Footer Bar */}
          <footer className="p-4 border-t border-zinc-800/80 bg-zinc-900/90 shrink-0">

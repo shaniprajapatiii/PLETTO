@@ -12,6 +12,7 @@ const Message = require("./models/Message");
 const User = require("./models/User");
 const Presence = require("./models/Presence");
 const { ensureUserWorkspaceMembership, ensureAllUsersInPrimaryWorkspace } = require("./utils/workspaceHelper");
+const { setIo } = require("./utils/socket");
 
 const PORT = Number(process.env.PORT) || 5000;
 
@@ -20,28 +21,24 @@ connectDB().then(() => {
 });
 
 const server = http.createServer(app);
+
 const io = new Server(server, {
    cors: {
       origin: (origin, callback) => {
-         if (!origin) {
-            callback(null, true);
-            return;
-         }
+         if (!origin) return callback(null, true);
 
          const allowedOrigins = [process.env.CLIENT_URL];
          try {
             const url = new URL(origin);
             if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
-               callback(null, true);
-               return;
+               return callback(null, true);
             }
-         } catch (error) {
-            // invalid origin format, fall back to explicit list
+         } catch {
+            // fallback to explicit origin check
          }
 
          if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-            return;
+            return callback(null, true);
          }
 
          callback(new Error("Not allowed by CORS"));
@@ -50,9 +47,10 @@ const io = new Server(server, {
       credentials: true,
    },
 });
-const { setIo } = require("./utils/socket");
+
 setIo(io);
 
+// Socket Authentication Middleware
 io.use(async (socket, next) => {
    try {
       const token = socket.handshake.auth?.token;
@@ -83,12 +81,10 @@ io.use(async (socket, next) => {
    }
 });
 
-// Track active users
+// Track active channels per socket connection
 const userChannels = new Map();
 
 io.on("connection", (socket) => {
-   console.log(`User ${socket.user.id} connected`);
-
    // Join workspace room and personal user room immediately on connection
    if (socket.user.workspaceId) {
       socket.join(socket.user.workspaceId);
@@ -97,7 +93,7 @@ io.on("connection", (socket) => {
       socket.join(`user:${socket.user.id}`);
    }
 
-   // ============ PRESENCE & TYPING ============
+   // ============ PRESENCE & STATUS ============
    socket.on("userOnline", async () => {
       try {
          await Presence.findOneAndUpdate(
@@ -120,7 +116,7 @@ io.on("connection", (socket) => {
             color: socket.user.color,
          });
       } catch (error) {
-         console.error("userOnline error:", error);
+         console.error("userOnline error:", error.message);
       }
    });
 
@@ -137,19 +133,19 @@ io.on("connection", (socket) => {
             name: socket.user.name,
          });
       } catch (error) {
-         console.error("userAway error:", error);
+         console.error("userAway error:", error.message);
       }
    });
 
-   // ============ CHANNEL MANAGEMENT ============
+   // ============ CHANNEL ROOMS ============
    socket.on("joinChannel", async (channelId) => {
       try {
          const channel = await Channel.findOne({ _id: channelId, workspace: socket.user.workspaceId });
          if (!channel) return;
 
          if (channel.type === "private" || channel.type === "dm") {
-            const isMember = channel.members?.some((id) => id.toString() === socket.user.id.toString());
-            const isCreator = channel.createdBy?.toString() === socket.user.id.toString();
+            const isMember = channel.members?.some((id) => id.toString() === socket.user.id);
+            const isCreator = channel.createdBy?.toString() === socket.user.id;
             if (!isMember && !isCreator) {
                socket.emit("channelAccessDenied", { channelId, message: "Access denied to private channel" });
                return;
@@ -208,12 +204,12 @@ io.on("connection", (socket) => {
       });
    });
 
-   // ============ CHANNEL MANAGEMENT (Real-time) ============
+   // ============ CHANNELS CRUD (Real-time Broadcast) ============
    socket.on("channelCreated", async (channelId) => {
       try {
          const channel = await Channel.findOne({ _id: channelId, workspace: socket.user.workspaceId })
-            .populate("members", "name email avatar")
-            .populate("createdBy", "name");
+            .populate("members", "name email avatar color")
+            .populate("createdBy", "name email avatar");
          if (!channel) return;
 
          io.to(socket.user.workspaceId).emit("channelCreated", channel);
@@ -225,8 +221,8 @@ io.on("connection", (socket) => {
    socket.on("channelUpdated", async (channelId) => {
       try {
          const channel = await Channel.findOne({ _id: channelId, workspace: socket.user.workspaceId })
-            .populate("members", "name email avatar")
-            .populate("createdBy", "name");
+            .populate("members", "name email avatar color")
+            .populate("createdBy", "name email avatar");
          if (!channel) return;
 
          io.to(socket.user.workspaceId).emit("channelUpdated", channel);
@@ -243,8 +239,8 @@ io.on("connection", (socket) => {
       }
    });
 
-   // ============ MESSAGING ============
-   socket.on("sendMessage", async ({ channelId, text, attachments = [] }) => {
+   // ============ MESSAGES & THREADS ============
+   socket.on("sendMessage", async ({ channelId, text, attachments = [], threadParentId = null }) => {
       try {
          if (!text || !text.trim()) return;
 
@@ -252,9 +248,17 @@ io.on("connection", (socket) => {
          if (!channel) return;
 
          if (channel.type === "private" || channel.type === "dm") {
-            const isMember = channel.members?.some((id) => id.toString() === socket.user.id.toString());
-            const isCreator = channel.createdBy?.toString() === socket.user.id.toString();
+            const isMember = channel.members?.some((id) => id.toString() === socket.user.id);
+            const isCreator = channel.createdBy?.toString() === socket.user.id;
             if (!isMember && !isCreator) return;
+         }
+
+         let isThreadReply = false;
+         if (threadParentId) {
+            const parent = await Message.findById(threadParentId);
+            if (parent) {
+               isThreadReply = true;
+            }
          }
 
          const message = await Message.create({
@@ -263,28 +267,37 @@ io.on("connection", (socket) => {
             user: socket.user.id,
             text: text.trim(),
             attachments,
+            isThreadReply,
+            threadParent: isThreadReply ? threadParentId : null,
          });
 
+         if (isThreadReply) {
+            await Message.findByIdAndUpdate(threadParentId, {
+               $push: { threadReplies: message._id },
+               $inc: { threadReplyCount: 1 },
+               lastReplyAt: new Date(),
+            });
+         }
+
+         await Channel.findByIdAndUpdate(channelId, { lastActivityAt: new Date() });
+
          const populatedMessage = await Message.findById(message._id)
-            .populate("user", "name avatar color")
-            .populate("reactions.users", "name avatar");
+            .select("channel workspace user text attachments isThreadReply threadParent threadReplyCount isEdited editedAt isDeleted createdAt updatedAt")
+            .populate("user", "name avatar color");
 
          io.to(channelId).emit("newMessage", populatedMessage);
 
-         // Broadcast to workspace room so all online workspace members receive new public channel messages
+         // Broadcast to workspace room for public channels
          if (channel.type === "public" && socket.user.workspaceId) {
             io.to(socket.user.workspaceId).emit("newMessage", populatedMessage);
          }
 
-         // For DMs and Private channels, emit to each member's personal socket room
+         // For DMs and Private channels, emit to members' individual socket rooms
          if (channel.members && channel.members.length > 0) {
             channel.members.forEach((mId) => {
                io.to(`user:${mId.toString()}`).emit("newMessage", populatedMessage);
             });
          }
-
-         // Update channel last activity
-         await Channel.findByIdAndUpdate(channelId, { lastActivityAt: new Date() });
       } catch (error) {
          console.error("sendMessage error:", error.message);
       }
@@ -301,7 +314,6 @@ io.on("connection", (socket) => {
          });
          if (!message) return;
 
-         // Save edit history
          message.editHistory.push({
             text: message.text,
             editedAt: message.editedAt || message.createdAt,
@@ -313,8 +325,8 @@ io.on("connection", (socket) => {
          await message.save();
 
          const populatedMessage = await Message.findById(messageId)
-            .populate("user", "name avatar color")
-            .populate("reactions.users", "name avatar");
+            .select("channel workspace user text attachments isThreadReply threadParent threadReplyCount isEdited editedAt isDeleted createdAt updatedAt")
+            .populate("user", "name avatar color");
 
          io.to(channelId).emit("messageEdited", populatedMessage);
       } catch (error) {
@@ -335,124 +347,35 @@ io.on("connection", (socket) => {
          message.deletedAt = new Date();
          await message.save();
 
-         io.to(channelId).emit("messageDeleted", {
-            messageId,
-            channelId,
-         });
+         io.to(channelId).emit("messageDeleted", { messageId, channelId });
       } catch (error) {
          console.error("deleteMessage error:", error.message);
       }
    });
 
-   // ============ MESSAGE FEATURES ============
-   socket.on("pinMessage", async ({ messageId, channelId }) => {
+   socket.on("deleteLatestMessage", async ({ channelId }) => {
       try {
          const message = await Message.findOne({
-            _id: messageId,
+            channel: channelId,
+            user: socket.user.id,
             workspace: socket.user.workspaceId,
-         });
+            isDeleted: false,
+         }).sort({ createdAt: -1 });
          if (!message) return;
 
-         message.isPinned = true;
-         message.pinnedBy = socket.user.id;
-         message.pinnedAt = new Date();
+         message.isDeleted = true;
+         message.deletedAt = new Date();
          await message.save();
 
-         const populatedMessage = await Message.findById(messageId)
-            .populate("user", "name avatar color")
-            .populate("pinnedBy", "name avatar");
-
-         io.to(channelId).emit("messagePinned", populatedMessage);
+         io.to(channelId).emit("messageDeleted", { messageId: message._id, channelId });
       } catch (error) {
-         console.error("pinMessage error:", error.message);
+         console.error("deleteLatestMessage error:", error.message);
       }
    });
 
-   socket.on("unpinMessage", async ({ messageId, channelId }) => {
-      try {
-         const message = await Message.findOne({
-            _id: messageId,
-            workspace: socket.user.workspaceId,
-         });
-         if (!message) return;
-
-         message.isPinned = false;
-         message.pinnedBy = null;
-         message.pinnedAt = null;
-         await message.save();
-
-         io.to(channelId).emit("messageUnpinned", { messageId, channelId });
-      } catch (error) {
-         console.error("unpinMessage error:", error.message);
-      }
-   });
-
-   socket.on("addReaction", async ({ messageId, channelId, emoji }) => {
-      try {
-         if (!emoji) return;
-
-         const message = await Message.findOne({
-            _id: messageId,
-            workspace: socket.user.workspaceId,
-         });
-         if (!message) return;
-
-         const reaction = message.reactions.find((r) => r.emoji === emoji);
-         if (reaction) {
-            if (!reaction.users.includes(socket.user.id)) {
-               reaction.users.push(socket.user.id);
-            }
-         } else {
-            message.reactions.push({ emoji, users: [socket.user.id] });
-         }
-
-         await message.save();
-
-         const populatedMessage = await Message.findById(messageId)
-            .populate("user", "name avatar color")
-            .populate("reactions.users", "name avatar");
-
-         io.to(channelId).emit("reactionAdded", populatedMessage);
-      } catch (error) {
-         console.error("addReaction error:", error.message);
-      }
-   });
-
-   socket.on("removeReaction", async ({ messageId, channelId, emoji }) => {
-      try {
-         if (!emoji) return;
-
-         const message = await Message.findOne({
-            _id: messageId,
-            workspace: socket.user.workspaceId,
-         });
-         if (!message) return;
-
-         const reaction = message.reactions.find((r) => r.emoji === emoji);
-         if (reaction) {
-            reaction.users = reaction.users.filter((id) => id.toString() !== socket.user.id.toString());
-            if (reaction.users.length === 0) {
-               message.reactions = message.reactions.filter((r) => r.emoji !== emoji);
-            }
-         }
-
-         await message.save();
-
-         const populatedMessage = await Message.findById(messageId)
-            .populate("user", "name avatar color")
-            .populate("reactions.users", "name avatar");
-
-         io.to(channelId).emit("reactionRemoved", populatedMessage);
-      } catch (error) {
-         console.error("removeReaction error:", error.message);
-      }
-   });
-
-   // ============ DISCONNECT ============
+   // ============ DISCONNECT & CLEANUP ============
    socket.on("disconnect", async () => {
       try {
-         console.log(`User ${socket.user.id} disconnected`);
-
          await Presence.findOneAndUpdate(
             { user: socket.user.id },
             {
@@ -475,11 +398,10 @@ io.on("connection", (socket) => {
                userId: socket.user.id,
                name: socket.user.name,
             });
+            userChannels.delete(socket.id);
          }
-
-         socket.removeAllListeners();
       } catch (error) {
-         console.error("disconnect error:", error);
+         console.error("disconnect error:", error.message);
       }
    });
 });

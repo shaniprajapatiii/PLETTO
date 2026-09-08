@@ -111,6 +111,7 @@ export default function People() {
          const res = await createChannel({
             name: member.name || member.email,
             type: "dm",
+            members: [user._id, memberId],
             recipientId: memberId,
          });
 

@@ -36,9 +36,9 @@ Modern teams suffer from tool fragmentation — switching endlessly between Slac
 
 ### 💬 Real-Time Team Channels
 - **Public & Private Discussion Rooms**: Organize conversations by team, squad, or topic.
-- **Live Threaded Discussions & Reactions**: Keep conversations organized with threads and emojis.
+- **Live Threaded Discussions & Direct Replies**: Keep conversations structured with dedicated thread replies.
+- **Delete Latest Messages**: Quickly delete your most recent message with 1 click.
 - **Typing Indicators & Live Message Delivery**: Real-time Socket.IO broadcasts ensure zero-delay communication.
-- **Pinned Announcements & Topic Headers**: Highlight mission-critical channel announcements.
 
 ### ✉️ 1-on-1 Direct Messaging (DM)
 - **Private Conversations**: Instant peer-to-peer discussions with team members.
@@ -264,7 +264,9 @@ All protected routes require an `Authorization: Bearer <token>` header.
 - `GET /api/chat/channels` — List workspace channels
 - `POST /api/chat/channels` — Create new public or private channel
 - `DELETE /api/chat/channels/:id` — Delete channel (creator only)
-- `GET /api/chat/messages/:channelId` — Fetch message history with threads and reactions
+- `GET /api/chat/channels/:channelId/messages` — Fetch message history with threads
+- `DELETE /api/chat/channels/:channelId/messages/latest` — Delete your latest message in channel
+- `DELETE /api/chat/messages/:messageId` — Delete a specific message
 
 ### Team & Workspaces (`/api/workspace`, `/api/profile`, `/api/presence`)
 - `GET /api/workspace/members` — List all members in workspace

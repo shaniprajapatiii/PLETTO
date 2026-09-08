@@ -25,15 +25,7 @@ export const sendMessage = (channelId, text, attachments = []) =>
 // Message editing and deletion
 export const editMessage = (messageId, text) => api.put(`/chat/messages/${messageId}`, { text });
 export const deleteMessage = (messageId) => api.delete(`/chat/messages/${messageId}`);
-
-// Message features - Pinning
-export const pinMessage = (messageId) => api.post(`/chat/messages/${messageId}/pin`);
-export const unpinMessage = (messageId) => api.post(`/chat/messages/${messageId}/unpin`);
-export const getPinnedMessages = (channelId) => api.get(`/chat/channels/${channelId}/pinned`);
-
-// Message features - Reactions
-export const addReaction = (messageId, emoji) => api.post(`/chat/messages/${messageId}/reactions`, { emoji });
-export const removeReaction = (messageId, emoji) => api.delete(`/chat/messages/${messageId}/reactions`, { data: { emoji } });
+export const deleteLatestMessage = (channelId) => api.delete(`/chat/channels/${channelId}/messages/latest`);
 
 // Thread APIs
 export const getThreadReplies = (messageId) => api.get(`/chat/messages/${messageId}/thread`);

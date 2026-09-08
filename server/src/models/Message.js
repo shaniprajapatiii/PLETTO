@@ -31,18 +31,6 @@ const messageSchema = new mongoose.Schema(
             metadata: mongoose.Schema.Types.Mixed,
          },
       ],
-      // Reactions/Emojis
-      reactions: [
-         {
-            emoji: String,
-            users: [
-               {
-                  type: mongoose.Schema.Types.ObjectId,
-                  ref: "User",
-               },
-            ],
-         },
-      ],
       // Message threading
       isThreadReply: {
          type: Boolean,
@@ -64,19 +52,6 @@ const messageSchema = new mongoose.Schema(
          default: 0,
       },
       // Message status
-      isPinned: {
-         type: Boolean,
-         default: false,
-      },
-      pinnedBy: {
-         type: mongoose.Schema.Types.ObjectId,
-         ref: "User",
-         default: null,
-      },
-      pinnedAt: {
-         type: Date,
-         default: null,
-      },
       isEdited: {
          type: Boolean,
          default: false,
@@ -115,7 +90,6 @@ const messageSchema = new mongoose.Schema(
 );
 
 messageSchema.index({ channel: 1, workspace: 1, isDeleted: 1, createdAt: -1 });
-messageSchema.index({ workspace: 1, isPinned: 1, pinnedAt: -1, isDeleted: 1 });
 messageSchema.index({ threadParent: 1, isDeleted: 1, createdAt: 1 });
 
 module.exports = mongoose.model("Message", messageSchema);

@@ -15,11 +15,7 @@ const {
    sendMessage,
    editMessage,
    deleteMessage,
-   pinMessage,
-   unpinMessage,
-   addReaction,
-   removeReaction,
-   getPinnedMessages,
+   deleteLatestMessage,
    getThreadReplies,
 } = require("../controllers/message.controller");
 const auth = require("../middleware/auth");
@@ -44,17 +40,11 @@ router.post("/channels/:channelId/unmute", auth, unmuteChannel);
 // Message routes
 router.get("/channels/:channelId/messages", auth, getMessages);
 router.post("/channels/:channelId/messages", auth, sendMessage);
+router.delete("/channels/:channelId/messages/latest", auth, deleteLatestMessage);
 router.put("/messages/:messageId", auth, editMessage);
 router.delete("/messages/:messageId", auth, deleteMessage);
 
-// Message features
-router.post("/messages/:messageId/pin", auth, pinMessage);
-router.post("/messages/:messageId/unpin", auth, unpinMessage);
-router.post("/messages/:messageId/reactions", auth, addReaction);
-router.delete("/messages/:messageId/reactions", auth, removeReaction);
-
 // Thread routes
 router.get("/messages/:messageId/thread", auth, getThreadReplies);
-router.get("/channels/:channelId/pinned", auth, getPinnedMessages);
 
 module.exports = router;
