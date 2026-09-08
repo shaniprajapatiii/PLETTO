@@ -1,59 +1,57 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { HiArrowRight, HiChatAlt2, HiDocumentText, HiUsers, HiViewGrid } from "react-icons/hi";
+import { HiArrowRight, HiChatAlt2, HiUsers, HiViewGrid } from "react-icons/hi";
 import { getChannels } from "../../services/chatService";
-import { getDocs } from "../../services/docsService";
 import { getWorkspaceMembers } from "../../services/workspaceService";
 import { PageShell } from "../../components/common/PageShell";
 
 const tabs = [
    { id: "overview", label: "Overview", icon: HiViewGrid },
    { id: "channels", label: "Channels", icon: HiChatAlt2 },
-   { id: "documents", label: "Documents", icon: HiDocumentText },
+   { id: "members", label: "Members", icon: HiUsers },
 ];
 
 export default function Dashboard() {
-   const [stats, setStats] = useState({ channels: 0, documents: 0 });
-   const [preview, setPreview] = useState({ channels: [], documents: [] });
+   const [stats, setStats] = useState({ channels: 0, members: 0 });
+   const [preview, setPreview] = useState({ channels: [] });
    const [members, setMembers] = useState([]);
    const [activeTab, setActiveTab] = useState("overview");
 
    useEffect(() => {
       const load = async () => {
-         const [channelsRes, docsRes, membersRes] = await Promise.allSettled([
+         const [channelsRes, membersRes] = await Promise.allSettled([
             getChannels(),
-            getDocs(),
             getWorkspaceMembers(),
          ]);
 
          const channels = channelsRes.status === "fulfilled" ? channelsRes.value.data.channels : [];
-         const documents = docsRes.status === "fulfilled" ? docsRes.value.data.documents : [];
          const workspaceMembers = membersRes.status === "fulfilled" ? membersRes.value.data.members || [] : [];
 
-         setStats({ channels: channels.length, documents: documents.length });
-         setPreview({ channels: channels.slice(0, 5), documents: documents.slice(0, 5) });
+         setStats({ channels: channels.length, members: workspaceMembers.length });
+         setPreview({ channels: channels.slice(0, 6) });
          setMembers(workspaceMembers);
       };
       load();
    }, []);
 
    const activity = useMemo(() => {
-      return [
-         ...preview.channels.map((item) => ({ title: item.name, subtitle: "Channel", icon: HiChatAlt2, link: `/chat?channel=${item._id}` })),
-         ...preview.documents.map((item) => ({ title: item.title, subtitle: "Document", icon: HiDocumentText, link: "/docs" })),
-      ].slice(0, 6);
+      return preview.channels.map((item) => ({
+         title: item.name,
+         subtitle: item.type === "private" ? "Private Channel" : "Public Channel",
+         icon: HiChatAlt2,
+         link: `/chat?channel=${item._id}`,
+      }));
    }, [preview]);
 
    return (
       <div className="space-y-6">
          <PageShell
             title="Dashboard"
-            subtitle="Overview of your workspace channels, documents, and team members."
+            subtitle="Overview of your workspace channels, discussions, and team members."
          >
             {/* Stat Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                <StatCard title="Active Channels" value={stats.channels} icon={<HiChatAlt2 className="h-4 w-4 text-zinc-300" />} />
-               <StatCard title="Documents" value={stats.documents} icon={<HiDocumentText className="h-4 w-4 text-zinc-300" />} />
                <StatCard title="Team Members" value={members.length} icon={<HiUsers className="h-4 w-4 text-zinc-300" />} />
             </div>
 
@@ -85,7 +83,7 @@ export default function Dashboard() {
                      <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
                         <div>
                            <h2 className="text-sm font-semibold text-zinc-100">Recent Workspace Activity</h2>
-                           <p className="text-xs text-zinc-400 mt-0.5">Recent updates across channels and documents</p>
+                           <p className="text-xs text-zinc-400 mt-0.5">Recent updates across channels and discussions</p>
                         </div>
                      </div>
 
@@ -126,7 +124,7 @@ export default function Dashboard() {
                      <div className="space-y-1.5">
                         <QuickLink to="/chat" title="Channels" desc="Team messaging rooms" />
                         <QuickLink to="/dm" title="Direct Messages" desc="1-on-1 conversations" />
-                        <QuickLink to="/docs" title="Documents" desc="Markdown notes and specs" />
+                        <QuickLink to="/my-channels" title="Channel Directory" desc="Browse & manage channels" />
                         <QuickLink to="/people" title="Team Directory" desc="Members and online status" />
                      </div>
                   </div>

@@ -9,7 +9,6 @@ const connectDB = require("./config/db");
 const WorkspaceMember = require("./models/WorkspaceMember");
 const Channel = require("./models/Channel");
 const Message = require("./models/Message");
-const Document = require("./models/Document");
 const User = require("./models/User");
 const Presence = require("./models/Presence");
 const { ensureUserWorkspaceMembership, ensureAllUsersInPrimaryWorkspace } = require("./utils/workspaceHelper");
@@ -447,62 +446,6 @@ io.on("connection", (socket) => {
       } catch (error) {
          console.error("removeReaction error:", error.message);
       }
-   });
-
-   // ============ DOCUMENTS ============
-   socket.on("joinDoc", async (docId) => {
-      try {
-         const document = await Document.findOne({ _id: docId, workspace: socket.user.workspaceId });
-         if (!document) return;
-
-         socket.join(`doc:${docId}`);
-         socket.emit("joinedDoc", docId);
-      } catch (error) {
-         console.error("joinDoc error:", error.message);
-      }
-   });
-
-   socket.on("docUpdate", async ({ docId, title, content, type }) => {
-      try {
-         if (!docId) return;
-         const update = {};
-         if (title !== undefined) update.title = title;
-         if (content !== undefined) update.content = content;
-         if (type !== undefined) update.type = type;
-
-         const document = await Document.findOneAndUpdate(
-            { _id: docId, workspace: socket.user.workspaceId },
-            update,
-            { new: true },
-         );
-         if (!document) return;
-
-         io.to(`doc:${docId}`).emit("docUpdate", {
-            document,
-            user: {
-               id: socket.user.id,
-               name: socket.user.name,
-               avatar: socket.user.avatar,
-               color: socket.user.color,
-            },
-         });
-      } catch (error) {
-         console.error("docUpdate error:", error.message);
-      }
-   });
-
-   socket.on("docCursor", ({ docId, cursor }) => {
-      if (!docId || !cursor) return;
-      socket.to(`doc:${docId}`).emit("docCursor", {
-         docId,
-         cursor,
-         user: {
-            id: socket.user.id,
-            name: socket.user.name,
-            avatar: socket.user.avatar,
-            color: socket.user.color,
-         },
-      });
    });
 
    // ============ DISCONNECT ============

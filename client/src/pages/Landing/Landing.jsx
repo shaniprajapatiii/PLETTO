@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
    HiArrowRight,
-   HiDocumentText,
    HiChatAlt2,
    HiMenu,
    HiX,
@@ -21,7 +20,7 @@ const sections = [
 
 export default function Landing() {
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-   const [activeTab, setActiveTab] = useState("docs");
+   const [activeTab, setActiveTab] = useState("chat");
    const [openFaq, setOpenFaq] = useState(0);
 
    return (
@@ -120,7 +119,7 @@ export default function Landing() {
                   </h1>
 
                   <p className="mx-auto max-w-2xl text-sm sm:text-base leading-relaxed text-zinc-400">
-                     Real-time channels, technical documentation, and direct messaging in one clean, responsive application.
+                     Real-time channels, team direct messaging, and workspace directories in one clean, responsive application.
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -145,7 +144,7 @@ export default function Landing() {
                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-xl border border-zinc-800/80 bg-zinc-900/40">
                         {[
                            { label: "Socket Sync", value: "Realtime" },
-                           { label: "Markdown", value: "Live Preview" },
+                           { label: "Presence", value: "Live Status" },
                            { label: "Messaging", value: "Channels & DM" },
                            { label: "Data Store", value: "MongoDB Atlas" },
                         ].map((stat) => (
@@ -170,7 +169,6 @@ export default function Landing() {
 
                   <div className="flex flex-wrap items-center justify-center gap-1.5 pt-3">
                      {[
-                        { id: "docs", label: "Docs", icon: <HiDocumentText size={14} /> },
                         { id: "chat", label: "Channels", icon: <HiChatAlt2 size={14} /> },
                         { id: "dm", label: "Direct Messages", icon: <HiUsers size={14} /> },
                      ].map((tab) => (
@@ -205,33 +203,7 @@ export default function Landing() {
                      </span>
                   </div>
 
-                  <div className="pt-4 min-h-[300px]">
-                     {activeTab === "docs" && (
-                        <div className="space-y-3">
-                           <div className="flex items-center justify-between">
-                              <h3 className="font-medium text-sm text-zinc-100">Architecture Overview.md</h3>
-                              <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700 text-[10px] font-medium">Markdown</span>
-                           </div>
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div className="p-3.5 rounded-lg border border-zinc-800 bg-zinc-950 font-mono text-xs text-zinc-300 leading-relaxed space-y-1.5">
-                                 <div className="text-zinc-400 font-semibold"># System Architecture</div>
-                                 <p className="text-zinc-500">PLETTO connects real-time messaging with Markdown specs.</p>
-                                 <div className="text-zinc-400 font-semibold">## Capabilities</div>
-                                 <p className="text-zinc-500">- Group Channels & Threads</p>
-                                 <p className="text-zinc-500">- Split Markdown Editor</p>
-                              </div>
-                              <div className="p-3.5 rounded-lg border border-zinc-800 bg-zinc-950 text-xs leading-relaxed space-y-2">
-                                 <h2 className="text-sm font-semibold text-zinc-100 border-b border-zinc-800 pb-1">System Architecture</h2>
-                                 <p className="text-zinc-400">PLETTO connects real-time messaging with Markdown specs.</p>
-                                 <ul className="list-disc pl-4 space-y-0.5 text-zinc-400">
-                                    <li>Group Channels & Threads</li>
-                                    <li>Split Markdown Editor</li>
-                                 </ul>
-                              </div>
-                           </div>
-                        </div>
-                     )}
-
+                  <div className="pt-4 min-h-[220px]">
                      {activeTab === "chat" && (
                         <div className="space-y-3">
                            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
@@ -286,19 +258,19 @@ export default function Landing() {
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
                      {
-                        icon: <HiDocumentText className="text-zinc-400" size={20} />,
-                        title: "Docs",
-                        desc: "Full Markdown support with live split preview, headings, code blocks, task lists, and syntax blocks.",
-                     },
-                     {
                         icon: <HiChatAlt2 className="text-zinc-400" size={20} />,
                         title: "Channels",
-                        desc: "Public and private discussion rooms with message threads, pinned items, and real-time updates.",
+                        desc: "Public and private discussion rooms with message threads, pinned announcements, and real-time updates.",
                      },
                      {
                         icon: <HiUsers className="text-zinc-400" size={20} />,
                         title: "Direct Messages",
                         desc: "1-on-1 conversations with live presence indicators, typing status, and teammate search.",
+                     },
+                     {
+                        icon: <HiViewGrid className="text-zinc-400" size={20} />,
+                        title: "Channel Directory",
+                        desc: "Filter and manage all public and private channels, members, and topics across your workspace.",
                      },
                   ].map((card) => (
                      <div
@@ -332,8 +304,8 @@ export default function Landing() {
                         </thead>
                         <tbody className="divide-y divide-zinc-800/60 text-zinc-400">
                            {[
-                              { feature: "Workspace Integration", pletto: "Unified (Docs, Channels, DMs in one app)", legacy: "Multiple browser tabs & apps" },
-                              { feature: "Markdown Authoring", pletto: "Built-in split preview editor", legacy: "Separate documentation SaaS" },
+                              { feature: "Workspace Integration", pletto: "Unified (Channels, DMs & Directory in one app)", legacy: "Multiple browser tabs & apps" },
+                              { feature: "Threaded Discussions", pletto: "Built-in channel threads & emoji reactions", legacy: "Messy unorganized flat chat logs" },
                               { feature: "Realtime Sync", pletto: "Instant WebSocket communication", legacy: "Polling or delayed sync" },
                               { feature: "Setup Overhead", pletto: "Instant zero-configuration access", legacy: "Multiple logins & integrations" },
                            ].map((row) => (
@@ -360,11 +332,11 @@ export default function Landing() {
                   {[
                      {
                         q: "What is PLETTO?",
-                        a: "PLETTO is a real-time collaborative workspace combining technical documentation, team channels, and direct messaging.",
+                        a: "PLETTO is a real-time collaborative workspace combining team discussion channels, direct messaging, and a unified workspace directory.",
                      },
                      {
-                        q: "Does PLETTO support Markdown editing?",
-                        a: "Yes. It includes a built-in Markdown editor with a live split preview, table insertion, headings, code formatting, and task checkboxes.",
+                        q: "How does real-time communication work?",
+                        a: "PLETTO uses a Socket.IO real-time engine to provide instant message delivery, live presence indicators, and typing status.",
                      },
                      {
                         q: "How are channels organized?",

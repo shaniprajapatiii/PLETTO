@@ -9,7 +9,6 @@ import Layout from "../components/common/Layout";
 
 const Dashboard = lazy(() => import("../pages/Dashboard/Dashboard"));
 const Chat = lazy(() => import("../pages/Chat/Chat"));
-const Docs = lazy(() => import("../pages/Docs/Docs"));
 const People = lazy(() => import("../pages/People/People"));
 const Profile = lazy(() => import("../pages/Profile/Profile"));
 const Settings = lazy(() => import("../pages/Settings/Settings"));
@@ -33,7 +32,6 @@ export default function AppRoutes() {
                   }
                >
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/docs" element={<Docs />} />
                   <Route path="/chat" element={<Chat />} />
                   <Route path="/dm" element={<DM />} />
                   <Route path="/my-channels" element={<MyChannels />} />

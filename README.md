@@ -12,7 +12,7 @@
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
 **A unified, hyper-responsive digital workspace for high-velocity teams.**  
-*Merge team chat, 1-on-1 direct messaging, knowledge documents, and live presence into a single synchronized operating system.*
+*Merge team chat, 1-on-1 direct messaging, team directory, and live presence into a single synchronized operating system.*
 
 [Features](#-key-features) • [Architecture](#-architecture--tech-stack) • [Quick Start](#-quick-start) • [Environment Variables](#-environment-variables) • [WebSocket Events](#-real-time-websocket-engine) • [API Reference](#-api-endpoints-overview)
 
@@ -22,11 +22,11 @@
 
 ## 🌟 Overview
 
-Modern teams suffer from tool fragmentation — switching endlessly between Slack, Notion, Google Docs, and standalone messaging utilities. 
+Modern teams suffer from tool fragmentation — switching endlessly between Slack, Discord, and standalone messaging utilities. 
 
 **PLETTO** solves this by delivering a **multiplayer operating system for teams**:
 - **Sub-40ms Event Synchronization**: Driven by Socket.IO and MongoDB.
-- **Unified Workspace Interface**: Access channels, documents, direct messages, and team presence in a single cohesive window.
+- **Unified Workspace Interface**: Access channels, direct messages, member directory, and team presence in a single cohesive window.
 - **Keyboard-First Workflow**: Jump anywhere instantaneously with the global **⌘K Command Palette**.
 - **Enterprise-Ready Workspace Security**: Granular member roles, public/private room privacy, and JWT authentication.
 
@@ -45,25 +45,20 @@ Modern teams suffer from tool fragmentation — switching endlessly between Slac
 - **Teammate Directory**: Search and start conversations directly from your team roster.
 - **Integrated Presence**: View whether your colleague is online, away, or offline before messaging.
 
-### 📄 Real-Time Knowledge Documents
-- **Full-Screen Markdown & Plain Text Spec Editor**: Dedicated distraction-free focus view.
-- **Side-by-Side Live Markdown Preview**: Render headings, code blocks, tables, task checkboxes, and quotes in real time.
-- **Collaborative Sync**: State updates persisted to MongoDB and synced live across open client sessions.
-
 ### 🎛️ Mission Control Dashboard
-- **Real-Time Pulse**: Overview of total workspace channels, knowledge docs, and active members.
-- **Live Activity Stream**: Immediate chronological stream of recent workspace actions and document revisions.
-- **Instant Quick Navigation**: One-click jump to active channels, documents, and team members.
+- **Real-Time Pulse**: Overview of total workspace channels, discussions, and active members.
+- **Live Activity Stream**: Immediate chronological stream of recent workspace actions and channel updates.
+- **Instant Quick Navigation**: One-click jump to active channels, direct messages, and team members.
 
 ### ⚡ Global Command Palette (⌘K)
-- **Instant Jump Navigation**: Press `⌘K` (or `Ctrl+K`) anywhere in the app to jump to any page, channel, or document.
+- **Instant Jump Navigation**: Press `⌘K` (or `Ctrl+K`) anywhere in the app to jump to any page or channel.
 - **Keyboard Navigation**: Use `↑` / `↓` arrows and `Enter` to navigate without touching your mouse.
 - **Live Filtering**: Fast fuzzy search across all application modules.
 
-### 🏢 Workspace Control Center (`/my-channels`)
-- **Central Asset Registry**: Single focus view for managing all channels and documents.
-- **Fast Filtering & Search**: Filter by all assets, channels only, or documents only.
-- **Asset Creator Permissions**: Securely manage or delete channels and documents.
+### 🏢 Channel Directory (`/my-channels`)
+- **Central Asset Registry**: Single focus view for managing all public and private channels.
+- **Fast Filtering & Search**: Filter by all channels, public only, or private only.
+- **Channel Creator Permissions**: Securely manage or delete channels.
 
 ### 🟢 Live Presence & Team Roster
 - **Presence Stacks**: Real-time visual avatar stacks displaying active collaborators in the header.
@@ -89,7 +84,7 @@ Modern teams suffer from tool fragmentation — switching endlessly between Slac
    ┌─────────────────────────────┐ ┌─────────────────────────────┐
    │   MongoDB Atlas (Mongoose)  │ │      Cloudinary Media       │
    │ Users, Workspaces, Messages │ │     Avatars & File Uploads  │
-   │ Presence, Documents         │ └─────────────────────────────┘
+   │ Presence, Messages          │ └─────────────────────────────┘
    └─────────────────────────────┘
 ```
 
@@ -128,8 +123,7 @@ PLETTO/
 │   │   │   ├── Dashboard/      # Mission control overview & live activity
 │   │   │   ├── Chat/           # Team channels & threaded messaging
 │   │   │   ├── DM/             # Direct 1-on-1 messaging
-│   │   │   ├── Docs/           # Full-screen markdown & spec editor
-│   │   │   ├── MyChannels/     # Workspace Control Center & asset directory
+│   │   │   ├── MyChannels/     # Workspace channel directory & management
 │   │   │   ├── People/         # Team member directory & status
 │   │   │   ├── Profile/        # User profile & avatar editor
 │   │   │   └── Settings/       # Workspace roles & member invite controls
@@ -142,7 +136,7 @@ PLETTO/
 ├── server/                     # Backend Node.js + Express + Socket.IO application
 │   ├── src/
 │   │   ├── config/             # MongoDB connection (db.js)
-│   │   ├── controllers/        # Request handlers (auth, chat, docs, workspace, etc.)
+│   │   ├── controllers/        # Request handlers (auth, chat, workspace, etc.)
 │   │   ├── middleware/         # Auth verification & error handling
 │   │   ├── models/             # Mongoose schemas (User, Workspace, Channel, Message, etc.)
 │   │   ├── routes/             # Express API route declarations
@@ -253,8 +247,6 @@ PLETTO's real-time communication engine is built on Socket.IO and authenticated 
 | `sendMessage` | Client → Server | `{ channelId, text, parentMessageId? }` | Sends message to channel and broadcasts to room members |
 | `newMessage` | Server → Client | `messageObject` | Emitted when a new channel message arrives |
 | `typing` | Client → Server | `{ channelId, isTyping }` | Broadcasts live typing indicator to channel members |
-| `joinDoc` | Client → Server | `docId` | Subscribes socket to document room (`doc:<id>`) |
-| `docUpdate` | Client ⇆ Server | `{ docId, content, title? }` | Broadcasts live document changes to collaborators |
 | `userPresenceUpdate` | Server → Client | `{ userId, status }` | Broadcasts teammate online/offline status changes |
 
 ---
@@ -273,13 +265,6 @@ All protected routes require an `Authorization: Bearer <token>` header.
 - `POST /api/chat/channels` — Create new public or private channel
 - `DELETE /api/chat/channels/:id` — Delete channel (creator only)
 - `GET /api/chat/messages/:channelId` — Fetch message history with threads and reactions
-
-### Documents (`/api/docs`)
-- `GET /api/docs` — List workspace documents
-- `POST /api/docs` — Create new Markdown/Plain text document
-- `GET /api/docs/:id` — Fetch single document content
-- `PUT /api/docs/:id` — Update document title, content, or type
-- `DELETE /api/docs/:id` — Delete document
 
 ### Team & Workspaces (`/api/workspace`, `/api/profile`, `/api/presence`)
 - `GET /api/workspace/members` — List all members in workspace

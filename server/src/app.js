@@ -42,14 +42,12 @@ app.use("/api/auth", authRoutes);
 
 // Feature routes
 const chatRoutes = require("./routes/chat.routes");
-const docsRoutes = require("./routes/docs.routes");
 const profileRoutes = require("./routes/profile.routes");
 const workspaceRoutes = require("./routes/workspace.routes");
 const uploadRoutes = require("./routes/upload.routes");
 const presenceRoutes = require("./routes/presence.routes");
 
 app.use("/api/chat", chatRoutes);
-app.use("/api/docs", docsRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/workspace", workspaceRoutes);
 app.use("/api/upload", uploadRoutes);

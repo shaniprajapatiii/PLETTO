@@ -3,51 +3,41 @@ import { useNavigate } from "react-router-dom";
 import {
    HiPlus,
    HiTrash,
-   HiDocumentText,
    HiExclamationCircle,
    HiLockClosed,
    HiGlobeAlt,
    HiArrowsExpand,
    HiSearch,
-   HiShieldCheck,
+   HiChatAlt2,
 } from "react-icons/hi";
 import { getChannels, deleteChannel } from "../../services/chatService";
-import { getDocs, deleteDoc } from "../../services/docsService";
-import { useAuth } from "../../context/AuthContext";
 import { PageShell } from "../../components/common/PageShell";
 
 export default function MyChannels() {
-   const { user } = useAuth();
    const navigate = useNavigate();
 
    const [channels, setChannels] = useState([]);
-   const [docs, setDocs] = useState([]);
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
 
-   const [activeTab, setActiveTab] = useState("all"); // 'all', 'channels', 'docs'
+   const [activeTab, setActiveTab] = useState("all"); // 'all', 'public', 'private'
    const [searchQuery, setSearchQuery] = useState("");
 
-   const loadAllData = async () => {
+   const loadChannels = async () => {
       try {
          setLoading(true);
-         const [channelsRes, docsRes] = await Promise.all([
-            getChannels({ type: "channel" }),
-            getDocs(),
-         ]);
-
+         const channelsRes = await getChannels({ type: "channel" });
          setChannels((channelsRes.data.channels || []).filter((c) => c.type !== "dm"));
-         setDocs(docsRes.data.documents || []);
          setError(null);
       } catch (err) {
-         setError(err.response?.data?.message || "Failed to load workspace resources");
+         setError(err.response?.data?.message || "Failed to load workspace channels");
       } finally {
          setLoading(false);
       }
    };
 
    useEffect(() => {
-      loadAllData();
+      loadChannels();
    }, []);
 
    const handleDeleteChannelItem = async (channelId) => {
@@ -60,16 +50,6 @@ export default function MyChannels() {
       }
    };
 
-   const handleDeleteDocItem = async (docId) => {
-      if (!window.confirm("Are you sure you want to delete this document?")) return;
-      try {
-         await deleteDoc(docId);
-         setDocs((prev) => prev.filter((d) => d._id !== docId));
-      } catch (err) {
-         setError(err.response?.data?.message || "Failed to delete document.");
-      }
-   };
-
    const formatDate = (dateString) => {
       if (!dateString) return "N/A";
       return new Date(dateString).toLocaleDateString("en-US", {
@@ -79,83 +59,49 @@ export default function MyChannels() {
       });
    };
 
-   const unifiedAssets = useMemo(() => {
-      const channelItems = channels.filter((c) => c.type !== "dm").map((c) => ({
-         id: c._id,
-         type: "channel",
-         subType: c.type,
-         title: c.name,
-         description: c.topic || (c.type === "private" ? "Private channel" : "Public channel"),
-         updatedAt: c.updatedAt || c.createdAt,
-         meta: `${c.members?.length || 0} members`,
-         openUrl: `/chat?channel=${c._id}`,
-         onDelete: () => handleDeleteChannelItem(c._id),
-      }));
-
-      const docItems = docs.map((d) => ({
-         id: d._id,
-         type: "doc",
-         subType: d.type || "text",
-         title: d.title || "Untitled Document",
-         description: d.content ? d.content.substring(0, 80) + "..." : "Empty document.",
-         updatedAt: d.updatedAt || d.createdAt,
-         meta: `${d.content ? d.content.trim().split(/\s+/).length : 0} words`,
-         openUrl: `/docs?doc=${d._id}&fullscreen=true`,
-         onDelete: () => handleDeleteDocItem(d._id),
-      }));
-
-      let combined = [];
-      if (activeTab === "all") combined = [...channelItems, ...docItems];
-      else if (activeTab === "channels") combined = channelItems;
-      else if (activeTab === "docs") combined = docItems;
-
-      if (!searchQuery.trim()) return combined;
-      const q = searchQuery.toLowerCase();
-      return combined.filter(
-         (item) => item.title?.toLowerCase().includes(q) || item.description?.toLowerCase().includes(q)
-      );
-   }, [channels, docs, activeTab, searchQuery]);
-
    const stats = useMemo(() => {
       const publicCount = channels.filter((c) => c.type === "public").length;
       const privateCount = channels.filter((c) => c.type === "private").length;
       return {
+         total: channels.length,
          publicChannels: publicCount,
          privateChannels: privateCount,
-         docsCount: docs.length,
       };
-   }, [channels, docs]);
+   }, [channels]);
+
+   const filteredChannels = useMemo(() => {
+      let list = channels;
+      if (activeTab === "public") list = list.filter((c) => c.type === "public");
+      else if (activeTab === "private") list = list.filter((c) => c.type === "private");
+
+      if (!searchQuery.trim()) return list;
+      const q = searchQuery.toLowerCase();
+      return list.filter(
+         (item) => item.name?.toLowerCase().includes(q) || item.topic?.toLowerCase().includes(q)
+      );
+   }, [channels, activeTab, searchQuery]);
 
    if (loading) {
       return (
          <div className="flex items-center justify-center py-20 text-xs text-zinc-400">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-zinc-400 border-t-transparent mr-2.5" />
-            Loading directory...
+            Loading channel directory...
          </div>
       );
    }
 
    return (
       <PageShell
-         title="Directory"
-         subtitle="Manage and browse workspace channels and documents."
+         title="Channel Directory"
+         subtitle="Browse, filter, and manage workspace discussion channels."
          actions={
-            <div className="flex gap-2">
-               <button
-                  onClick={() => navigate("/chat")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold rounded-lg transition"
-               >
-                  <HiPlus size={14} />
-                  <span>New Channel</span>
-               </button>
-               <button
-                  onClick={() => navigate("/docs")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-medium rounded-lg transition"
-               >
-                  <HiPlus size={14} />
-                  <span>New Document</span>
-               </button>
-            </div>
+            <button
+               onClick={() => navigate("/chat")}
+               className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold rounded-lg transition"
+            >
+               <HiPlus size={14} />
+               <span>New Channel</span>
+            </button>
          }
       >
          {error && (
@@ -167,6 +113,14 @@ export default function MyChannels() {
 
          {/* Metrics Overview Cards */}
          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
+               <div className="flex items-center justify-between text-zinc-400">
+                  <span className="text-[11px] font-medium text-zinc-400">Total Channels</span>
+                  <HiChatAlt2 size={16} className="text-zinc-500" />
+               </div>
+               <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.total}</div>
+            </div>
+
             <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
                <div className="flex items-center justify-between text-zinc-400">
                   <span className="text-[11px] font-medium text-zinc-400">Public Channels</span>
@@ -182,23 +136,15 @@ export default function MyChannels() {
                </div>
                <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.privateChannels}</div>
             </div>
-
-            <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
-               <div className="flex items-center justify-between text-zinc-400">
-                  <span className="text-[11px] font-medium text-zinc-400">Documents</span>
-                  <HiDocumentText size={16} className="text-zinc-500" />
-               </div>
-               <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.docsCount}</div>
-            </div>
          </div>
 
          {/* Filter Tabs & Search */}
          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 w-full sm:w-auto overflow-x-auto text-xs font-medium">
                {[
-                  { key: "all", label: `All (${channels.length + docs.length})` },
-                  { key: "channels", label: `Channels (${channels.length})` },
-                  { key: "docs", label: `Documents (${docs.length})` },
+                  { key: "all", label: `All (${channels.length})` },
+                  { key: "public", label: `Public (${stats.publicChannels})` },
+                  { key: "private", label: `Private (${stats.privateChannels})` },
                ].map((tab) => (
                   <button
                      key={tab.key}
@@ -220,18 +166,18 @@ export default function MyChannels() {
                <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search assets..."
+                  placeholder="Search channels..."
                   className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-zinc-600 transition"
                />
             </div>
          </div>
 
-         {/* Unified Asset Cards Grid */}
-         {unifiedAssets.length > 0 ? (
+         {/* Channels Grid */}
+         {filteredChannels.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-               {unifiedAssets.map((item) => (
+               {filteredChannels.map((item) => (
                   <div
-                     key={`${item.type}-${item.id}`}
+                     key={item._id}
                      className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900/90 transition flex flex-col justify-between space-y-3.5 backdrop-blur-sm"
                   >
                      <div>
@@ -239,36 +185,32 @@ export default function MyChannels() {
                         <div className="flex items-center justify-between gap-2 mb-2.5">
                            <div className="flex items-center gap-2 min-w-0">
                               <div className="h-7 w-7 rounded-md flex items-center justify-center text-xs bg-zinc-800 border border-zinc-700/60 text-zinc-300 shrink-0">
-                                 {item.type === "channel" ? (
-                                    item.subType === "private" ? <HiLockClosed size={13} /> : <HiGlobeAlt size={13} />
-                                 ) : (
-                                    <HiDocumentText size={13} />
-                                 )}
+                                 {item.type === "private" ? <HiLockClosed size={13} /> : <HiGlobeAlt size={13} />}
                               </div>
 
                               <span className="px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-zinc-800/80 border border-zinc-700/50 text-zinc-300">
-                                 {item.type === "channel" ? (item.subType === "private" ? "Private" : "Public") : "Doc"}
+                                 {item.type === "private" ? "Private" : "Public"}
                               </span>
                            </div>
 
                            <span className="text-[11px] text-zinc-500">
-                              {item.meta}
+                              {item.members?.length || 0} members
                            </span>
                         </div>
 
                         {/* Title & Description */}
-                        <h3 className="font-semibold text-xs text-zinc-200 truncate">{item.title}</h3>
+                        <h3 className="font-semibold text-xs text-zinc-200 truncate">#{item.name}</h3>
                         <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                           {item.description}
+                           {item.topic || (item.type === "private" ? "Private team channel" : "General workspace channel")}
                         </p>
-                        <p className="text-[10px] text-zinc-500 mt-2">Updated {formatDate(item.updatedAt)}</p>
+                        <p className="text-[10px] text-zinc-500 mt-2">Updated {formatDate(item.updatedAt || item.createdAt)}</p>
                      </div>
 
                      {/* Action Bar */}
                      <div className="flex gap-2 pt-2.5 border-t border-zinc-800/80">
                         <button
                            type="button"
-                           onClick={() => navigate(item.openUrl)}
+                           onClick={() => navigate(`/chat?channel=${item._id}`)}
                            className="flex-1 py-1.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg transition text-xs font-medium flex items-center justify-center gap-1.5 border border-zinc-700/60"
                         >
                            <HiArrowsExpand size={13} />
@@ -277,9 +219,9 @@ export default function MyChannels() {
 
                         <button
                            type="button"
-                           onClick={item.onDelete}
+                           onClick={() => handleDeleteChannelItem(item._id)}
                            className="p-1.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 rounded-lg transition"
-                           title="Delete asset"
+                           title="Delete channel"
                         >
                            <HiTrash size={14} />
                         </button>
@@ -289,10 +231,10 @@ export default function MyChannels() {
             </div>
          ) : (
             <div className="text-center py-16 rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 space-y-2">
-               <HiShieldCheck className="mx-auto text-zinc-600" size={36} />
-               <h3 className="text-sm font-semibold text-zinc-200">No assets found</h3>
+               <HiChatAlt2 className="mx-auto text-zinc-600" size={36} />
+               <h3 className="text-sm font-semibold text-zinc-200">No channels found</h3>
                <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                  Create channels or documents to populate your workspace directory.
+                  Create a new public or private channel to start collaborating with your team.
                </p>
             </div>
          )}

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
    HiViewGrid as DashboardIcon,
-   HiDocumentText as DocsIcon,
    HiChatAlt2 as ChatIcon,
    HiUsers as PeopleIcon,
    HiUserCircle as ProfileIcon,
@@ -19,7 +18,6 @@ import {
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
-import { createDoc } from "../../services/docsService";
 import { createChannel, getChannels } from "../../services/chatService";
 import { Logo } from "../brand/Logo";
 import { CommandPalette } from "./CommandPalette";
@@ -32,7 +30,6 @@ const navGroups = [
          { label: "Dashboard", to: "/dashboard", icon: DashboardIcon },
          { label: "Channels", to: "/chat", icon: ChatIcon },
          { label: "Direct Messages", to: "/dm", icon: ChatIcon },
-         { label: "Documents", to: "/docs", icon: DocsIcon },
       ]
    },
    {
@@ -52,8 +49,8 @@ const navGroups = [
 ];
 
 const starterNotifications = [
-   { id: "1", title: "Document updated", body: "Architecture notes were revised.", link: "/docs", read: false, createdAt: new Date().toISOString() },
-   { id: "2", title: "Channel discussion", body: "Check the latest team updates.", link: "/chat", read: false, createdAt: new Date().toISOString() },
+   { id: "1", title: "Channel discussion", body: "New messages posted in team channels.", link: "/chat", read: false, createdAt: new Date().toISOString() },
+   { id: "2", title: "Team activity", body: "Check the latest team updates.", link: "/chat", read: false, createdAt: new Date().toISOString() },
    { id: "3", title: "Workspace update", body: "A new teammate joined the workspace.", link: "/settings", read: true, createdAt: new Date().toISOString() },
 ];
 

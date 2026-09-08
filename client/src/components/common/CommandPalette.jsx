@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
    HiSearch,
-   HiDocumentText,
    HiChatAlt2,
    HiViewGrid,
    HiUserCircle,
@@ -19,13 +18,12 @@ const CATEGORIZED_ACTIONS = [
          { id: "dashboard", title: "Dashboard", description: "Workspace overview and recent activity", href: "/dashboard", icon: HiViewGrid },
          { id: "channels", title: "Channels", description: "Team discussions and public rooms", href: "/chat", icon: HiChatAlt2 },
          { id: "dm", title: "Direct Messages", description: "1-on-1 conversations", href: "/dm", icon: HiUsers },
-         { id: "docs", title: "Documents", description: "Markdown notes and specs", href: "/docs", icon: HiDocumentText },
       ],
    },
    {
       category: "Organization",
       items: [
-         { id: "my-channels", title: "Directory", description: "Workspace channels and documents", href: "/my-channels", icon: HiHashtag },
+         { id: "my-channels", title: "Directory", description: "Workspace channels and rooms", href: "/my-channels", icon: HiHashtag },
          { id: "people", title: "Team", description: "Team members and online status", href: "/people", icon: HiUsers },
       ],
    },
