@@ -25,35 +25,35 @@ export default function Landing() {
 
    return (
       <div className="min-h-screen bg-[#0b0c10] text-zinc-100 app-grid-bg flex flex-col">
-         {/* Navigation Bar */}
-         <header className="sticky top-0 z-40 px-4 py-4 sm:px-6 lg:px-8 border-b border-zinc-800/80 bg-[#0b0c10]/80 backdrop-blur-md">
-            <div className="mx-auto max-w-7xl flex items-center justify-between gap-4">
+         {/* Floating Oval Navigation Bar */}
+         <header className="sticky top-3 sm:top-5 z-50 px-3 sm:px-6 w-full flex flex-col items-center pointer-events-none">
+            <div className="pointer-events-auto mx-auto w-full max-w-5xl rounded-full border border-zinc-800/90 bg-[#0d0f15]/85 px-4 sm:px-6 py-2.5 sm:py-2.5 flex items-center justify-between gap-4 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.07] transition-all">
                <Link to="/" className="flex items-center gap-3 text-white">
                   <Logo />
                </Link>
 
-               <nav className="hidden items-center gap-6 lg:flex">
+               <nav className="hidden items-center gap-1 lg:flex">
                   {sections.map((section) => (
                      <a
                         key={section.href}
                         href={section.href}
-                        className="text-xs font-medium text-zinc-400 transition hover:text-zinc-100"
+                        className="px-3.5 py-1.5 rounded-full text-xs font-medium text-zinc-400 transition hover:text-zinc-100 hover:bg-zinc-800/50"
                      >
                         {section.label}
                      </a>
                   ))}
                </nav>
 
-               <div className="hidden items-center gap-3 md:flex">
+               <div className="hidden items-center gap-2.5 md:flex">
                   <Link
                      to="/login"
-                     className="rounded-lg border border-zinc-800 bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
+                     className="rounded-full border border-zinc-800 bg-zinc-900/80 px-4 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-white hover:border-zinc-700 shadow-sm"
                   >
                      Sign In
                   </Link>
                   <Link
                      to="/register"
-                     className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-white px-3.5 py-1.5 text-xs font-medium text-zinc-950 transition"
+                     className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 hover:bg-white px-4 py-1.5 text-xs font-semibold text-zinc-950 transition shadow-sm hover:shadow-[0_0_16px_rgba(255,255,255,0.2)]"
                   >
                      <span>Get Started</span>
                      <HiArrowRight className="h-3.5 w-3.5" />
@@ -63,40 +63,40 @@ export default function Landing() {
                <button
                   type="button"
                   onClick={() => setMobileMenuOpen((value) => !value)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 transition hover:text-white md:hidden"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-300 transition hover:text-white md:hidden"
                   aria-label="Toggle navigation"
                >
-                  {mobileMenuOpen ? <HiX className="h-5 w-5" /> : <HiMenu className="h-5 w-5" />}
+                  {mobileMenuOpen ? <HiX className="h-4 w-4" /> : <HiMenu className="h-4 w-4" />}
                </button>
             </div>
 
             {/* Mobile Dropdown */}
             {mobileMenuOpen && (
-               <div className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4 md:hidden space-y-3">
-                  <nav className="flex flex-col gap-2">
+               <div className="pointer-events-auto mt-2 w-full max-w-md rounded-2xl border border-zinc-800/90 bg-[#0d0f15]/95 p-4 shadow-2xl backdrop-blur-2xl ring-1 ring-white/[0.07] md:hidden space-y-3">
+                  <nav className="flex flex-col gap-1">
                      {sections.map((section) => (
                         <a
                            key={section.href}
                            href={section.href}
                            onClick={() => setMobileMenuOpen(false)}
-                           className="text-xs font-medium text-zinc-300 hover:text-white py-1"
+                           className="rounded-lg px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white transition"
                         >
                            {section.label}
                         </a>
                      ))}
                   </nav>
-                  <div className="pt-2 border-t border-zinc-800 flex flex-col gap-2">
+                  <div className="pt-2 border-t border-zinc-800/80 flex flex-col gap-2">
                      <Link
                         to="/login"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="rounded-lg border border-zinc-800 bg-zinc-950 py-2 text-center text-xs font-medium text-zinc-200"
+                        className="rounded-full border border-zinc-800 bg-zinc-900/90 py-2 text-center text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
                      >
                         Sign In
                      </Link>
                      <Link
                         to="/register"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-100 py-2 text-xs font-medium text-zinc-950"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-full bg-zinc-100 hover:bg-white py-2 text-xs font-semibold text-zinc-950 transition shadow-sm"
                      >
                         <span>Get Started</span>
                         <HiArrowRight className="h-3.5 w-3.5" />

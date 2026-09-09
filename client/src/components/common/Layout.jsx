@@ -315,44 +315,73 @@ export default function Layout() {
          {/* Main Content Area */}
          <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
             {/* Header Navbar */}
-            <header className="flex h-13 shrink-0 items-center justify-between gap-3 border-b border-zinc-800/80 bg-[#0d0e13]/80 px-4 backdrop-blur-md sm:px-6 z-20">
-               <div className="flex min-w-0 items-center gap-2.5">
+            <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-zinc-800/80 bg-[#0d0e13]/90 px-4 backdrop-blur-xl sm:px-6 z-20">
+               {/* Left: Mobile trigger & Breadcrumb Oval Pill */}
+               <div className="flex min-w-0 items-center gap-3">
                   <button
                      type="button"
                      onClick={() => setMobileNavOpen(true)}
-                     className="rounded-lg border border-zinc-800 p-1.5 text-zinc-400 transition hover:text-white lg:hidden"
+                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-zinc-400 transition hover:border-zinc-700 hover:text-white lg:hidden shrink-0"
+                     aria-label="Open mobile menu"
                   >
                      <MenuIcon className="h-4 w-4" />
                   </button>
 
-                  <div className="flex min-w-0 items-center gap-2 text-xs">
-                     <span className="text-zinc-500">Workspace</span>
-                     <span className="text-zinc-700">/</span>
-                     <span className="truncate font-medium text-zinc-200">{currentNavItem.label}</span>
+                  <div className="flex items-center gap-2 overflow-hidden">
+                     <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800/90 bg-zinc-900/60 px-3.5 py-1.5 text-xs shadow-sm backdrop-blur-sm">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 ring-4 ring-emerald-500/20" />
+                        <span className="font-medium text-zinc-400 truncate max-w-[120px] sm:max-w-[160px]">
+                           {workspace?.name || "Workspace"}
+                        </span>
+                        <span className="text-zinc-600">/</span>
+                        <span className="font-semibold text-zinc-100 truncate">
+                           {currentNavItem?.label || "Overview"}
+                        </span>
+                     </div>
                   </div>
                </div>
 
-               <div className="flex items-center gap-2 sm:gap-3">
+               {/* Center: Command Palette / Search Oval Pill */}
+               <div className="hidden md:flex items-center justify-center flex-1 max-w-md px-2">
+                  <button
+                     type="button"
+                     onClick={() => setPaletteOpen(true)}
+                     className="group flex w-full items-center justify-between gap-3 rounded-full border border-zinc-800/90 bg-zinc-900/70 px-4 py-2 text-xs text-zinc-400 transition-all hover:border-zinc-700 hover:bg-zinc-900/90 hover:text-zinc-200 shadow-sm"
+                  >
+                     <span className="flex items-center gap-2.5 truncate">
+                        <SearchIcon className="h-3.5 w-3.5 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
+                        <span className="text-zinc-400 group-hover:text-zinc-300 transition-colors">Search or jump to...</span>
+                     </span>
+                     <kbd className="rounded-md border border-zinc-700/80 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400 group-hover:text-zinc-300">
+                        ⌘K
+                     </kbd>
+                  </button>
+               </div>
+
+               {/* Right: Presence, Notifications & Profile */}
+               <div className="flex items-center gap-2 sm:gap-2.5">
                   <div className="hidden sm:flex items-center">
                      <PresenceStack />
                   </div>
+
 
                   {/* Notifications Bell */}
                   <div ref={(el) => (notifRef.current[0] = el)} className="relative">
                      <button
                         ref={(el) => (notifRef.current[1] = el)}
                         onClick={() => setNotifOpen((v) => !v)}
-                        className="relative p-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-white hover:border-zinc-700 transition"
+                        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/70 text-zinc-400 transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-white"
+                        title="Notifications"
                      >
                         <BellIcon className="h-4 w-4" />
                         {unreadCount > 0 ? (
-                           <span className="absolute top-1 right-1 flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                           <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-indigo-500 ring-2 ring-[#0d0e13]" />
                         ) : null}
                      </button>
 
                      {notifOpen ? (
-                        <div ref={(el) => (notifRef.current[2] = el)} className="absolute right-0 mt-2 w-80 rounded-xl border border-zinc-800 bg-zinc-900/95 p-4 shadow-xl z-50 space-y-3 backdrop-blur-md">
-                           <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                        <div ref={(el) => (notifRef.current[2] = el)} className="absolute right-0 mt-2 w-80 rounded-2xl border border-zinc-800/90 bg-zinc-900/95 p-4 shadow-2xl z-50 space-y-3 backdrop-blur-xl ring-1 ring-white/[0.06]">
+                           <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
                               <span className="text-xs font-semibold text-zinc-200">Notifications</span>
                               <div className="flex gap-2 text-[11px] text-zinc-400">
                                  {unreadCount > 0 ? <button onClick={markAllRead} className="hover:text-zinc-200">Mark read</button> : null}
@@ -360,12 +389,12 @@ export default function Layout() {
                               </div>
                            </div>
                            {notifications.length > 0 ? (
-                              <div className="space-y-2 max-h-64 overflow-y-auto">
+                              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                                  {notifications.map((n) => (
                                     <button
                                        key={n.id}
                                        onClick={() => openNotification(n)}
-                                       className={`w-full p-2.5 rounded-lg border text-left text-xs transition ${
+                                       className={`w-full p-2.5 rounded-xl border text-left text-xs transition ${
                                           n.read ? "border-zinc-800/80 bg-zinc-950/40 text-zinc-400" : "border-zinc-700 bg-zinc-800/60 text-zinc-200"
                                        }`}
                                     >
@@ -380,6 +409,21 @@ export default function Layout() {
                         </div>
                      ) : null}
                   </div>
+
+                  {/* Profile Capsule */}
+                  <button
+                     type="button"
+                     onClick={() => navigate("/profile")}
+                     className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/70 py-1 pl-1 pr-3 text-xs font-medium text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-white"
+                     title="View Profile"
+                  >
+                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-600 text-xs font-semibold text-white border border-zinc-600/50">
+                        {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                     </div>
+                     <span className="hidden sm:inline font-medium max-w-[100px] truncate">
+                        {user?.name || "Profile"}
+                     </span>
+                  </button>
                </div>
             </header>
 

@@ -34,7 +34,9 @@ export default function Login() {
             {/* Left Graphic Banner */}
             <div className="hidden lg:flex flex-col justify-between p-10 bg-zinc-950/40 border-r border-zinc-800/80">
                <div>
-                  <Logo />
+                  <Link to="/">
+                     <Logo />
+                  </Link>
                   <h2 className="mt-12 text-2xl font-semibold tracking-tight text-white leading-snug">
                      Streamline your collaborative workspace.
                   </h2>
@@ -51,7 +53,9 @@ export default function Login() {
             {/* Right Form Card */}
             <div className="p-8 sm:p-10 flex flex-col justify-center">
                <div className="flex items-center justify-between mb-8">
-                  <Logo />
+                  <Link to="/">
+                     <Logo />
+                  </Link>
                   <span className="px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-300 bg-zinc-800 rounded-md border border-zinc-700">
                      Sign In
                   </span>
