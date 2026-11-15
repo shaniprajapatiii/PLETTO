@@ -4,18 +4,21 @@
 
 :root {
   color-scheme: dark;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #f4f4f5;
-  background-color: #0b0c10;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #ffffff;
+  background-color: #000000;
 
-  --bg-app: #0b0c10;
-  --bg-sidebar: #0f1015;
-  --bg-surface: #14161d;
-  --bg-surface-hover: #1a1d26;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(255, 255, 255, 0.25);
-  --text-primary: #f4f4f5;
-  --text-muted: #9ca3af;
+  --bg-app: #000000;
+  --bg-sidebar: #050505;
+  --bg-surface: #0a0a0a;
+  --bg-surface-elevated: #111111;
+  --bg-surface-hover: #171717;
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.25);
+  --border-focus: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #d4d4d8;
+  --text-muted: #8e8e93;
   --accent: #ffffff;
 }
 
@@ -24,11 +27,12 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #0b0c10;
-  color: #f4f4f5;
+  background-color: #000000;
+  color: #ffffff;
   overflow-x: hidden;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -48,64 +52,114 @@ img, svg {
   max-width: 100%;
 }
 
-/* Universal Light-Dark Technical Grid Background */
+/* Pure Black & White Technical Grid & Dot Backgrounds */
 .app-grid-bg {
-  background-color: #0b0c10;
+  background-color: #000000;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 28px 28px;
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
-.app-grid-subtle {
-  background-color: #0d0e13;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+.app-dots-bg {
+  background-color: #000000;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
-/* Common Card & Surface styles */
-.card-panel {
-  background: rgba(18, 20, 26, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  border-radius: 12px;
+.app-subtle-border {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.card-panel-hover {
-  background: rgba(18, 20, 26, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
+/* Big Card & Modern Surface Styles */
+.big-card {
+  background-color: #09090b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.9);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.big-card-interactive {
+  background-color: #09090b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.9);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.big-card-interactive:hover {
+  background-color: #121215;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -15px rgba(255, 255, 255, 0.06);
+}
+
+/* Stark Monochromatic Buttons */
+.btn-white {
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.btn-white:hover {
+  background-color: #e4e4e7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+}
+
+.btn-white:active {
+  transform: translateY(0);
+}
+
+.btn-dark {
+  background-color: #121214;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   transition: all 0.15s ease;
 }
 
-.card-panel-hover:hover {
-  background: rgba(24, 27, 36, 0.9);
-  border-color: rgba(255, 255, 255, 0.18);
+.btn-dark:hover {
+  background-color: #1c1c20;
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
 }
 
-/* Custom Scrollbars */
+/* Monochromatic Badges */
+.badge-bw {
+  background-color: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-radius: 9999px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* High Contrast Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  border: 1px solid #000000;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 ::selection {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: #ffffff;
+  color: #000000;
 }

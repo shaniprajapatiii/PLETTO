@@ -1,9 +1,9 @@
 export function Logo({ className = "", iconClassName = "", withText = true }) {
    return (
-      <div className={`flex items-center gap-2.5 ${className}`}>
-         <div className={`relative shrink-0 flex items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900 text-zinc-100 shadow-sm ${iconClassName || "h-7 w-7"}`}>
+      <div className={`flex items-center gap-3 ${className}`}>
+         <div className={`relative shrink-0 flex items-center justify-center rounded-xl border border-white/20 bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.15)] ${iconClassName || "h-8 w-8"}`}>
             <svg
-               className="h-4 w-4 text-white"
+               className="h-4 w-4 text-black"
                viewBox="0 0 24 24"
                fill="none"
                stroke="currentColor"
@@ -17,7 +17,7 @@ export function Logo({ className = "", iconClassName = "", withText = true }) {
             </svg>
          </div>
          {withText && (
-            <span className="text-sm font-bold tracking-wider text-zinc-100 uppercase">
+            <span className="text-sm sm:text-base font-black tracking-widest text-white uppercase font-mono">
                PLETTO
             </span>
          )}

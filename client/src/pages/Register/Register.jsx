@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { registerUser } from "../../services/authService";
 import { Logo } from "../../components/brand/Logo";
+import { HiArrowRight, HiOutlineUser, HiOutlineMail, HiOutlineLockClosed } from "react-icons/hi";
 
 export default function Register() {
    const navigate = useNavigate();
@@ -22,116 +23,126 @@ export default function Register() {
          setWorkspace(res.data.workspace);
          navigate("/dashboard");
       } catch {
-         setError("Unable to create account. Please try again with a valid email.");
+         setError("Unable to create account. Please ensure all fields are filled with valid data.");
       } finally {
          setLoading(false);
       }
    };
 
    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#0b0c10] app-grid-bg p-4 sm:p-6">
-         <div className="w-full max-w-4xl rounded-2xl border border-zinc-800 bg-zinc-900/90 shadow-2xl overflow-hidden grid lg:grid-cols-2 backdrop-blur-xl">
-            {/* Left Banner */}
-            <div className="hidden lg:flex flex-col justify-between p-10 bg-zinc-950/40 border-r border-zinc-800/80">
+      <div className="min-h-screen w-full flex items-center justify-center bg-black app-grid-bg p-4 sm:p-6 lg:p-8">
+         <div className="w-full max-w-4xl big-card overflow-hidden grid lg:grid-cols-2 shadow-[0_20px_70px_rgba(0,0,0,0.95)]">
+            {/* Left Graphic Banner (Big Card side) */}
+            <div className="hidden lg:flex flex-col justify-between p-10 sm:p-12 bg-gradient-to-b from-[#111114] to-black border-r border-white/10">
                <div>
                   <Link to="/">
                      <Logo />
                   </Link>
-                  <h2 className="mt-12 text-2xl font-semibold tracking-tight text-white leading-snug">
-                     Build your next workspace with clarity.
+                  <h2 className="mt-14 text-3xl font-black tracking-tight text-white leading-tight">
+                     Build your workspace with speed and clarity.
                   </h2>
-                  <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
-                     Connect team chats, knowledge documents, and direct messaging into one unified platform.
+                  <p className="mt-4 text-sm text-neutral-400 leading-relaxed font-normal">
+                     Get started in seconds with team discussion rooms, direct messaging, and rich member rosters.
                   </p>
                </div>
 
-               <div className="p-3.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-300">
-                  Role permissions, member roster, and real-time syncing.
+               <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-white/15 bg-black/60 text-xs font-mono text-neutral-300">
+                     • Zero-friction team onboarding
+                     <br />
+                     • Instant role assignments & permissions
+                     <br />
+                     • 100% pure black & white design system
+                  </div>
+                  <div className="text-[11px] font-mono text-neutral-500">
+                     ENTERPRISE GRADE • REALTIME SOCKET ENGINE
+                  </div>
                </div>
             </div>
 
-            {/* Right Form Card */}
-            <div className="p-8 sm:p-10 flex flex-col justify-center">
+            {/* Right Form Big Card */}
+            <div className="p-8 sm:p-12 flex flex-col justify-center">
                <div className="flex items-center justify-between mb-8">
-                  <Link to="/">
+                  <Link to="/" className="lg:hidden">
                      <Logo />
                   </Link>
-                  <span className="px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-300 bg-zinc-800 rounded-md border border-zinc-700">
-                     Register
+                  <span className="badge-bw px-3 py-1 text-xs font-mono">
+                     REGISTER
                   </span>
                </div>
 
-               <h1 className="text-xl font-semibold text-zinc-100">Create Workspace</h1>
-               <p className="mt-1 text-xs text-zinc-400">Get started with your collaborative workspace.</p>
+               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Create Workspace</h1>
+               <p className="mt-1.5 text-xs sm:text-sm text-neutral-400">Setup your account and launch your collaborative workspace.</p>
 
                {error ? (
-                  <div className="mt-4 p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-red-300 font-medium">
+                  <div className="mt-5 p-4 rounded-xl border border-white/30 bg-[#16161a] text-xs font-bold text-white">
                      {error}
                   </div>
                ) : null}
 
-               <form onSubmit={submit} className="mt-6 space-y-4">
+               <form onSubmit={submit} className="mt-8 space-y-5">
                   <div>
-                     <label className="block text-xs font-medium text-zinc-300">Full Name</label>
-                     <input
-                        required
-                        value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        placeholder="Alex Morgan"
-                        className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-zinc-500 transition"
-                     />
+                     <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider font-mono">Full Name</label>
+                     <div className="relative mt-2">
+                        <HiOutlineUser className="absolute left-3.5 top-3.5 h-4 w-4 text-neutral-500" />
+                        <input
+                           required
+                           value={form.name}
+                           onChange={(e) => setForm({ ...form, name: e.target.value })}
+                           placeholder="Alex Morgan"
+                           className="w-full rounded-xl border border-white/15 bg-[#121214] py-3 pl-10 pr-4 text-sm text-white placeholder:text-neutral-600 outline-none focus:border-white transition"
+                        />
+                     </div>
                   </div>
 
                   <div>
-                     <label className="block text-xs font-medium text-zinc-300">Work Email</label>
-                     <input
-                        type="email"
-                        required
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        placeholder="alex@company.com"
-                        className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-zinc-500 transition"
-                     />
+                     <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider font-mono">Work Email</label>
+                     <div className="relative mt-2">
+                        <HiOutlineMail className="absolute left-3.5 top-3.5 h-4 w-4 text-neutral-500" />
+                        <input
+                           type="email"
+                           required
+                           value={form.email}
+                           onChange={(e) => setForm({ ...form, email: e.target.value })}
+                           placeholder="alex@company.com"
+                           className="w-full rounded-xl border border-white/15 bg-[#121214] py-3 pl-10 pr-4 text-sm text-white placeholder:text-neutral-600 outline-none focus:border-white transition"
+                        />
+                     </div>
                   </div>
 
                   <div>
-                     <label className="block text-xs font-medium text-zinc-300">Password</label>
-                     <input
-                        type="password"
-                        required
-                        value={form.password}
-                        onChange={(e) => setForm({ ...form, password: e.target.value })}
-                        placeholder="••••••••"
-                        className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-zinc-500 transition"
-                     />
+                     <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider font-mono">Password</label>
+                     <div className="relative mt-2">
+                        <HiOutlineLockClosed className="absolute left-3.5 top-3.5 h-4 w-4 text-neutral-500" />
+                        <input
+                           type="password"
+                           required
+                           value={form.password}
+                           onChange={(e) => setForm({ ...form, password: e.target.value })}
+                           placeholder="••••••••••••"
+                           className="w-full rounded-xl border border-white/15 bg-[#121214] py-3 pl-10 pr-4 text-sm text-white placeholder:text-neutral-600 outline-none focus:border-white transition"
+                        />
+                     </div>
                   </div>
 
                   <button
                      type="submit"
                      disabled={loading}
-                     className="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-sm transition disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+                     className="btn-white w-full py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
                   >
-                     {loading ? (
-                        <>
-                           <span className="h-4 w-4 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />
-                           <span>Creating Account...</span>
-                        </>
-                     ) : (
-                        <span>Create Workspace</span>
-                     )}
+                     <span>{loading ? "Creating Workspace..." : "Create Workspace"}</span>
+                     <HiArrowRight className="h-4 w-4" />
                   </button>
                </form>
 
-               <p className="mt-6 text-center text-xs text-zinc-400">
+               <div className="mt-8 pt-6 border-t border-white/10 text-center text-xs text-neutral-400">
                   Already have an account?{" "}
-                  <Link to="/login" className="font-medium text-zinc-200 hover:underline">
+                  <Link to="/login" className="font-bold text-white hover:underline">
                      Sign In
                   </Link>
-               </p>
+               </div>
             </div>
          </div>
       </div>
    );
 }
-
-

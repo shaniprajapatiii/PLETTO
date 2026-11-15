@@ -15,23 +15,23 @@ const CATEGORIZED_ACTIONS = [
    {
       category: "Navigation",
       items: [
-         { id: "dashboard", title: "Dashboard", description: "Workspace overview and recent activity", href: "/dashboard", icon: HiViewGrid },
+         { id: "dashboard", title: "Dashboard", description: "Workspace overview, metrics, and activity", href: "/dashboard", icon: HiViewGrid },
          { id: "channels", title: "Channels", description: "Team discussions and public rooms", href: "/chat", icon: HiChatAlt2 },
-         { id: "dm", title: "Direct Messages", description: "1-on-1 conversations", href: "/dm", icon: HiUsers },
+         { id: "dm", title: "Direct Messages", description: "1-on-1 private conversations", href: "/dm", icon: HiUsers },
       ],
    },
    {
       category: "Organization",
       items: [
-         { id: "my-channels", title: "Directory", description: "Workspace channels and rooms", href: "/my-channels", icon: HiHashtag },
-         { id: "people", title: "Team", description: "Team members and online status", href: "/people", icon: HiUsers },
+         { id: "my-channels", title: "Channel Directory", description: "Browse, filter, and manage channels", href: "/my-channels", icon: HiHashtag },
+         { id: "people", title: "Team Directory", description: "All team members and live status", href: "/people", icon: HiUsers },
       ],
    },
    {
-      category: "Account",
+      category: "Account & Workspace",
       items: [
-         { id: "profile", title: "Profile", description: "Personal details and avatar", href: "/profile", icon: HiUserCircle },
-         { id: "settings", title: "Settings", description: "Workspace settings and roles", href: "/settings", icon: HiCog },
+         { id: "profile", title: "Profile", description: "Your details, avatar, and bio", href: "/profile", icon: HiUserCircle },
+         { id: "settings", title: "Settings", description: "Workspace members, roles, and invite", href: "/settings", icon: HiCog },
       ],
    },
 ];
@@ -91,16 +91,16 @@ export function CommandPalette({ open, onOpenChange }) {
 
    return (
       <div
-         className="fixed inset-0 z-50 flex items-start justify-center bg-black/75 px-4 py-16 backdrop-blur-sm"
+         className="fixed inset-0 z-50 flex items-start justify-center bg-black/85 px-4 pt-20 sm:pt-28 pb-6 backdrop-blur-md"
          onClick={() => onOpenChange(false)}
       >
          <div
-            className="w-full max-w-xl rounded-xl border border-zinc-800 bg-[#12141a] p-3 shadow-2xl space-y-3"
+            className="w-full max-w-2xl rounded-2xl border border-white/20 bg-[#080808] p-4 sm:p-5 shadow-[0_20px_60px_rgba(0,0,0,0.95)] space-y-4 ring-1 ring-white/10"
             onClick={(event) => event.stopPropagation()}
          >
-            {/* Search Input Bar */}
-            <div className="flex items-center gap-2.5 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2">
-               <HiSearch className="h-4 w-4 text-zinc-400 shrink-0" />
+            {/* Big Search Input Bar */}
+            <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-[#121214] px-4 py-3">
+               <HiSearch className="h-5 w-5 text-neutral-400 shrink-0" />
                <input
                   autoFocus
                   value={query}
@@ -108,18 +108,18 @@ export function CommandPalette({ open, onOpenChange }) {
                      setQuery(event.target.value);
                      setSelectedIndex(0);
                   }}
-                  placeholder="Search pages, channels, or documents..."
-                  className="w-full bg-transparent text-xs text-zinc-100 placeholder:text-zinc-500 outline-none"
+                  placeholder="Type a command or search..."
+                  className="w-full bg-transparent text-sm sm:text-base font-medium text-white placeholder:text-neutral-500 outline-none"
                />
-               <kbd className="px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-[10px] font-mono text-zinc-400">
+               <kbd className="px-2 py-0.5 rounded border border-white/20 bg-black text-[11px] font-mono text-neutral-300">
                   ESC
                </kbd>
             </div>
 
             {/* Search Results */}
-            <div className="max-h-[50vh] overflow-y-auto space-y-1 pr-1">
+            <div className="max-h-[55vh] overflow-y-auto space-y-1.5 pr-1">
                {flatActions.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-zinc-500">
+                  <div className="py-12 text-center text-sm text-neutral-500">
                      No commands match "{query}".
                   </div>
                ) : (
@@ -136,25 +136,41 @@ export function CommandPalette({ open, onOpenChange }) {
                               onOpenChange(false);
                            }}
                            onMouseEnter={() => setSelectedIndex(index)}
-                           className={`group flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition ${
+                           className={`group flex w-full items-center justify-between rounded-xl p-3 text-left transition ${
                               isSelected
-                                 ? "bg-zinc-800 text-white"
-                                 : "text-zinc-300 hover:bg-zinc-800/50"
+                                 ? "bg-white text-black"
+                                 : "text-neutral-200 hover:bg-white/10"
                            }`}
                         >
-                           <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300">
-                                 <Icon className="h-3.5 w-3.5" />
+                           <div className="flex items-center gap-3.5 min-w-0">
+                              <div
+                                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition ${
+                                    isSelected
+                                       ? "bg-black text-white border-black"
+                                       : "bg-[#141416] border-white/10 text-white"
+                                 }`}
+                              >
+                                 <Icon className="h-4 w-4" />
                               </div>
                               <div className="min-w-0">
-                                 <div className="text-xs font-medium truncate">
+                                 <div className="text-sm font-semibold truncate">
                                     {action.title}
                                  </div>
-                                 <div className="text-[11px] text-zinc-400 truncate">{action.description}</div>
+                                 <div
+                                    className={`text-xs truncate transition ${
+                                       isSelected ? "text-neutral-700" : "text-neutral-400"
+                                    }`}
+                                 >
+                                    {action.description}
+                                 </div>
                               </div>
                            </div>
 
-                           <HiArrowRight className={`h-3.5 w-3.5 shrink-0 transition ${isSelected ? "text-zinc-200" : "text-zinc-600"}`} />
+                           <HiArrowRight
+                              className={`h-4 w-4 shrink-0 transition ${
+                                 isSelected ? "text-black translate-x-0.5" : "text-neutral-600"
+                              }`}
+                           />
                         </button>
                      );
                   })
@@ -162,12 +178,12 @@ export function CommandPalette({ open, onOpenChange }) {
             </div>
 
             {/* Footer Hints */}
-            <div className="flex items-center justify-between pt-2 border-t border-zinc-800/80 text-[10px] text-zinc-500 font-mono">
-               <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs text-neutral-400 font-mono">
+               <div className="flex items-center gap-4">
                   <span>↑↓ Navigate</span>
-                  <span>↵ Select</span>
+                  <span>↵ Open</span>
                </div>
-               <span>Command Palette</span>
+               <span>PLETTO PALETTE</span>
             </div>
          </div>
       </div>

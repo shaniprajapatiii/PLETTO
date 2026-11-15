@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import {
    HiPlus,
    HiTrash,
-   HiExclamationCircle,
    HiLockClosed,
    HiGlobeAlt,
-   HiArrowsExpand,
+   HiArrowRight,
    HiSearch,
    HiChatAlt2,
+   HiUsers,
 } from "react-icons/hi";
 import { getChannels, deleteChannel } from "../../services/chatService";
 import { PageShell } from "../../components/common/PageShell";
@@ -20,7 +20,7 @@ export default function MyChannels() {
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
 
-   const [activeTab, setActiveTab] = useState("all"); // 'all', 'public', 'private'
+   const [activeTab, setActiveTab] = useState("all");
    const [searchQuery, setSearchQuery] = useState("");
 
    const loadChannels = async () => {
@@ -41,7 +41,7 @@ export default function MyChannels() {
    }, []);
 
    const handleDeleteChannelItem = async (channelId) => {
-      if (!window.confirm("Are you sure you want to delete this channel? All messages will be removed.")) return;
+      if (!window.confirm("Are you sure you want to delete this channel? All messages will be permanently removed.")) return;
       try {
          await deleteChannel(channelId);
          setChannels((prev) => prev.filter((c) => c._id !== channelId));
@@ -83,9 +83,9 @@ export default function MyChannels() {
 
    if (loading) {
       return (
-         <div className="flex items-center justify-center py-20 text-xs text-zinc-400">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-zinc-400 border-t-transparent mr-2.5" />
-            Loading channel directory...
+         <div className="flex flex-col items-center justify-center py-28 text-sm text-neutral-400 gap-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
+            <span>Loading channel directory...</span>
          </div>
       );
    }
@@ -93,54 +93,63 @@ export default function MyChannels() {
    return (
       <PageShell
          title="Channel Directory"
-         subtitle="Browse, filter, and manage workspace discussion channels."
+         subtitle="Browse, filter, search, and manage all workspace channels."
          actions={
             <button
                onClick={() => navigate("/chat")}
-               className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold rounded-lg transition"
+               className="btn-white px-5 py-2.5 text-xs font-bold flex items-center gap-2 shadow-md"
             >
-               <HiPlus size={14} />
+               <HiPlus size={16} />
                <span>New Channel</span>
             </button>
          }
       >
          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2.5 text-xs text-red-300">
-               <HiExclamationCircle className="text-red-400 shrink-0" size={16} />
-               <p>{error}</p>
+            <div className="p-4 bg-[#141416] border border-white/30 rounded-xl flex items-center justify-between text-xs text-white">
+               <span>{error}</span>
+               <button onClick={() => setError(null)} className="text-neutral-400 hover:text-white">✕</button>
             </div>
          )}
 
-         {/* Metrics Overview Cards */}
-         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
-               <div className="flex items-center justify-between text-zinc-400">
-                  <span className="text-[11px] font-medium text-zinc-400">Total Channels</span>
-                  <HiChatAlt2 size={16} className="text-zinc-500" />
+         {/* Big Overview Metric Cards */}
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
+            <div className="big-card p-6 flex flex-col justify-between gap-4">
+               <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider font-mono">Total Rooms</span>
+                  <div className="p-2 rounded-xl bg-white text-black">
+                     <HiChatAlt2 size={18} />
+                  </div>
                </div>
-               <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.total}</div>
+               <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-mono">{stats.total}</div>
+               <p className="text-xs text-neutral-400">Total discussion channels in this workspace</p>
             </div>
 
-            <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
-               <div className="flex items-center justify-between text-zinc-400">
-                  <span className="text-[11px] font-medium text-zinc-400">Public Channels</span>
-                  <HiGlobeAlt size={16} className="text-zinc-500" />
+            <div className="big-card p-6 flex flex-col justify-between gap-4">
+               <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider font-mono">Public Channels</span>
+                  <div className="p-2 rounded-xl bg-white text-black">
+                     <HiGlobeAlt size={18} />
+                  </div>
                </div>
-               <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.publicChannels}</div>
+               <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-mono">{stats.publicChannels}</div>
+               <p className="text-xs text-neutral-400">Open for all team members to join</p>
             </div>
 
-            <div className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-sm space-y-1">
-               <div className="flex items-center justify-between text-zinc-400">
-                  <span className="text-[11px] font-medium text-zinc-400">Private Channels</span>
-                  <HiLockClosed size={16} className="text-zinc-500" />
+            <div className="big-card p-6 flex flex-col justify-between gap-4">
+               <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider font-mono">Private Channels</span>
+                  <div className="p-2 rounded-xl bg-white text-black">
+                     <HiLockClosed size={18} />
+                  </div>
                </div>
-               <div className="text-xl font-bold text-zinc-100 tracking-tight">{stats.privateChannels}</div>
+               <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-mono">{stats.privateChannels}</div>
+               <p className="text-xs text-neutral-400">Restricted to designated members only</p>
             </div>
          </div>
 
-         {/* Filter Tabs & Search */}
-         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-            <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 w-full sm:w-auto overflow-x-auto text-xs font-medium">
+         {/* Filter Tabs & Search Bar */}
+         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2">
+            <div className="flex items-center gap-1.5 bg-[#09090b] p-1.5 rounded-xl border border-white/15 w-full sm:w-auto">
                {[
                   { key: "all", label: `All (${channels.length})` },
                   { key: "public", label: `Public (${stats.publicChannels})` },
@@ -150,10 +159,10 @@ export default function MyChannels() {
                      key={tab.key}
                      type="button"
                      onClick={() => setActiveTab(tab.key)}
-                     className={`px-3 py-1 rounded-md transition whitespace-nowrap ${
+                     className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap ${
                         activeTab === tab.key
-                           ? "bg-zinc-800 text-white font-medium shadow-sm"
-                           : "text-zinc-400 hover:text-zinc-200"
+                           ? "bg-white text-black shadow-sm"
+                           : "text-neutral-400 hover:text-white"
                      }`}
                   >
                      {tab.label}
@@ -161,80 +170,90 @@ export default function MyChannels() {
                ))}
             </div>
 
-            <div className="relative w-full sm:w-64">
-               <HiSearch className="absolute left-3 top-2.5 text-zinc-500" size={14} />
+            <div className="relative w-full sm:w-80">
+               <HiSearch className="absolute left-3.5 top-3.5 text-neutral-400" size={16} />
                <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search channels..."
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-xs text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-zinc-600 transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/15 bg-[#09090b] text-xs sm:text-sm text-white placeholder:text-neutral-500 outline-none focus:border-white transition"
                />
             </div>
          </div>
 
-         {/* Channels Grid */}
+         {/* Big Channel Cards Grid */}
          {filteredChannels.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-               {filteredChannels.map((item) => (
-                  <div
-                     key={item._id}
-                     className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900/90 transition flex flex-col justify-between space-y-3.5 backdrop-blur-sm"
-                  >
-                     <div>
-                        {/* Header Badge */}
-                        <div className="flex items-center justify-between gap-2 mb-2.5">
-                           <div className="flex items-center gap-2 min-w-0">
-                              <div className="h-7 w-7 rounded-md flex items-center justify-center text-xs bg-zinc-800 border border-zinc-700/60 text-zinc-300 shrink-0">
-                                 {item.type === "private" ? <HiLockClosed size={13} /> : <HiGlobeAlt size={13} />}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+               {filteredChannels.map((item) => {
+                  const isPrivate = item.type === "private";
+                  return (
+                     <div
+                        key={item._id}
+                        className="big-card-interactive p-6 flex flex-col justify-between gap-5 relative group"
+                     >
+                        <div className="space-y-4">
+                           {/* Header Badge */}
+                           <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                 <div className="h-8 w-8 rounded-xl flex items-center justify-center bg-white text-black font-bold shadow-sm">
+                                    {isPrivate ? <HiLockClosed size={15} /> : <HiGlobeAlt size={15} />}
+                                 </div>
+                                 <span className="badge-bw px-2.5 py-0.5 text-[10px] font-mono uppercase">
+                                    {isPrivate ? "Private" : "Public"}
+                                 </span>
                               </div>
 
-                              <span className="px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-zinc-800/80 border border-zinc-700/50 text-zinc-300">
-                                 {item.type === "private" ? "Private" : "Public"}
+                              <span className="text-xs font-mono text-neutral-400 flex items-center gap-1.5">
+                                 <HiUsers size={14} className="text-neutral-500" />
+                                 <span>{item.members?.length || 1} members</span>
                               </span>
                            </div>
 
-                           <span className="text-[11px] text-zinc-500">
-                              {item.members?.length || 0} members
-                           </span>
+                           {/* Title & Description */}
+                           <div>
+                              <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-white transition truncate">
+                                 #{item.name}
+                              </h3>
+                              <p className="text-xs sm:text-sm text-neutral-400 mt-1.5 line-clamp-2 leading-relaxed">
+                                 {item.topic || (isPrivate ? "Restricted private team discussion channel." : "Open workspace discussion channel.")}
+                              </p>
+                           </div>
+
+                           <div className="text-[11px] font-mono text-neutral-500">
+                              Created {formatDate(item.createdAt)}
+                           </div>
                         </div>
 
-                        {/* Title & Description */}
-                        <h3 className="font-semibold text-xs text-zinc-200 truncate">#{item.name}</h3>
-                        <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                           {item.topic || (item.type === "private" ? "Private team channel" : "General workspace channel")}
-                        </p>
-                        <p className="text-[10px] text-zinc-500 mt-2">Updated {formatDate(item.updatedAt || item.createdAt)}</p>
-                     </div>
+                        {/* Action Bar */}
+                        <div className="flex gap-2.5 pt-4 border-t border-white/10">
+                           <button
+                              type="button"
+                              onClick={() => navigate(`/chat?channel=${item._id}`)}
+                              className="btn-white flex-1 py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-2"
+                           >
+                              <span>Open Channel</span>
+                              <HiArrowRight size={14} />
+                           </button>
 
-                     {/* Action Bar */}
-                     <div className="flex gap-2 pt-2.5 border-t border-zinc-800/80">
-                        <button
-                           type="button"
-                           onClick={() => navigate(`/chat?channel=${item._id}`)}
-                           className="flex-1 py-1.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg transition text-xs font-medium flex items-center justify-center gap-1.5 border border-zinc-700/60"
-                        >
-                           <HiArrowsExpand size={13} />
-                           <span>Open</span>
-                        </button>
-
-                        <button
-                           type="button"
-                           onClick={() => handleDeleteChannelItem(item._id)}
-                           className="p-1.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 rounded-lg transition"
-                           title="Delete channel"
-                        >
-                           <HiTrash size={14} />
-                        </button>
+                           <button
+                              type="button"
+                              onClick={() => handleDeleteChannelItem(item._id)}
+                              className="p-2.5 border border-white/15 bg-black hover:border-white/40 hover:bg-white/10 text-neutral-400 hover:text-white rounded-xl transition"
+                              title="Delete channel"
+                           >
+                              <HiTrash size={16} />
+                           </button>
+                        </div>
                      </div>
-                  </div>
-               ))}
+                  );
+               })}
             </div>
          ) : (
-            <div className="text-center py-16 rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 space-y-2">
-               <HiChatAlt2 className="mx-auto text-zinc-600" size={36} />
-               <h3 className="text-sm font-semibold text-zinc-200">No channels found</h3>
-               <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                  Create a new public or private channel to start collaborating with your team.
+            <div className="big-card text-center py-24 p-8 space-y-3">
+               <HiChatAlt2 className="mx-auto text-neutral-600" size={48} />
+               <h3 className="text-lg font-bold text-white">No channels found</h3>
+               <p className="text-xs sm:text-sm text-neutral-400 max-w-sm mx-auto">
+                  Create a new discussion channel to get conversations started.
                </p>
             </div>
          )}

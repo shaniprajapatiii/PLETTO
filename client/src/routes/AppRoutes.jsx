@@ -18,7 +18,12 @@ const DM = lazy(() => import("../pages/DM/DM"));
 export default function AppRoutes() {
    return (
       <BrowserRouter>
-         <Suspense fallback={<div className="flex h-screen items-center justify-center bg-zinc-950 text-zinc-400">Loading...</div>}>
+         <Suspense fallback={
+            <div className="flex h-screen items-center justify-center bg-black text-white flex-col gap-3 font-mono text-xs">
+               <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+               <span>LOADING PLETTO...</span>
+            </div>
+         }>
             <Routes>
                <Route path="/" element={<Landing />} />
                <Route path="/login" element={<Login />} />

@@ -84,22 +84,22 @@ export function PresenceStack() {
    }, [members, onlineUserIds, user]);
 
    return (
-      <div className="flex items-center gap-2 rounded-xl border border-zinc-800/80 bg-zinc-900/60 px-3 py-1.5 backdrop-blur-md">
+      <div className="flex items-center gap-2.5 rounded-full border border-white/15 bg-black px-3.5 py-1.5 shadow-sm">
          <div className="flex -space-x-2">
             {activeOnlineMembers.slice(0, 4).map((person) => (
                <div
                   key={person._id || person.email}
                   title={`${person.name || person.email} (Online)`}
-                  className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-950 bg-zinc-800 text-[9px] font-bold text-zinc-200 shadow-md"
+                  className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-black bg-[#161618] text-[9px] font-bold text-white shadow-sm"
                >
                   <img src={getAvatarSrc(person)} alt={person.name || "Member"} className="h-full w-full object-cover" />
-                  <span className="absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full bg-white ring-1 ring-black" />
                </div>
             ))}
          </div>
 
-         <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-300">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+         <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+            <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
             <span>{activeOnlineMembers.length} active</span>
          </div>
       </div>
